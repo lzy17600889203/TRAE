@@ -1,0 +1,122 @@
+[
+  {
+    "id": "sunny-growth",
+    "name": "向阳生长预设",
+    "description": "模拟植物在充足阳光和养分条件下的健康生长状态",
+    "genes": {
+      "iterations": 6,
+      "branchAngle": 22,
+      "lightAttraction": 0.85,
+      "nutrientSupply": 0.75,
+      "branchReduction": 0.68,
+      "baseLength": 2.2,
+      "maxLevel": 10,
+      "leafDensity": 0.85,
+      "flowerChance": 0.25
+    },
+    "environment": {
+      "lightDirection": { "x": 0.3, "y": 1.0, "z": 0.0 },
+      "windStrength": 0.15,
+      "gravityStrength": 0.25,
+      "temperature": 28,
+      "humidity": 70
+    },
+    "animations": {
+      "branchGrowthSpeed": 0.8,
+      "leafUnfurlSpeed": 1.2,
+      "photosynthesisSpeed": 2.0,
+      "flowerBloomSpeed": 1.0,
+      "diseaseSpreadSpeed": 0.0
+    }
+  },
+  {
+    "id": "shady-etiolation",
+    "name": "阴暗徒长预设",
+    "description": "模拟植物在光照不足时的徒长现象，枝条细长稀疏",
+    "genes": {
+      "iterations": 7,
+      "branchAngle": 15,
+      "lightAttraction": 0.95,
+      "nutrientSupply": 0.4,
+      "branchReduction": 0.55,
+      "baseLength": 3.5,
+      "maxLevel": 12,
+      "leafDensity": 0.25,
+      "flowerChance": 0.02
+    },
+    "environment": {
+      "lightDirection": { "x": 0.05, "y": 1.0, "z": 0.0 },
+      "windStrength": 0.05,
+      "gravityStrength": 0.4,
+      "temperature": 20,
+      "humidity": 85
+    },
+    "animations": {
+      "branchGrowthSpeed": 1.5,
+      "leafUnfurlSpeed": 0.5,
+      "photosynthesisSpeed": 0.3,
+      "flowerBloomSpeed": 0.2,
+      "diseaseSpreadSpeed": 0.05
+    }
+  },
+  {
+    "id": "nutrient-overload",
+    "name": "营养过剩预设",
+    "description": "模拟营养过量导致的密集生长、枝条穿插重叠",
+    "genes": {
+      "iterations": 9,
+      "branchAngle": 35,
+      "lightAttraction": 0.3,
+      "nutrientSupply": 0.98,
+      "branchReduction": 0.85,
+      "baseLength": 1.5,
+      "maxLevel": 15,
+      "leafDensity": 0.95,
+      "flowerChance": 0.4
+    },
+    "environment": {
+      "lightDirection": { "x": 0.1, "y": 1.0, "z": 0.1 },
+      "windStrength": 0.08,
+      "gravityStrength": 0.2,
+      "temperature": 30,
+      "humidity": 75
+    },
+    "animations": {
+      "branchGrowthSpeed": 1.8,
+      "leafUnfurlSpeed": 1.5,
+      "photosynthesisSpeed": 3.0,
+      "flowerBloomSpeed": 1.8,
+      "diseaseSpreadSpeed": 0.0
+    }
+  },
+  {
+    "id": "withered-disease",
+    "name": "枯萎病变预设",
+    "description": "模拟植物受病害侵袭的状态，黑斑扩散、生长停滞",
+    "genes": {
+      "iterations": 4,
+      "branchAngle": 20,
+      "lightAttraction": 0.1,
+      "nutrientSupply": 0.15,
+      "branchReduction": 0.4,
+      "baseLength": 1.2,
+      "maxLevel": 5,
+      "leafDensity": 0.15,
+      "flowerChance": 0.0
+    },
+    "environment": {
+      "lightDirection": { "x": 0.0, "y": 0.5, "z": 0.0 },
+      "windStrength": 0.2,
+      "gravityStrength": 0.5,
+      "temperature": 15,
+      "humidity": 40
+    },
+    "animations": {
+      "branchGrowthSpeed": 0.2,
+      "leafUnfurlSpeed": 0.1,
+      "photosynthesisSpeed": 0.1,
+      "flowerBloomSpeed": 0.0,
+      "diseaseSpreadSpeed": 2.5
+    }
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "name": "plant-simulation",
+  "version": "1.0.0",
+  "description": "Angular + Three.js + Fastify L-System Plant Growth Simulation",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "keywords": [
+    "l-system",
+    "fractal",
+    "plant",
+    "three.js",
+    "angular",
+    "fastify"
+  ],
+  "author": "",
+  "license": "MIT"
+}

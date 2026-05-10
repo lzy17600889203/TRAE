@@ -1,0 +1,7 @@
+{
+  "lightDirection": { "x": 0.2, "y": 1.0, "z": 0.1 },
+  "windStrength": 0.1,
+  "gravityStrength": 0.3,
+  "temperature": 25,
+  "humidity": 60
+}

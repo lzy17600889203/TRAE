@@ -1,0 +1,11 @@
+{
+  "iterations": 5,
+  "branchAngle": 25,
+  "lightAttraction": 0.5,
+  "nutrientSupply": 0.6,
+  "branchReduction": 0.7,
+  "baseLength": 2.0,
+  "maxLevel": 8,
+  "leafDensity": 0.6,
+  "flowerChance": 0.1
+}
