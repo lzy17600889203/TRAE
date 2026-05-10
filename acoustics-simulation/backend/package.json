@@ -1,0 +1,16 @@
+{
+  "name": "acoustics-simulation-backend",
+  "version": "1.0.0",
+  "description": "3D Acoustic Resonance Cavity Simulation - Backend",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "sql.js": "^1.10.3",
+    "@fastify/cors": "^9.0.0",
+    "mathjs": "^12.4.0"
+  }
+}
