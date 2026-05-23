@@ -1,0 +1,14 @@
+{
+  "name": "cryptographic-algorithm-visualizer",
+  "version": "1.0.0",
+  "description": "深入演示经典与现代加密算法内部运作机制的教学工具",
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && npm run start",
+    "install:all": "cd frontend && npm install && cd ../backend && npm install",
+    "dev": "npm run install:all"
+  },
+  "keywords": ["cryptography", "visualization", "education", "vue", "fastify"],
+  "author": "",
+  "license": "ISC"
+}
