@@ -1,0 +1,16 @@
+{
+  "name": "lp-simplex-backend",
+  "version": "1.0.0",
+  "description": "Fastify + SQLite backend for LP Simplex solver",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "fastify": "^4.28.1",
+    "@fastify/cors": "^9.0.1",
+    "sql.js": "^1.10.3"
+  }
+}
