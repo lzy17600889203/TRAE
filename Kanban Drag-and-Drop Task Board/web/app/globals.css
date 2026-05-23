@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --board-bg: #f6f7fb;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--board-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.card-item {
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 160ms ease,
+              opacity 160ms ease;
+  will-change: transform;
+}
+
+.card-item.dragging {
+  opacity: 0.85;
+  transform: scale(1.04) rotate(-1.5deg);
+  box-shadow: 0 18px 30px rgba(30, 35, 60, 0.22);
+  z-index: 50;
+}
+
+.column-body {
+  transition: background-color 120ms ease, box-shadow 180ms ease;
+}
+
+.column-body.drop-active {
+  background-color: rgba(99, 102, 241, 0.08);
+  box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 0.55);
+}
+
+.drop-indicator {
+  height: 0px;
+  overflow: hidden;
+  transition: height 160ms ease, margin 160ms ease, box-shadow 160ms ease;
+  pointer-events: none;
+}
+
+.drop-indicator.active {
+  height: 64px;
+  margin: 6px 0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05));
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.45);
+}
+
+.sweep-line {
+  background-image: linear-gradient(90deg, #6366f1, #22d3ee);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 2px;
+  transition: background-size 480ms ease-out;
+}
+
+.sweep-line.sweep {
+  background-size: 100% 2px;
+}
+
+.new-card-pop {
+  animation: card-pop 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes card-pop {
+  0% { transform: scale(0.6) rotate(-3deg); opacity: 0; }
+  60% { transform: scale(1.04) rotate(0.5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
