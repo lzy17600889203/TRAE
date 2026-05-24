@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at top, #10161f 0%, #07090d 70%);
+  color: #e6e9ef;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+.glass {
+  background: rgba(17, 20, 27, 0.72);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.neon-border {
+  box-shadow: 0 0 0 1px rgba(0,255,163,0.35), 0 0 20px rgba(0,255,163,0.15) inset;
+}
+
+.glitch-text {
+  position: relative;
+  color: #ff2d6e;
+  text-shadow:
+    1px 0 #00e5ff,
+    -1px 0 #ff00aa;
+  animation: glitch-anim 1.6s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+  0%   { transform: translate(0); }
+  20%  { transform: translate(-2px, 1px); }
+  40%  { transform: translate(-1px, -1px); }
+  60%  { transform: translate(1px, 2px); }
+  80%  { transform: translate(2px, -1px); }
+  100% { transform: translate(0); }
+}
+
+.char-cell {
+  transition: transform 240ms cubic-bezier(.2,.9,.3,1.2), opacity 240ms ease, background 240ms ease;
+}
+.char-cell.filtered {
+  opacity: 0.18;
+  transform: scale(0.8);
+}
+.char-cell.kept {
+  background: rgba(0, 255, 163, 0.1);
+  color: #00ffa3;
+  border-color: rgba(0,255,163,0.4);
+}
+
+@keyframes path-draw {
+  from { stroke-dashoffset: 2000; }
+  to   { stroke-dashoffset: 0; }
+}
+.path-draw {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: path-draw 2s ease forwards;
+}
+
+@keyframes ring-spin {
+  to { transform: rotate(360deg); }
+}
+.ring-spin { animation: ring-spin 1.2s linear infinite; }
+
+@keyframes scroll-num {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.scroll-num { animation: scroll-num 180ms ease forwards; }
+
+@keyframes glitch-err {
+  0%   { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 1px); }
+  25%  { clip-path: inset(40% 0 30% 0); transform: translate(3px, -2px); }
+  50%  { clip-path: inset(60% 0 10% 0); transform: translate(-3px, 2px); }
+  75%  { clip-path: inset(20% 0 60% 0); transform: translate(2px, -1px); }
+  100% { clip-path: inset(5% 0 80% 0); transform: translate(0); }
+}
+.glitch-err { animation: glitch-err 1.2s infinite; }
+
+.scan-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(0,255,163,0.12), transparent);
+  pointer-events: none;
+  animation: scan 4s linear infinite;
+}
