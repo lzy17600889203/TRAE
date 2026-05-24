@@ -1,0 +1,100 @@
+<div class="app-shell">
+  <header class="app-header">
+    <h1>Visual Graph Query Builder</h1>
+    <div class="scene-row">
+      @for (id of sceneIds; track id) {
+        <button
+          class="scene-btn"
+          [class.active]="currentScene?.id === id"
+          (click)="loadScene(id)"
+        >
+          {{ sceneNameMap[id] }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="canvas-section">
+      <app-graph-canvas
+        [graph]="graph"
+        [highlightedNodeIds]="highlightedNodeIds"
+        [highlightedEdgeIds]="highlightedEdgeIds"
+        [errorNodeIds]="errorNodeIds"
+        [errorEdgeIds]="errorEdgeIds"
+        [pulsingNodeIds]="pulsingNodeIds"
+        [running]="running"
+        (graphChange)="onGraphChange($event)"
+      />
+      <div class="run-bar">
+        <button
+          class="btn run"
+          [disabled]="running"
+          (click)="onExecute()"
+        >
+          @if (running) {
+            <span class="spinner"></span> 执行中…
+          } @else {
+            ▶ 运行查询
+          }
+        </button>
+        @if (currentScene) {
+          <div class="scene-info">
+            <strong>{{ currentScene.name }}</strong>
+            <span class="desc">{{ currentScene.description }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <aside class="side-panel">
+      <div class="panel-card">
+        <h3>生成的查询</h3>
+        <div class="query-tabs">
+          <div class="tab">
+            <div class="tab-title">Cypher</div>
+            <pre><code>{{ lastQuery?.cypher || '// 点击“运行查询”后显示生成的 Cypher' }}</code></pre>
+          </div>
+          <div class="tab">
+            <div class="tab-title">Gremlin</div>
+            <pre><code>{{ lastQuery?.gremlin || '// 点击“运行查询”后显示生成的 Gremlin' }}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3>结果集</h3>
+        @if (lastError) {
+          <div class="error-box">
+            <div class="error-kind">[{{ lastError.kind }}]</div>
+            <div class="error-msg">{{ lastError.message }}</div>
+          </div>
+        } @else if (lastResult) {
+          <div class="result-meta">
+            共 <strong>{{ lastResult.count }}</strong> 条结果
+          </div>
+          <div class="result-note">{{ lastResult.note }}</div>
+          <div class="result-rows">
+            @for (row of lastResult.rows.slice(0, 12); track $index) {
+              <div class="result-row">
+                @for (n of row; track n.id) {
+                  <span class="chip">
+                    <strong>{{ n.label }}</strong>
+                    @if (n.props['name']; as name) {
+                      : {{ name }}
+                    }
+                  </span>
+                }
+              </div>
+            }
+            @if (lastResult.rows.length > 12) {
+              <div class="more">还有 {{ lastResult.rows.length - 12 }} 条结果…</div>
+            }
+          </div>
+        } @else {
+          <div class="placeholder">运行查询后将在此显示结果集。</div>
+        }
+      </div>
+    </aside>
+  </main>
+</div>

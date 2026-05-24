@@ -1,0 +1,169 @@
+<div class="canvas-wrap">
+  <div class="toolbar">
+    <button (click)="addNode()" class="btn primary">+ 添加节点</button>
+    <button (click)="clearGraph()" class="btn danger">清空</button>
+    <div class="hint">拖动节点移动 · 从右侧端口拖出连线 · 双击节点可切换为起点 · 点击节点右上角 × 删除</div>
+  </div>
+
+  <svg
+    #canvas
+    class="graph-svg"
+    viewBox="0 0 900 520"
+    (mousemove)="onMouseMove($event)"
+    (mouseup)="onMouseUp()"
+    (mouseleave)="onMouseUp()"
+  >
+    <defs>
+      <marker
+        id="arrow"
+        viewBox="0 0 10 10"
+        refX="10"
+        refY="5"
+        markerWidth="6"
+        markerHeight="6"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8" />
+      </marker>
+      <marker
+        id="arrow-hi"
+        viewBox="0 0 10 10"
+        refX="10"
+        refY="5"
+        markerWidth="6"
+        markerHeight="6"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee" />
+      </marker>
+      <marker
+        id="arrow-err"
+        viewBox="0 0 10 10"
+        refX="10"
+        refY="5"
+        markerWidth="6"
+        markerHeight="6"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f43f5e" />
+      </marker>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+        <feMerge>
+          <feMergeNode in="coloredBlur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+
+    <rect class="grid-bg" x="0" y="0" width="900" height="520" />
+
+    @for (line of snapLines; track line.axis + line.value) {
+      @if (line.axis === 'x') {
+        <line
+          class="snap-line v"
+          [attr.x1]="line.value"
+          [attr.x2]="line.value"
+          y1="0"
+          y2="520"
+        />
+      } @else {
+        <line
+          class="snap-line h"
+          x1="0"
+          x2="900"
+          [attr.y1]="line.value"
+          [attr.y2]="line.value"
+        />
+      }
+    }
+
+    @for (edge of graph.edges; track trackEdge($index, edge)) {
+      @if (nodeById(edge.source); as s) {
+        @if (nodeById(edge.target); as t) {
+          <g class="edge-wrap" (click)="deleteEdge(edge.id)">
+            <path
+              class="edge-line"
+              [class.edge-highlight]="highlightedEdgeIds.has(edge.id)"
+              [class.edge-error]="errorEdgeIds.has(edge.id)"
+              [class.edge-run]="running"
+              [attr.d]="edgePath(s.x, s.y, t.x, t.y)"
+              [attr.marker-end]="
+                errorEdgeIds.has(edge.id)
+                  ? 'url(#arrow-err)'
+                  : highlightedEdgeIds.has(edge.id)
+                    ? 'url(#arrow-hi)'
+                    : 'url(#arrow)'
+              "
+            />
+            @if (highlightedEdgeIds.has(edge.id) || running) {
+              <circle r="5" class="data-particle">
+                <animateMotion
+                  dur="1.6s"
+                  repeatCount="indefinite"
+                  [attr.path]="edgePath(s.x, s.y, t.x, t.y)"
+                />
+              </circle>
+            }
+            <text
+              class="edge-label"
+              [attr.transform]="'translate(' + midX(s.x, t.x) + ',' + midY(s.y, t.y) + ')'"
+            >
+              {{ edge.type }}{{ edge.max ? '*' + (edge.min ?? 1) + '..' + edge.max : '' }}
+            </text>
+          </g>
+        }
+      }
+    }
+
+    @if (connectPreview(); as cp) {
+      <path
+        class="edge-preview"
+        [attr.d]="edgePath(cp.startX, cp.startY, cp.currentX, cp.currentY)"
+      />
+    }
+
+    @for (node of graph.nodes; track trackNode($index, node)) {
+      <g
+        class="node-wrap"
+        [class.node-start]="node.start"
+        [class.node-highlight]="highlightedNodeIds.has(node.id)"
+        [class.node-pulse]="pulsingNodeIds.has(node.id)"
+        [class.node-error]="errorNodeIds.has(node.id)"
+        [class.node-hover-target]="hoverTargetId === node.id"
+        [attr.transform]="'translate(' + node.x + ',' + node.y + ')'"
+        (mousedown)="onNodeMouseDown($event, node)"
+        (mouseup)="onNodeMouseUp($event, node)"
+        (dblclick)="toggleStart(node.id)"
+      >
+        <circle
+          r="38"
+          class="node-ring"
+          [attr.fill]="node.color + '22'"
+          [attr.stroke]="node.color"
+        />
+        @if (node.start) {
+          <circle r="48" class="node-start-ring" [attr.stroke]="node.color" />
+        }
+        <text class="node-label" text-anchor="middle" y="4">
+          {{ node.label }}
+        </text>
+        <text class="node-sub" text-anchor="middle" y="22">
+          {{ node.name || node.kind || node.id_ || node.id }}
+        </text>
+        <circle
+          r="6"
+          class="port port-out"
+          [attr.cx]="38"
+          [attr.cy]="0"
+          data-port="out"
+          [attr.fill]="node.color"
+        />
+        <g class="node-del" (click)="$event.stopPropagation(); deleteNode(node.id)">
+          <circle r="10" cx="32" cy="-32" fill="#111827" stroke="#f43f5e" />
+          <text x="32" y="-28" text-anchor="middle" fill="#fff" font-size="14">×</text>
+        </g>
+      </g>
+    }
+  </svg>
+</div>
