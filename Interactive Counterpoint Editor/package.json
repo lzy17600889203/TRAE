@@ -1,0 +1,10 @@
+{
+  "name": "interactive-counterpoint-editor",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build:frontend": "cd frontend && npm run build",
+    "start": "cd backend && npm run dev"
+  }
+}
