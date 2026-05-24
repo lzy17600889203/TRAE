@@ -1,0 +1,142 @@
+[
+  {
+    "id": "A1",
+    "name": "Simplification",
+    "formula": "A -> (B -> A)",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A2",
+    "name": "Distributivity",
+    "formula": "(A -> (B -> C)) -> ((A -> B) -> (A -> C))",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A3",
+    "name": "Double Negation",
+    "formula": "(~A -> ~B) -> (B -> A)",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A4",
+    "name": "And-Elim L",
+    "formula": "(A & B) -> A",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A5",
+    "name": "And-Elim R",
+    "formula": "(A & B) -> B",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A6",
+    "name": "And-Intro",
+    "formula": "A -> (B -> (A & B))",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A7",
+    "name": "Or-Intro L",
+    "formula": "A -> (A | B)",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A8",
+    "name": "Or-Intro R",
+    "formula": "B -> (A | B)",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A9",
+    "name": "Or-Elim",
+    "formula": "(A -> C) -> ((B -> C) -> ((A | B) -> C))",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A10",
+    "name": "Excluded Middle",
+    "formula": "A | ~A",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A11",
+    "name": "Modus Tollens",
+    "formula": "(A -> B) -> (~B -> ~A)",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A12",
+    "name": "Contrapositive",
+    "formula": "(A -> B) <-> (~B -> ~A)",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A13",
+    "name": "Hypothetical Syllogism",
+    "formula": "(A -> B) -> ((B -> C) -> (A -> C))",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A14",
+    "name": "Universal Instantiation",
+    "formula": "(forall x. P(x)) -> P(y)",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A15",
+    "name": "Existential Generalization",
+    "formula": "P(y) -> (exists x. P(x))",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A16",
+    "name": "Universal Generalization",
+    "formula": "(forall x. (A -> P(x))) -> (A -> (forall x. P(x)))",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "A17",
+    "name": "Existential Instantiation",
+    "formula": "((forall x. (P(x) -> C)) & (exists x. P(x))) -> C",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "ID",
+    "name": "Identity",
+    "formula": "A -> A",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "EQ",
+    "name": "Equality Reflexive",
+    "formula": "x = x",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  },
+  {
+    "id": "SUBS",
+    "name": "Equality Substitution",
+    "formula": "(x = y) -> (P(x) -> P(y))",
+    "builtin": 1,
+    "description": "Built-in axiom"
+  }
+]

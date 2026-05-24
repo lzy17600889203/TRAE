@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "name": "经典三段论场景",
+    "goal": "Mortal(Socrates)",
+    "description": "所有人都会死；苏格拉底是人；因此苏格拉底会死。",
+    "created_at": "2026-05-24T06:04:44.782Z",
+    "updated_at": "2026-05-24T06:48:22.648Z"
+  },
+  {
+    "id": 2,
+    "name": "经典三段论场景",
+    "goal": "Mortal(Socrates)",
+    "description": "所有人都会死；苏格拉底是人；因此苏格拉底会死。",
+    "created_at": "2026-05-24T06:57:48.097Z",
+    "updated_at": "2026-05-24T06:57:48.101Z"
+  }
+]
