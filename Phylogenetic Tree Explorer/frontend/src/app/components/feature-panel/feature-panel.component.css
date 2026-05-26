@@ -1,0 +1,207 @@
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 6px 12px;
+  background: rgba(20, 20, 40, 0.8);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+}
+
+.toggle-btn.active {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: #00ffff;
+  color: #00ffff;
+}
+
+.matrix-view {
+  margin-bottom: 12px;
+}
+
+.feature-matrix {
+  background: rgba(20, 20, 40, 0.6);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.matrix-header {
+  display: flex;
+  background: rgba(0, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.matrix-row {
+  display: flex;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.matrix-row:hover {
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.matrix-row.highlighted {
+  background: rgba(255, 235, 59, 0.15);
+  border-color: #FFEB3B;
+}
+
+.matrix-row.highlighted .feature-name {
+  color: #FFEB3B;
+}
+
+.matrix-cell {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.header-cell {
+  font-weight: 600;
+  color: #00ffff;
+}
+
+.feature-name {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.feature-value {
+  text-align: right;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: monospace;
+}
+
+.species-view {
+  margin-bottom: 12px;
+}
+
+.view-title {
+  font-size: 12px;
+  color: #00ffff;
+  margin-bottom: 8px;
+}
+
+.feature-list {
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.feature-list li {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(20, 20, 40, 0.5);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.feature-list li:hover {
+  background: rgba(0, 255, 255, 0.1);
+}
+
+.feature-list li.highlighted {
+  background: rgba(255, 235, 59, 0.15);
+  border-color: #FFEB3B;
+}
+
+.feature-label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.feature-val {
+  font-size: 12px;
+  color: #00ffff;
+  font-family: monospace;
+  margin-right: 8px;
+}
+
+.feature-category {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.empty-features {
+  text-align: center;
+  padding: 16px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+}
+
+.add-feature {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 255, 255, 0.15);
+}
+
+.highlight-legend {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(255, 235, 59, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 235, 59, 0.3);
+}
+
+.legend-title {
+  font-size: 11px;
+  color: #FFEB3B;
+  margin-bottom: 6px;
+}
+
+.legend-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.highlight-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  background: rgba(255, 235, 59, 0.2);
+  border: 1px solid #FFEB3B;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #FFEB3B;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.highlight-tag:hover {
+  background: rgba(255, 235, 59, 0.3);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 24px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.empty-state p {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.empty-state .hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+}

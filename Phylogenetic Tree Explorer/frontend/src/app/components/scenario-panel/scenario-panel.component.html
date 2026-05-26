@@ -1,0 +1,94 @@
+<div class="panel">
+  <div class="panel-title">预设场景</div>
+
+  <div class="scenario-grid">
+    <div
+      class="scenario-card"
+      [ngClass]="getScenarioClass(scenario.id)"
+      [class.active]="isScenarioActive(scenario.id)"
+      *ngFor="let scenario of scenarios"
+      (click)="loadScenario(scenario.id)"
+    >
+      <div class="scenario-name">{{ scenario.name }}</div>
+      <div class="scenario-desc">{{ scenario.description }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">算法设置</div>
+
+  <div class="algorithm-selector">
+    <button
+      class="algorithm-btn"
+      [class.active]="algorithm === 'upgma'"
+      (click)="algorithm = 'upgma'"
+    >UPGMA</button>
+    <button
+      class="algorithm-btn"
+      [class.active]="algorithm === 'nj'"
+      (click)="algorithm = 'nj'"
+    >邻接法</button>
+  </div>
+
+  <div class="checkbox-group">
+    <label class="checkbox-item">
+      <input type="checkbox" [(ngModel)]="hasMissingData" />
+      缺失数据
+    </label>
+    <label class="checkbox-item">
+      <input type="checkbox" [(ngModel)]="polyphyleticForce" />
+      多系群
+    </label>
+    <label class="checkbox-item">
+      <input type="checkbox" [(ngModel)]="circularDependency" />
+      循环依赖
+    </label>
+  </div>
+
+  <div class="slider-group">
+    <div class="slider-label">
+      <span>超长分支倍率</span>
+      <span class="slider-value">{{ longBranchMultiplier.toFixed(1) }}x</span>
+    </div>
+    <input
+      type="range"
+      min="1"
+      max="3"
+      step="0.1"
+      [(ngModel)]="longBranchMultiplier"
+    />
+  </div>
+
+  <button class="btn btn-primary" (click)="computePhylogeny()">
+    构建系统发育树
+  </button>
+</div>
+
+<div class="panel">
+  <div class="panel-title">分类层级</div>
+
+  <div class="taxonomy-levels">
+    <button
+      class="level-btn"
+      [class.active]="activeTaxonomyLevel === null"
+      (click)="activeTaxonomyLevel = null; onTaxonomyLevelChange()"
+      style="color: rgba(255,255,255,0.5)"
+    >全部</button>
+    <button
+      class="level-btn"
+      *ngFor="let level of taxonomyLevels"
+      [class.active]="activeTaxonomyLevel === level.key"
+      [style.border-color]="activeTaxonomyLevel === level.key ? level.color : 'transparent'"
+      [style.color]="level.color"
+      (click)="activeTaxonomyLevel = activeTaxonomyLevel === level.key ? null : level.key; onTaxonomyLevelChange()"
+    >{{ level.label }}</button>
+  </div>
+
+  <div class="checkbox-group">
+    <label class="checkbox-item">
+      <input type="checkbox" [(ngModel)]="showDistances" (change)="onShowDistancesChange()" />
+      显示分支长度
+    </label>
+  </div>
+</div>

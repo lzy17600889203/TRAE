@@ -1,0 +1,141 @@
+<div class="tree-container" #svgContainer>
+  <div class="tree-toolbar">
+    <button class="toolbar-btn" (click)="expandAll()" title="展开全部">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <polyline points="9 21 3 21 3 15"></polyline>
+        <line x1="21" y1="3" x2="14" y2="10"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </svg>
+    </button>
+    <button class="toolbar-btn" (click)="collapseAll()" title="折叠全部">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="4 14 10 14 10 20"></polyline>
+        <polyline points="20 10 14 10 14 4"></polyline>
+        <line x1="14" y1="10" x2="21" y2="3"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </svg>
+    </button>
+    <span class="toolbar-separator"></span>
+    <span class="toolbar-info" *ngIf="algorithm">算法: {{ algorithm }}</span>
+    <span class="toolbar-info" *ngIf="warnings.length > 0">
+      ⚠ {{ warnings.length }} 个警告
+    </span>
+  </div>
+
+  <div class="warning-banner" *ngIf="warnings.length > 0">
+    <div class="warning-item" *ngFor="let w of warnings">
+      ⚠ {{ w }}
+    </div>
+  </div>
+
+  <svg
+    class="tree-svg"
+    [attr.width]="svgWidth"
+    [attr.height]="svgHeight"
+    [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight"
+  >
+    <defs>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feMerge>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+        <feMerge>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <linearGradient id="branchGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="rgba(0, 255, 255, 0.3)"/>
+        <stop offset="50%" stop-color="rgba(0, 255, 255, 0.8)"/>
+        <stop offset="100%" stop-color="rgba(0, 255, 136, 0.8)"/>
+      </linearGradient>
+      <linearGradient id="dangerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="rgba(255, 82, 82, 0.3)"/>
+        <stop offset="100%" stop-color="rgba(255, 82, 82, 0.9)"/>
+      </linearGradient>
+    </defs>
+
+    <g class="branches-layer">
+      <path
+        *ngFor="let branch of branches"
+        [attr.d]="branch.path"
+        [attr.fill]="'none'"
+        [attr.stroke]="branch.highlighted ? '#FFEB3B' : (branch.length > 150 ? 'url(#dangerGradient)' : 'url(#branchGradient)')"
+        [attr.stroke-width]="branch.width"
+        [attr.stroke-linecap]="'round'"
+        [attr.stroke-dasharray]="branch.length"
+        [attr.stroke-dashoffset]="branch.length * (1 - branch.progress)"
+        [attr.filter]="branch.highlighted ? 'url(#strongGlow)' : 'url(#glow)'"
+        [class.branch-highlighted]="branch.highlighted"
+        [class.branch-animate]="isGrowing"
+      ></path>
+    </g>
+
+    <g class="nodes-layer">
+      <g
+        *ngFor="let node of nodes"
+        [attr.transform]="'translate(' + node.x + ',' + node.y + ')'"
+        [class.node-clickable]="node.hasChildren"
+        [class.node-highlighted]="node.highlighted"
+        (click)="onNodeClick(node)"
+        (mouseenter)="onNodeMouseEnter($event, node)"
+        (mouseleave)="onNodeMouseLeave()"
+      >
+        <circle
+          [attr.r]="node.isLeaf ? 6 : (node.collapsed ? 8 : 5)"
+          [attr.fill]="node.isLeaf ? '#00ff88' : (node.collapsed ? '#FFB74D' : '#00ffff')"
+          [attr.stroke]="node.highlighted ? '#FFEB3B' : 'rgba(255, 255, 255, 0.5)'"
+          [attr.stroke-width]="node.highlighted ? 3 : 1.5"
+          [attr.filter]="node.highlighted ? 'url(#strongGlow)' : 'url(#glow)'"
+          [class.node-pulse]="node.highlighted"
+          [class.node-expand]="node.hasChildren && !node.isLeaf"
+          [class.node-collapsed-indicator]="node.collapsed && node.hasChildren"
+        ></circle>
+
+        <text
+          *ngIf="node.isLeaf"
+          [attr.x]="12"
+          [attr.y]="4"
+          [attr.fill]="node.highlighted ? '#FFEB3B' : 'rgba(255, 255, 255, 0.9)'"
+          [attr.font-size]="'12'"
+          [attr.font-weight]="node.highlighted ? 'bold' : 'normal'"
+          [attr.filter]="node.highlighted ? 'url(#glow)' : 'none'"
+        >{{ node.name }}</text>
+
+        <text
+          *ngIf="!node.isLeaf && node.hasChildren && node.depth === 0"
+          [attr.x]="-8"
+          [attr.y]="-10"
+          [attr.text-anchor]="'end'"
+          [attr.fill]="'rgba(0, 255, 255, 0.6)'"
+          [attr.font-size]="'11'"
+        >{{ node.name }}</text>
+
+        <text
+          *ngIf="showDistances && node.branchLength > 0"
+          [attr.x]="node.hasChildren ? -12 : 12"
+          [attr.y]="-8"
+          [attr.text-anchor]="node.hasChildren ? 'end' : 'start'"
+          [attr.fill]="'rgba(255, 183, 77, 0.8)'"
+          [attr.font-size]="'10'"
+        >{{ node.branchLength.toFixed(2) }}</text>
+      </g>
+    </g>
+  </svg>
+
+  <div
+    class="tooltip"
+    *ngIf="showTooltip"
+    [style.left.px]="tooltipX"
+    [style.top.px]="tooltipY"
+  >
+    <div class="tooltip-content">{{ tooltipText }}</div>
+  </div>
+</div>

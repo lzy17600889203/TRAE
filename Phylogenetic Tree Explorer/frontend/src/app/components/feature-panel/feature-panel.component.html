@@ -1,0 +1,92 @@
+<div class="panel">
+  <div class="panel-title">特征矩阵</div>
+
+  <div *ngIf="!selectedSpecies" class="empty-state">
+    <p>请选择一个物种</p>
+    <p class="hint">点击左侧物种列表中的物种</p>
+  </div>
+
+  <div *ngIf="selectedSpecies">
+    <div class="view-toggle">
+      <button
+        class="toggle-btn"
+        [class.active]="matrixView"
+        (click)="matrixView = true"
+      >矩阵视图</button>
+      <button
+        class="toggle-btn"
+        [class.active]="!matrixView"
+        (click)="matrixView = false"
+      >物种视图</button>
+    </div>
+
+    <div *ngIf="matrixView" class="matrix-view">
+      <div class="feature-matrix">
+        <div class="matrix-header">
+          <span class="matrix-cell header-cell">特征</span>
+          <span class="matrix-cell header-cell">{{ selectedSpecies.name }}</span>
+        </div>
+        <div
+          class="matrix-row"
+          *ngFor="let feature of featureMatrix"
+          [class.highlighted]="isHighlighted(feature.name)"
+          (click)="toggleFeatureHighlight(feature.name)"
+        >
+          <span class="matrix-cell feature-name">{{ feature.name }}</span>
+          <span class="matrix-cell feature-value">
+            {{ (feature.values[0] && feature.values[0].value) || 'N/A' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!matrixView" class="species-view">
+      <h4 class="view-title">{{ selectedSpecies.name }} 的特征</h4>
+      <ul class="feature-list" *ngIf="speciesFeatures.length > 0">
+        <li
+          *ngFor="let f of speciesFeatures"
+          [class.highlighted]="isHighlighted(f.feature_name)"
+          (click)="toggleFeatureHighlight(f.feature_name)"
+        >
+          <span class="feature-label">{{ f.feature_name }}</span>
+          <span class="feature-val">{{ f.feature_value }}</span>
+          <span class="feature-category" *ngIf="f.category">{{ f.category }}</span>
+        </li>
+      </ul>
+      <div *ngIf="speciesFeatures.length === 0" class="empty-features">
+        暂无特征数据
+      </div>
+    </div>
+
+    <div class="add-feature">
+      <div class="input-group">
+        <label>特征名称</label>
+        <input type="text" [(ngModel)]="newFeatureName" placeholder="如：脊椎、鳞片" />
+      </div>
+      <div class="input-group">
+        <label>特征值</label>
+        <input type="text" [(ngModel)]="newFeatureValue" placeholder="数值或描述" />
+      </div>
+      <div class="input-group">
+        <label>分类</label>
+        <select [(ngModel)]="newFeatureCategory">
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" (click)="addFeature()">添加特征</button>
+    </div>
+  </div>
+
+  <div class="highlight-legend" *ngIf="highlightedFeatures.size > 0">
+    <div class="legend-title">高亮特征</div>
+    <div class="legend-tags">
+      <span
+        class="highlight-tag"
+        *ngFor="let feat of Array.from(highlightedFeatures)"
+        (click)="toggleFeatureHighlight(feat)"
+      >
+        {{ feat }} ✕
+      </span>
+    </div>
+  </div>
+</div>

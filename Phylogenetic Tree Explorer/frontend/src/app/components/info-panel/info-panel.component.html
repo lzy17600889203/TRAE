@@ -1,0 +1,92 @@
+<div class="panel">
+  <div class="panel-title">统计信息</div>
+
+  <div class="info-row">
+    <span class="info-label">算法</span>
+    <span class="info-value">{{ phylogenyResult?.algorithm || '-' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">物种数量</span>
+    <span class="info-value">{{ speciesList.length }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">叶节点数</span>
+    <span class="info-value">{{ leafCount }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">内部节点数</span>
+    <span class="info-value">{{ internalNodeCount }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">平均分支长度</span>
+    <span class="info-value">{{ avgBranchLength.toFixed(3) }}</span>
+  </div>
+  <div class="info-row" [class.warning-row]="maxBranchLength > 2">
+    <span class="info-label">最长分支</span>
+    <span class="info-value" [class.warning-value]="maxBranchLength > 2">
+      {{ maxBranchLength.toFixed(3) }}
+      <span *ngIf="maxBranchLength > 2" class="warning-icon">⚠</span>
+    </span>
+  </div>
+</div>
+
+<div class="panel" *ngIf="getWarnings().length > 0">
+  <div class="panel-title" style="color: #FF9800">问题检测</div>
+
+  <div class="warning-box" *ngFor="let w of getWarnings()">
+    ⚠ {{ w }}
+  </div>
+
+  <div class="error-box" *ngIf="phylogenyResult?.hasPolyphyletic">
+    ✗ 多系群检测：树结构存在交叉分支
+  </div>
+
+  <div class="warning-box" *ngIf="phylogenyResult?.hasMissingData">
+    ⚠ 数据缺失：部分特征数据不完整
+  </div>
+
+  <div class="error-box" *ngIf="phylogenyResult?.hasLongBranches">
+    ✗ 超长分支：分支长度超出阈值，可能导致布局溢出
+  </div>
+</div>
+
+<div class="panel" *ngIf="taxonomyDistribution.length > 0">
+  <div class="panel-title">分类层级分布</div>
+  <div
+    class="taxonomy-bar"
+    *ngFor="let dist of taxonomyDistribution"
+  >
+    <div class="bar-label">
+      <span [style.color]="dist.color">{{ dist.level }}</span>
+      <span class="bar-count">{{ dist.count }}</span>
+    </div>
+    <div class="bar-track">
+      <div
+        class="bar-fill"
+        [style.background-color]="dist.color"
+        [style.width.%]="(dist.count / speciesList.length) * 100"
+      ></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" *ngIf="selectedSpecies">
+  <div class="panel-title">选中物种</div>
+  <div class="selected-species">
+    <h3>{{ selectedSpecies.name }}</h3>
+    <p class="latin-name" *ngIf="selectedSpecies.latin_name">
+      {{ selectedSpecies.latin_name }}
+    </p>
+    <div class="taxonomy-details">
+      <ng-container *ngFor="let level of getTaxonomyRows()">
+        <div
+          class="taxonomy-row"
+          *ngIf="level.value"
+        >
+          <span [style.color]="level.color">{{ level.label }}</span>
+          <span class="taxonomy-value">{{ level.value }}</span>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

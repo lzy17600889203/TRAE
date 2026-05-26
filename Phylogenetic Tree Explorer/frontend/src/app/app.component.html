@@ -1,0 +1,102 @@
+<div class="app-container">
+  <header class="app-header">
+    <div class="header-left">
+      <h1 class="app-title">🌳 系统发育树可视化系统</h1>
+      <p class="app-subtitle">基于林奈分类法的生物演化树分析平台</p>
+    </div>
+    <div class="header-right">
+      <span class="status-indicator" [class.connected]="speciesList.length > 0">
+        {{ speciesList.length > 0 ? '● 已连接' : '○ 未连接' }}
+      </span>
+      <button class="btn btn-danger btn-small" (click)="clearAll()" *ngIf="speciesList.length > 0">
+        清除数据
+      </button>
+    </div>
+  </header>
+
+  <div class="message-overlay" *ngIf="successMessage || errorMessage || isLoading">
+    <div class="message-box" [ngClass]="{
+      'success': successMessage,
+      'error': errorMessage,
+      'loading': isLoading
+    }">
+      <span *ngIf="isLoading" class="spinner"></span>
+      <span *ngIf="!isLoading && successMessage">✓ {{ successMessage }}</span>
+      <span *ngIf="!isLoading && errorMessage">✗ {{ errorMessage }}</span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <aside class="sidebar-left">
+      <app-species-panel
+        [speciesList]="speciesList"
+        [selectedSpecies]="selectedSpecies"
+        (speciesSelected)="onSpeciesSelected($event)"
+        (speciesCreated)="onSpeciesCreated($event)"
+        (speciesDeleted)="onSpeciesDeleted($event)"
+      ></app-species-panel>
+
+      <app-feature-panel
+        [selectedSpecies]="selectedSpecies"
+        [features]="featureList"
+        [highlightedFeatures]="highlightedFeatures"
+        (featuresUpdated)="onFeaturesUpdated($event)"
+        (featureHighlighted)="onFeatureHighlighted($event)"
+      ></app-feature-panel>
+    </aside>
+
+    <main class="tree-viewport">
+      <app-tree-visualization
+        *ngIf="tree"
+        [tree]="tree"
+        [speciesList]="speciesList"
+        [featureList]="featureList"
+        [highlightedFeatures]="highlightedFeatures"
+        [highlightedNodes]="highlightedNodes"
+        [activeTaxonomyLevel]="activeTaxonomyLevel"
+        [showDistances]="showDistances"
+        [algorithm]="phylogenyResult?.algorithm || ''"
+        [warnings]="phylogenyResult?.warnings || []"
+      ></app-tree-visualization>
+
+      <div class="empty-tree" *ngIf="!tree">
+        <div class="empty-tree-content">
+          <div class="empty-tree-icon">🌲</div>
+          <h2>开始构建系统发育树</h2>
+          <p>选择一个预设场景或添加物种数据，然后点击"构建系统发育树"按钮</p>
+          <div class="empty-tree-hints">
+            <div class="hint-item">
+              <span class="hint-icon">📋</span>
+              <span>选择预设场景快速加载示例数据</span>
+            </div>
+            <div class="hint-item">
+              <span class="hint-icon">🧬</span>
+              <span>自定义物种特征矩阵进行分析</span>
+            </div>
+            <div class="hint-item">
+              <span class="hint-icon">📊</span>
+              <span>观察多系群、缺失数据等异常现象</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="sidebar-right">
+      <app-scenario-panel
+        [scenarios]="scenarios"
+        [currentScenario]="currentScenario"
+        (scenarioLoaded)="onScenarioLoaded($event)"
+        (phylogenyRequested)="onPhylogenyRequested($event)"
+        (taxonomyLevelChanged)="onTaxonomyLevelChanged($event)"
+        (showDistancesChanged)="onShowDistancesChanged($event)"
+      ></app-scenario-panel>
+
+      <app-info-panel
+        [phylogenyResult]="phylogenyResult"
+        [selectedSpecies]="selectedSpecies"
+        [speciesList]="speciesList"
+      ></app-info-panel>
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,139 @@
+.species-stats {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 12px;
+  text-align: right;
+}
+
+.btn-toggle {
+  margin-bottom: 12px;
+}
+
+.add-form {
+  padding: 12px;
+  background: rgba(0, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  margin-bottom: 12px;
+  animation: fade-slide 0.3s ease forwards;
+}
+
+.taxonomy-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.taxonomy-inputs .input-group {
+  margin-bottom: 0;
+}
+
+.species-list {
+  list-style: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.species-list li {
+  position: relative;
+  padding: 10px 12px;
+  padding-right: 36px;
+  background: rgba(20, 20, 40, 0.6);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.species-list li:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.3);
+}
+
+.species-list li.selected {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: #00ffff;
+}
+
+.species-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.species-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8e8e8;
+}
+
+.species-latin {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+.species-tags {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.taxonomy-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 9px;
+  border: 1px solid;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 68, 68, 0.2);
+  border: 1px solid rgba(255, 68, 68, 0.4);
+  border-radius: 4px;
+  color: #ff4444;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 68, 68, 0.4);
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.4);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 24px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.empty-state p {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.empty-state .hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

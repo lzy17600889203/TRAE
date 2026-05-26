@@ -1,0 +1,135 @@
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.scenario-card {
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+  animation: fade-slide 0.3s ease forwards;
+}
+
+.scenario-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.scenario-card:hover::before {
+  left: 100%;
+}
+
+.scenario-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.scenario-card.active {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px currentColor;
+}
+
+.scenario-card.standard {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.25), rgba(76, 175, 80, 0.05));
+  border-color: #4CAF50;
+}
+
+.scenario-card.convergent {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.25), rgba(255, 152, 0, 0.05));
+  border-color: #FF9800;
+}
+
+.scenario-card.missing {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.25), rgba(156, 39, 176, 0.05));
+  border-color: #9C27B0;
+}
+
+.scenario-card.polyphyletic {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.25), rgba(244, 67, 54, 0.05));
+  border-color: #F44336;
+}
+
+.scenario-name {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.scenario-desc {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+
+.algorithm-selector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.algorithm-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(20, 20, 40, 0.8);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+}
+
+.algorithm-btn.active {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: #00ffff;
+  color: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+.taxonomy-levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.level-btn {
+  padding: 4px 10px;
+  background: rgba(20, 20, 40, 0.8);
+  border: 1px solid;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.level-btn.active {
+  background: currentColor;
+  color: #0a0a1a !important;
+  font-weight: 600;
+  transform: scale(1.05);
+}
+
+@keyframes fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

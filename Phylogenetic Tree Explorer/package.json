@@ -1,0 +1,25 @@
+{
+  "name": "phylogenetic-tree-explorer",
+  "version": "1.0.0",
+  "description": "生物演化树可视化系统 - 基于林奈分类法的系统发育分析平台",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npx tsx watch src/server.ts",
+    "dev:frontend": "cd frontend && npx ng serve --port 4200",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npx tsc",
+    "build:frontend": "cd frontend && npx ng build",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && node dist/server.js",
+    "start:frontend": "cd frontend && npx ng serve --port 4200"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

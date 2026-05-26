@@ -1,0 +1,65 @@
+<div class="panel">
+  <div class="panel-title">物种管理</div>
+
+  <div class="species-stats">
+    <span>共 {{ speciesList.length }} 个物种</span>
+  </div>
+
+  <button class="btn btn-toggle" (click)="showAddForm = !showAddForm">
+    {{ showAddForm ? '取消添加' : '＋ 添加物种' }}
+  </button>
+
+  <div class="add-form" *ngIf="showAddForm">
+    <div class="input-group">
+      <label>物种名称</label>
+      <input type="text" [(ngModel)]="newSpeciesName" placeholder="输入物种名称" />
+    </div>
+    <div class="input-group">
+      <label>拉丁学名</label>
+      <input type="text" [(ngModel)]="newLatinName" placeholder="输入拉丁学名" />
+    </div>
+    <div class="taxonomy-inputs">
+      <div class="input-group" *ngFor="let level of taxonomyLevels">
+        <label [style.color]="level.color">{{ level.label }}</label>
+        <input
+          type="text"
+          [(ngModel)]="taxonomyInputs[level.key]"
+          [placeholder]="'输入' + level.label + '名'"
+        />
+      </div>
+    </div>
+    <button class="btn btn-primary" (click)="addSpecies()">添加</button>
+  </div>
+
+  <ul class="species-list" *ngIf="speciesList.length > 0">
+    <li
+      *ngFor="let sp of speciesList"
+      [class.selected]="selectedSpecies?.id === sp.id"
+      (click)="selectSpecies(sp)"
+    >
+      <div class="species-info">
+        <span class="species-name">{{ sp.name }}</span>
+        <span class="species-latin" *ngIf="sp.latin_name">{{ sp.latin_name }}</span>
+      </div>
+      <div class="species-tags" *ngIf="getTags(sp)">
+        <span
+          class="taxonomy-tag"
+          *ngFor="let tag of getTags(sp)"
+          [style.background-color]="tag.color + '30'"
+          [style.border-color]="tag.color"
+          [style.color]="tag.color"
+        >
+          {{ tag.label }}
+        </span>
+      </div>
+      <button class="delete-btn" (click)="deleteSpecies(sp.id); $event.stopPropagation()">
+        ✕
+      </button>
+    </li>
+  </ul>
+
+  <div class="empty-state" *ngIf="speciesList.length === 0">
+    <p>暂无物种数据</p>
+    <p class="hint">点击预设场景按钮加载数据</p>
+  </div>
+</div>
