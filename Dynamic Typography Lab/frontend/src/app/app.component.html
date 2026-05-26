@@ -1,0 +1,199 @@
+<div class="app-container">
+  <header class="header">
+    <h1>Knuth-Plass 高级排版演示系统</h1>
+    <p>基于动态规划的最优换行算法 · 坏度最小化 · 高级排版特性展示</p>
+  </header>
+
+  <div class="main-content">
+    <aside class="control-panel">
+      <div class="panel-section">
+        <h3>🎯 预设场景</h3>
+        <div class="preset-buttons">
+          <button 
+            *ngFor="let preset of presets" 
+            class="preset-btn"
+            [class.active]="selectedPreset === preset.name"
+            (click)="applyPreset(preset)">
+            {{ preset.name }}
+          </button>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3>📏 排版参数</h3>
+        
+        <div class="form-group">
+          <label>
+            栏宽 (px)
+            <span class="value-display">{{ options.columnWidth }}</span>
+          </label>
+          <input 
+            type="range" 
+            [(ngModel)]="options.columnWidth" 
+            min="100" 
+            max="800" 
+            step="10"
+            (change)="typeset()">
+        </div>
+
+        <div class="form-group">
+          <label>
+            字间距系数
+            <span class="value-display">{{ options.wordSpacing.toFixed(1) }}</span>
+          </label>
+          <input 
+            type="range" 
+            [(ngModel)]="options.wordSpacing" 
+            min="0.5" 
+            max="2.0" 
+            step="0.1"
+            (change)="typeset()">
+        </div>
+
+        <div class="form-group">
+          <label>
+            字母间距 (px)
+            <span class="value-display">{{ options.letterSpacing.toFixed(1) }}</span>
+          </label>
+          <input 
+            type="range" 
+            [(ngModel)]="options.letterSpacing" 
+            min="-1" 
+            max="3" 
+            step="0.1"
+            (change)="typeset()">
+        </div>
+
+        <div class="form-group">
+          <label>连字规则</label>
+          <select [(ngModel)]="options.ligatureMode" (change)="typeset()">
+            <option value="none">无连字</option>
+            <option value="normal">标准连字 (fi, fl, ff)</option>
+            <option value="aggressive">激进连字 (全部)</option>
+            <option value="conflict">冲突模式 (乱码演示)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>断字规则</label>
+          <select [(ngModel)]="options.hyphenationRules" (change)="typeset()">
+            <option value="none">不允许断字</option>
+            <option value="strict">严格 (单词≥5)</option>
+            <option value="normal">标准 (单词≥8)</option>
+            <option value="aggressive">激进 (单词≥4)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            容差度
+            <span class="value-display">{{ options.tolerance }}</span>
+          </label>
+          <input 
+            type="range" 
+            [(ngModel)]="options.tolerance" 
+            min="50" 
+            max="500" 
+            step="10"
+            (change)="typeset()">
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3>⚙️ 高级选项</h3>
+        
+        <div class="checkbox-group">
+          <input 
+            type="checkbox" 
+            id="opticalMargin"
+            [(ngModel)]="options.opticalMarginAlignment"
+            (change)="typeset()">
+          <label for="opticalMargin">视觉边距对齐</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input 
+            type="checkbox" 
+            id="arabicBreak"
+            [(ngModel)]="options.arabicBreakConnections"
+            (change)="typeset()">
+          <label for="arabicBreak">阿拉伯文断连 (演示)</label>
+        </div>
+      </div>
+    </aside>
+
+    <main class="preview-panel">
+      <textarea 
+        class="text-editor"
+        [(ngModel)]="inputText"
+        placeholder="在此输入要排版的文本...">
+      </textarea>
+
+      <button 
+        class="typeset-btn"
+        [disabled]="isProcessing || !inputText.trim()"
+        (click)="typeset()">
+        {{ isProcessing ? '计算中...' : '✨ 执行排版' }}
+      </button>
+
+      <div class="preview-container" #previewContainer>
+        <div 
+          *ngIf="result" 
+          class="typeset-content"
+          [style.width.px]="result.columnWidth"
+          [style.letter-spacing.px]="options.letterSpacing"
+          [style.font-size.px]="options.fontSize">
+          
+          <span 
+            *ngFor="let line of result.lines; let lineIndex = index" 
+            class="line-wrapper">
+            <span 
+              [class]="getLineClass(lineIndex)"
+              [style.word-spacing.px]="getWordSpacing(line)"
+              [style.margin-left.px]="line.leftOffset || 0"
+              [style.margin-right.px]="line.rightOffset || 0">
+              <span 
+                *ngFor="let char of line.text.split(''); let charIndex = index"
+                [class]="getCharClass(lineIndex, charIndex)"
+                (click)="onCharClick(lineIndex, charIndex)">
+                {{ char }}
+              </span>
+            </span>
+            <br>
+          </span>
+        </div>
+
+        <div *ngIf="!result" style="color: #999; text-align: center; padding: 40px;">
+          点击"执行排版"按钮开始演示
+        </div>
+      </div>
+
+      <div *ngIf="result" class="stats-panel">
+        <div class="stat-item">
+          <div class="stat-value">{{ result.lines.length }}</div>
+          <div class="stat-label">总行数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ formatDemerits(result.totalDemerits) }}</div>
+          <div class="stat-label">总坏度</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ result.columnWidth }}px</div>
+          <div class="stat-label">栏宽</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ result.issues.length }}</div>
+          <div class="stat-label">检测问题</div>
+        </div>
+      </div>
+
+      <div *ngIf="result && result.issues.length > 0" class="issues-panel">
+        <h4>🔍 排版问题检测</h4>
+        <div *ngFor="let issue of result.issues" class="issue-item">
+          {{ getIssueIcon(issue.type) }} 第{{ issue.line + 1 }}行: {{ issue.message }}
+          (严重度: {{ (issue.severity * 100).toFixed(0) }}%)
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
