@@ -1,0 +1,35 @@
+<div class="snapshot-container">
+  <h2>库存快照</h2>
+  <div class="snapshot-grid">
+    <div 
+      *ngFor="let snapshot of snapshots" 
+      class="snapshot-card"
+      [class.low-stock]="isLowStock(snapshot)"
+      [class.negative-stock]="isNegativeStock(snapshot)"
+      [class.selected]="selectedProductId === snapshot.product_id"
+      (click)="onProductSelect(snapshot.product_id)"
+    >
+      <div class="card-header">
+        <span class="product-code">{{ snapshot.code }}</span>
+        <h3>{{ snapshot.name }}</h3>
+      </div>
+      <div class="card-body">
+        <div class="quantity-display">
+          <span class="label">当前库存</span>
+          <span class="flip-number">{{ snapshot.total_quantity }}</span>
+          <span class="unit">{{ snapshot.unit }}</span>
+        </div>
+        <div class="cost-display">
+          <span class="label">加权平均成本</span>
+          <span class="cost">¥{{ snapshot.avg_cost.toFixed(2) }}/{{ snapshot.unit }}</span>
+        </div>
+        <div class="min-stock" *ngIf="isLowStock(snapshot)">
+          <span class="warning-text">⚠ 库存不足！安全库存: {{ snapshot.min_stock }}{{ snapshot.unit }}</span>
+        </div>
+        <div class="negative-warning" *ngIf="isNegativeStock(snapshot)">
+          <span class="danger-text">✕ 库存为负！</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

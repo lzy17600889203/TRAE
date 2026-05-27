@@ -1,0 +1,44 @@
+<div class="scene-preset-container">
+  <h2>场景预设</h2>
+  <div class="scene-grid">
+    <button 
+      *ngFor="let scene of scenes" 
+      class="scene-card"
+      [class.loading]="loadingScene === scene.id"
+      (click)="loadScene(scene.id)"
+    >
+      <div class="scene-icon">
+        <span *ngIf="scene.id === 'normal'">📦</span>
+        <span *ngIf="scene.id === 'multi-batch'">📋</span>
+        <span *ngIf="scene.id === 'low-stock'">⚠️</span>
+        <span *ngIf="scene.id === 'expired'">⏰</span>
+      </div>
+      <h3>{{ scene.name }}</h3>
+      <p>{{ scene.description }}</p>
+      <div *ngIf="loadingScene === scene.id" class="loading-spinner">
+        <span class="spinner"></span>
+      </div>
+    </button>
+  </div>
+
+  <div class="action-buttons">
+    <button class="export-btn" (click)="exportReport()" [disabled]="showExportProgress">
+      <span class="btn-icon">📊</span>
+      {{ showExportProgress ? '导出中...' : '导出报表' }}
+    </button>
+    <button class="reset-btn" (click)="resetDatabase()">
+      <span class="btn-icon">🔄</span>
+      重置数据
+    </button>
+  </div>
+
+  <div *ngIf="showExportProgress" class="export-progress-modal">
+    <div class="progress-content">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width]="exportProgress + '%'"></div>
+      </div>
+      <span class="progress-text">{{ exportMessage }}</span>
+      <span class="progress-percent">{{ Math.round(exportProgress) }}%</span>
+    </div>
+  </div>
+</div>

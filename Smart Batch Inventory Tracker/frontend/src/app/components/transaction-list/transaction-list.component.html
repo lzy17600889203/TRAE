@@ -1,0 +1,40 @@
+<div class="transaction-list-container">
+  <h2>交易记录</h2>
+  <div class="transaction-table-wrapper">
+    <table class="transaction-table">
+      <thead>
+        <tr>
+          <th>时间</th>
+          <th>商品</th>
+          <th>批次</th>
+          <th>类型</th>
+          <th>数量</th>
+          <th>单价</th>
+          <th>金额</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let transaction of transactions">
+          <td>{{ formatDate(transaction.transaction_date) }}</td>
+          <td>{{ transaction.code }}</td>
+          <td>{{ transaction.batch_no || '-' }}</td>
+          <td>
+            <span [class.type-in]="transaction.type === 'IN'" [class.type-out]="transaction.type === 'OUT'">
+              {{ transaction.type === 'IN' ? '入库' : '出库' }}
+            </span>
+          </td>
+          <td [class.type-out]="transaction.type === 'OUT'">
+            {{ transaction.type === 'IN' ? '+' : '-' }}{{ transaction.quantity }}
+          </td>
+          <td>¥{{ transaction.unit_cost && transaction.unit_cost.toFixed(2) || '-' }}</td>
+          <td>¥{{ transaction.total_cost && transaction.total_cost.toFixed(2) || '-' }}</td>
+          <td>{{ transaction.remark || '-' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="transactions.length === 0" class="empty-state">
+      暂无交易记录
+    </div>
+  </div>
+</div>

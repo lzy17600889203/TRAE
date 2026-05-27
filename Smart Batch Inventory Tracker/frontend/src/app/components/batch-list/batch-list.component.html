@@ -1,0 +1,33 @@
+<div class="batch-list-container">
+  <h2>批次流水</h2>
+  <div class="batch-table-wrapper">
+    <table class="batch-table">
+      <thead>
+        <tr>
+          <th>批次号</th>
+          <th>商品</th>
+          <th>数量</th>
+          <th>成本</th>
+          <th>过期日期</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let batch of batches" [class.expired]="isExpired(batch)">
+          <td>{{ batch.batch_no }}</td>
+          <td>ID: {{ batch.product_id }}</td>
+          <td>{{ batch.quantity }}</td>
+          <td>¥{{ batch.cost.toFixed(2) }}</td>
+          <td>{{ formatDate(batch.expiry_date) }}</td>
+          <td>
+            <span *ngIf="isExpired(batch)" class="status-badge expired">已过期</span>
+            <span *ngIf="!isExpired(batch)" class="status-badge valid">有效</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="batches.length === 0" class="empty-state">
+      暂无批次数据
+    </div>
+  </div>
+</div>

@@ -1,0 +1,137 @@
+.snapshot-container {
+  margin-bottom: 20px;
+}
+
+.snapshot-container h2 {
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.snapshot-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 4px solid #3b82f6;
+}
+
+.snapshot-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.snapshot-card.selected {
+  border-left-color: #10b981;
+  background: #f0fdf4;
+}
+
+.snapshot-card.low-stock {
+  border-left-color: #f59e0b;
+  animation: breathing 2s ease-in-out infinite;
+}
+
+.snapshot-card.negative-stock {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+}
+
+@keyframes breathing {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+  }
+}
+
+.card-header {
+  margin-bottom: 12px;
+}
+
+.product-code {
+  font-size: 12px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.card-header h3 {
+  margin: 8px 0 0 0;
+  color: #1e293b;
+  font-size: 18px;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quantity-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.quantity-display .label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.flip-number {
+  font-size: 32px;
+  font-weight: bold;
+  color: #1e293b;
+  transition: transform 0.3s ease;
+}
+
+.snapshot-card.low-stock .flip-number {
+  color: #f59e0b;
+}
+
+.snapshot-card.negative-stock .flip-number {
+  color: #ef4444;
+}
+
+.unit {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.cost-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cost-display .label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.cost {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.warning-text {
+  font-size: 12px;
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.danger-text {
+  font-size: 12px;
+  color: #ef4444;
+  font-weight: 500;
+}

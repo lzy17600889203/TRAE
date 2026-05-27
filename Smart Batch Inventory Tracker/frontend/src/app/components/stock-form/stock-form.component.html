@@ -1,0 +1,84 @@
+<div class="stock-form-container">
+  <div class="mode-tabs">
+    <button 
+      [class.active]="mode === 'in'" 
+      (click)="switchMode('in')"
+      class="tab-btn in-btn"
+    >
+      入库
+    </button>
+    <button 
+      [class.active]="mode === 'out'" 
+      (click)="switchMode('out')"
+      class="tab-btn out-btn"
+    >
+      出库
+    </button>
+  </div>
+
+  <form [formGroup]="stockForm" (ngSubmit)="onSubmit()" class="stock-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label>商品</label>
+        <select formControlName="product_id" (change)="onProductChange()">
+          <option value="">请选择商品</option>
+          <option *ngFor="let product of products" [value]="product.id">
+            {{ product.code }} - {{ product.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group" *ngIf="mode === 'in'">
+        <label>批次号</label>
+        <input 
+          type="text" 
+          formControlName="batch_no" 
+          placeholder="如: B20240101"
+        />
+        <span *ngIf="errors['batch_no']" class="error">{{ errors['batch_no'] }}</span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>数量</label>
+        <input 
+          type="text" 
+          formControlName="quantity" 
+          placeholder="请输入数量"
+        />
+        <span *ngIf="errors['quantity']" class="error">{{ errors['quantity'] }}</span>
+      </div>
+
+      <div class="form-group" *ngIf="mode === 'in'">
+        <label>单价</label>
+        <input 
+          type="text" 
+          formControlName="cost" 
+          placeholder="请输入单价"
+        />
+        <span *ngIf="errors['cost']" class="error">{{ errors['cost'] }}</span>
+      </div>
+
+      <div class="form-group" *ngIf="mode === 'in'">
+        <label>过期日期</label>
+        <input type="date" formControlName="expiry_date" />
+      </div>
+    </div>
+
+    <div class="form-group full-width">
+      <label>备注</label>
+      <textarea formControlName="remark" placeholder="可选备注信息"></textarea>
+    </div>
+
+    <button type="submit" class="submit-btn" [class.in-btn]="mode === 'in'" [class.out-btn]="mode === 'out'">
+      {{ mode === 'in' ? '确认入库' : '确认出库' }}
+    </button>
+
+    <span *ngIf="errors['server']" class="error server-error">{{ errors['server'] }}</span>
+  </form>
+
+  <div *ngIf="showSuccess" class="success-message slide-in">
+    ✓ {{ successMessage }}
+  </div>
+</div>

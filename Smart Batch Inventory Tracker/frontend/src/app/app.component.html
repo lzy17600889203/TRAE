@@ -1,0 +1,22 @@
+<div class="app-container">
+  <header class="app-header">
+    <h1>{{ title }}</h1>
+    <p class="subtitle">基于先进先出(FIFO)原则的商品库存管理系统</p>
+  </header>
+
+  <main class="app-main">
+    <div class="left-panel">
+      <app-scene-preset></app-scene-preset>
+      <app-stock-form></app-stock-form>
+    </div>
+
+    <div class="right-panel">
+      <app-inventory-snapshot></app-inventory-snapshot>
+    </div>
+  </main>
+
+  <div class="bottom-panel">
+    <app-batch-list></app-batch-list>
+    <app-transaction-list></app-transaction-list>
+  </div>
+</div>
