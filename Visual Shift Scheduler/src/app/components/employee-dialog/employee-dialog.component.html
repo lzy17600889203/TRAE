@@ -1,0 +1,32 @@
+<h2 mat-dialog-title>{{ isEdit ? '编辑员工' : '添加员工' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="employee-form">
+    <mat-form-field appearance="fill">
+      <mat-label>姓名</mat-label>
+      <input matInput formControlName="name" required>
+      <mat-error>请输入姓名</mat-error>
+    </mat-form-field>
+    
+    <mat-form-field appearance="fill">
+      <mat-label>部门</mat-label>
+      <input matInput formControlName="department" required>
+      <mat-error>请输入部门</mat-error>
+    </mat-form-field>
+    
+    <mat-form-field appearance="fill">
+      <mat-label>最大连续工作天数</mat-label>
+      <input matInput type="number" formControlName="maxConsecutiveDays" required>
+      <mat-error>请输入1-7之间的数字</mat-error>
+    </mat-form-field>
+    
+    <mat-form-field appearance="fill">
+      <mat-label>每日最大工作小时</mat-label>
+      <input matInput type="number" formControlName="maxDailyHours" required>
+      <mat-error>请输入1-24之间的数字</mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="cancel()">取消</button>
+  <button mat-raised-button color="primary" (click)="save()">保存</button>
+</mat-dialog-actions>

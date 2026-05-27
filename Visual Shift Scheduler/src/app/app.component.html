@@ -1,0 +1,41 @@
+<div class="app-container">
+  <mat-toolbar color="primary" class="app-header">
+    <span class="header-title">{{ title }}</span>
+    <div class="header-actions">
+      <button mat-button (click)="prevWeek()" class="nav-btn">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="week-label">{{ getWeekLabel() }}</span>
+      <button mat-button (click)="nextWeek()" class="nav-btn">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </mat-toolbar>
+
+  <div class="main-content">
+    <div class="sidebar">
+      <employee-list
+        [employees]="employees"
+        (add)="addEmployee($event)"
+        (update)="updateEmployee($event)"
+        (delete)="deleteEmployee($event)"
+      ></employee-list>
+      <scene-buttons (load)="loadScene($event)"></scene-buttons>
+    </div>
+
+    <div class="calendar-area">
+      <shift-calendar
+        [employees]="employees"
+        [shifts]="shifts"
+        [schedules]="schedules"
+        [weekDays]="getWeekDays()"
+        [slideDirection]="slideDirection"
+        (addSchedule)="addSchedule($event)"
+        (updateSchedule)="updateSchedule($event)"
+        (deleteSchedule)="deleteSchedule($event)"
+      ></shift-calendar>
+    </div>
+  </div>
+
+  <success-notification *ngIf="showSuccess"></success-notification>
+</div>

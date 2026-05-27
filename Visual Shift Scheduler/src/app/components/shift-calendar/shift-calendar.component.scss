@@ -1,0 +1,269 @@
+.calendar-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.calendar-container {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.calendar-grid {
+  display: flex;
+  flex-direction: column;
+  min-width: 100%;
+}
+
+.grid-header {
+  display: flex;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.header-cell {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  
+  &.employee-header {
+    flex: 0 0 120px;
+    min-width: 120px;
+    text-align: left;
+    padding-left: 16px;
+  }
+  
+  &.day-header {
+    border-right: 1px solid #e5e7eb;
+    transition: background-color 0.2s;
+    
+    &:last-child {
+      border-right: none;
+    }
+    
+    &.drag-over {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+  }
+}
+
+.day-name {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.day-date {
+  color: #1f2937;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+.grid-row {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.row-header {
+  flex: 0 0 120px;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+}
+
+.employee-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.avatar-initial {
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.employee-name {
+  font-weight: 500;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grid-cell {
+  flex: 1;
+  min-height: 80px;
+  padding: 8px;
+  border-right: 1px solid #e5e7eb;
+  position: relative;
+  transition: background-color 0.2s;
+  
+  &:last-child {
+    border-right: none;
+  }
+  
+  &.drag-over {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+  }
+}
+
+.shift-block {
+  border-radius: 8px;
+  padding: 8px;
+  cursor: move;
+  position: relative;
+  transition: all 0.2s ease;
+  color: white;
+  overflow: hidden;
+  
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  &.overlap-warning {
+    border: 2px dashed #ef4444 !important;
+  }
+  
+  &.cross-day-shift {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  }
+}
+
+.shift-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shift-employee-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  span {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+.shift-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shift-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.shift-time {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.delete-btn {
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: rgba(255, 255, 255, 0.8);
+  
+  .shift-block:hover & {
+    opacity: 1;
+  }
+}
+
+.empty-cell {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+  }
+}
+
+.empty-hint {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.violation-indicator {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+
+.warning-icon {
+  color: #f59e0b;
+  font-size: 20px;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.5));
+}
+
+.violation-tooltip {
+  position: absolute;
+  top: 24px;
+  right: 0;
+  background: #1f2937;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  z-index: 100;
+  min-width: 200px;
+}
+
+.violation-indicator:hover .violation-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltip-item {
+  padding: 4px 0;
+  
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .error {
+    color: #ef4444;
+  }
+}

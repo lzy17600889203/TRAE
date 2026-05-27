@@ -1,0 +1,18 @@
+<mat-card class="scene-card">
+  <mat-card-header>
+    <mat-card-title>预设场景</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="scene-buttons">
+      <button 
+        *ngFor="let scene of scenes" 
+        mat-raised-button 
+        class="scene-btn"
+        (click)="loadScene(scene.id)"
+      >
+        <mat-icon>{{ scene.icon }}</mat-icon>
+        <span>{{ scene.name }}</span>
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

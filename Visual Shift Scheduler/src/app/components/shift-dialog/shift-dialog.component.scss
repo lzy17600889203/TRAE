@@ -1,0 +1,27 @@
+.shift-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.shift-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shift-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.shift-time {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #6b7280;
+}

@@ -1,0 +1,90 @@
+<mat-card class="calendar-card">
+  <mat-card-header class="calendar-header">
+    <mat-card-title>排班日历</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div #calendarContainer class="calendar-container" [class]="getSlideAnimationClass()">
+      <div class="calendar-grid">
+        <div class="grid-header">
+          <div class="header-cell employee-header">员工</div>
+          <div 
+            *ngFor="let day of weekDays; let i = index" 
+            class="header-cell day-header"
+            [class.drag-over]="dragOverDay === i"
+          >
+            <div class="day-name">{{ getDayName(day) }}</div>
+            <div class="day-date">{{ getDateLabel(day) }}</div>
+          </div>
+        </div>
+        
+        <div 
+          *ngFor="let employee of employees; let empIndex = index" 
+          class="grid-row"
+        >
+          <div class="row-header">
+            <div class="employee-avatar">
+              <span class="avatar-initial">{{ employee.name.charAt(0) }}</span>
+            </div>
+            <span class="employee-name">{{ employee.name }}</span>
+          </div>
+          
+          <div 
+            *ngFor="let day of weekDays; let dayIndex = index" 
+            class="grid-cell"
+            [class.drag-over]="dragOverDay === dayIndex && dragOverEmployee === empIndex"
+            (click)="isEmptySchedule(employee.id, day) && onEmptyCellClick(day, employee.id)"
+            (dragover)="onDragOver($event, dayIndex, empIndex)"
+            (dragleave)="onDragLeave()"
+            (drop)="onDrop($event, dayIndex, empIndex)"
+          >
+            <div 
+              *ngIf="getScheduleAtPosition(employee.id, day)"
+              class="shift-block"
+              [class]="[
+                getViolationClass(getScheduleAtPosition(employee.id, day)!),
+                { 'overlap-warning': isOverlap(getScheduleAtPosition(employee.id, day)!), 'cross-day-shift': isCrossDay(getScheduleAtPosition(employee.id, day)!) }
+              ]"
+              [style.backgroundColor]="getShiftById(getScheduleAtPosition(employee.id, day)!.shiftId)?.color"
+              draggable="true"
+              (dragstart)="onDragStart($event, getScheduleAtPosition(employee.id, day)!, dayIndex, empIndex)"
+              (dragend)="onDragEnd()"
+              (click)="onShiftClick(getScheduleAtPosition(employee.id, day)!)"
+            >
+              <div class="shift-content">
+                <div class="shift-employee-avatar animate-avatar-float">
+                  <span>{{ employee.name.charAt(0) }}</span>
+                </div>
+                <div class="shift-info">
+                  <div class="shift-name">{{ getShiftById(getScheduleAtPosition(employee.id, day)!.shiftId)?.name }}</div>
+                  <div class="shift-time">
+                    {{ getShiftById(getScheduleAtPosition(employee.id, day)!.shiftId)?.startTime }} - {{ getShiftById(getScheduleAtPosition(employee.id, day)!.shiftId)?.endTime }}
+                  </div>
+                </div>
+                <button 
+                  class="delete-btn" 
+                  mat-icon-button 
+                  (click)="$event.stopPropagation(); onDeleteSchedule(getScheduleAtPosition(employee.id, day)!.id)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              
+              <div *ngIf="hasViolation(getScheduleAtPosition(employee.id, day)!)" class="violation-indicator">
+                <mat-icon class="warning-icon">warning</mat-icon>
+                <div class="violation-tooltip">
+                  <div *ngFor="let violation of getScheduleAtPosition(employee.id, day)!.violations" class="tooltip-item">
+                    <span [class.error]="violation.severity === 'error'">{{ violation.message }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div *ngIf="isEmptySchedule(employee.id, day)" class="empty-cell">
+              <span class="empty-hint">+ 添加排班</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

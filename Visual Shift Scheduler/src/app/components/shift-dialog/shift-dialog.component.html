@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>{{ isEdit ? '编辑排班' : '添加排班' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="shift-form">
+    <mat-form-field appearance="fill">
+      <mat-label>班次类型</mat-label>
+      <mat-select formControlName="shiftId" required>
+        <mat-option *ngFor="let shift of data.shifts" [value]="shift.id">
+          <div class="shift-option">
+            <span class="shift-color" [style.backgroundColor]="shift.color"></span>
+            <span>{{ shift.name }}</span>
+            <span class="shift-time">{{ shift.startTime }} - {{ shift.endTime }}</span>
+          </div>
+        </mat-option>
+      </mat-select>
+      <mat-error>请选择班次</mat-error>
+    </mat-form-field>
+    
+    <mat-form-field appearance="fill">
+      <mat-label>日期</mat-label>
+      <input matInput type="date" formControlName="date" required>
+      <mat-error>请选择日期</mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="cancel()">取消</button>
+  <button mat-raised-button color="primary" (click)="save()">保存</button>
+</mat-dialog-actions>

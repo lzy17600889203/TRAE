@@ -1,0 +1,20 @@
+<div
+  *ngIf="schedule"
+  class="shift-block"
+  [class]="getViolationClass()"
+  [style.backgroundColor]="getBlockColor()"
+  draggable="true"
+  (dragstart)="onDragStart($event)"
+  (click)="onBlockClick()"
+>
+  <div class="shift-content">
+    <span class="shift-name">{{ getShiftName() }}</span>
+    <span class="employee-name">{{ employee?.name }}</span>
+  </div>
+  
+  <div *ngIf="hasViolation()" class="violation-indicator">
+    <span class="violation-icon">!</span>
+  </div>
+  
+  <button class="delete-btn" (click)="onDelete()">×</button>
+</div>

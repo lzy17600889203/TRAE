@@ -1,0 +1,41 @@
+<mat-card class="employee-card">
+  <mat-card-header>
+    <mat-card-title>员工列表</mat-card-title>
+    <button mat-icon-button class="add-btn" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="employee-list">
+      <div 
+        *ngFor="let employee of employees" 
+        class="employee-item"
+      >
+        <div class="employee-avatar">
+          <span>{{ employee.name.charAt(0) }}</span>
+        </div>
+        <div class="employee-info">
+          <div class="employee-name">{{ employee.name }}</div>
+          <div class="employee-department">{{ employee.department }}</div>
+          <div class="employee-limits">
+            <span class="limit-item">最多连续{{ employee.maxConsecutiveDays }}天</span>
+            <span class="limit-item">最多{{ employee.maxDailyHours }}小时/天</span>
+          </div>
+        </div>
+        <div class="employee-actions">
+          <button mat-icon-button (click)="openEditDialog(employee)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="onDelete(employee.id)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      
+      <div *ngIf="employees.length === 0" class="empty-list">
+        <mat-icon class="empty-icon">users</mat-icon>
+        <p>暂无员工，请添加</p>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
