@@ -1,0 +1,16 @@
+{
+  "name": "lazy-cook-recipe-box-backend",
+  "version": "1.0.0",
+  "description": "Lazy Cook Recipe Box - Fastify + sql.js (SQLite) backend",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "fastify": "^4.28.1",
+    "@fastify/cors": "^9.0.1",
+    "sql.js": "^1.10.3"
+  }
+}

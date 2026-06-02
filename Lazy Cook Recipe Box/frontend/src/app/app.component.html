@@ -1,0 +1,109 @@
+<div class="container">
+  <header class="hero">
+    <h1>🍳 懒厨师的菜谱收藏夹</h1>
+    <p class="subtitle">别再纠结"多少克盐"了，记下来下次照着来就行</p>
+  </header>
+
+  <section class="scene-bar">
+    <button
+      *ngFor="let s of scenes; let i = index"
+      class="scene-btn"
+      [class.active]="currentScene === s.key"
+      (click)="selectScene(s.key)"
+    >
+      <span class="scene-emoji">{{ s.emoji }}</span>
+      <span class="scene-label">{{ s.label }}</span>
+    </button>
+  </section>
+
+  <div class="tip-bar" [@fadeIn]="currentScene">
+    <span>💡 {{ sceneTip() }}</span>
+  </div>
+
+  <section class="content" [@bookFlip]="recipes.length">
+    <ng-container *ngIf="loadingRecipes">
+      <div class="loading">⏳ 正在翻菜谱……</div>
+    </ng-container>
+
+    <ng-container *ngIf="!loadingRecipes && recipes.length === 0">
+      <div class="empty">📭 这个场景暂时没有菜谱</div>
+    </ng-container>
+
+    <ng-container *ngIf="!loadingRecipes && recipes.length > 0">
+      <div class="recipe-card" *ngFor="let r of recipes" (click)="pickRecipe(r)">
+        <div class="card-emoji">{{ r.emoji }}</div>
+        <div class="card-body">
+          <div class="card-title">{{ r.name }}</div>
+          <div class="card-desc">{{ r.description }}</div>
+          <div class="card-meta">基础分量 · {{ r.base_servings }} 人份</div>
+        </div>
+        <div class="card-arrow">➜</div>
+      </div>
+    </ng-container>
+  </section>
+
+  <section *ngIf="selectedRecipe || loadingDetail" class="detail-panel" [@fadeIn]="selectedRecipe?.id">
+    <ng-container *ngIf="loadingDetail">
+      <div class="loading">🥄 正在换算分量……</div>
+    </ng-container>
+
+    <ng-container *ngIf="selectedRecipe && !loadingDetail">
+      <div class="detail-header">
+        <div class="detail-emoji">{{ selectedRecipe.emoji }}</div>
+        <div>
+          <h2>{{ selectedRecipe.name }}</h2>
+          <p class="detail-desc">{{ selectedRecipe.description }}</p>
+        </div>
+      </div>
+
+      <div class="servings-box">
+        <div class="servings-row">
+          <label>🍽 就餐人数</label>
+          <input
+            type="range"
+            min="1"
+            max="20"
+            step="1"
+            [(ngModel)]="servings"
+            (ngModelChange)="onServingsChange()"
+            class="servings-slider"
+          />
+          <div class="servings-badge">{{ servings }} 人</div>
+        </div>
+        <div class="ratio-info">
+          基准 {{ selectedRecipe.base_servings }} 人份 → 当前 {{ servings }} 人份
+          · 换算系数 × {{ selectedRecipe.ratio.toFixed(2) }}
+        </div>
+      </div>
+
+      <div class="ingredients-list">
+        <h3>🥕 食材清单</h3>
+        <ul>
+          <li *ngFor="let ing of selectedRecipe.ingredients" [class.fuzzy]="ing.is_fuzzy">
+            <span class="ing-name">{{ ing.name }}</span>
+            <span class="ing-amount">
+              <span class="qty-text" #qtyText>
+                {{ quantityText(ing) }}
+              </span>
+              <span class="qty-unit">{{ ing.unit }}</span>
+              <span *ngIf="ing.is_fuzzy" class="fuzzy-tag" title="此食材不能自动换算">⚠</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div *ngIf="selectedRecipe.steps" class="steps-box">
+        <h3>📖 步骤</h3>
+        <p class="steps-text">{{ selectedRecipe.steps }}</p>
+      </div>
+    </ng-container>
+  </section>
+
+  <div *ngIf="error" class="error-banner" [@fadeIn]="error">
+    ⛔ {{ error }}
+  </div>
+
+  <footer class="footer">
+    <div>数据本地存储于 backend/recipes.db · 分量换算在后端完成</div>
+  </footer>
+</div>
