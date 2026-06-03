@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>接单小助手 · 工时与账单管理</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%8F%B0%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="clock" id="clock">
+        <div class="face">
+          <div class="hand hour" id="hour-hand"></div>
+          <div class="hand minute" id="minute-hand"></div>
+          <div class="hand second" id="second-hand"></div>
+          <div class="pin"></div>
+        </div>
+      </div>
+      <div>
+        <h1>接单小助手</h1>
+        <p class="tagline">按客户 / 项目记录工时，自动算账单</p>
+      </div>
+    </div>
+    <div class="summary" id="summary">
+      <div class="sum-item"><span class="label">累计工时</span><span class="value" id="sum-hours">—</span></div>
+      <div class="sum-item"><span class="label">账单总额</span><span class="value" id="sum-amount">—</span></div>
+      <div class="sum-item highlight"><span class="label">待收款</span><span class="value" id="sum-unpaid">—</span></div>
+      <div class="sum-item"><span class="label">账单数量</span><span class="value" id="sum-count">—</span></div>
+    </div>
+  </header>
+
+  <nav class="scenario-bar" id="scenario-bar">
+    <span class="scenario-hint">一键切换演示场景 →</span>
+    <button class="scenario-btn" data-key="big-monthly">大客户按月结算</button>
+    <button class="scenario-btn" data-key="small-flat">小客户按件计费</button>
+    <button class="scenario-btn" data-key="overtime-crazy">连续加班疯狂爆肝</button>
+    <button class="scenario-btn" data-key="overdue-half-year">客户拖欠尾款半年</button>
+    <button class="scenario-btn" data-key="timezone-mistake">跨时区项目时间算错</button>
+    <span class="scenario-status" id="scenario-status"></span>
+  </nav>
+
+  <main class="app-main">
+    <section class="card">
+      <h2>📋 账单列表</h2>
+      <div class="filter-row">
+        <label>状态筛选
+          <select id="invoice-filter">
+            <option value="">全部</option>
+            <option value="draft">草稿</option>
+            <option value="unpaid">未付款</option>
+            <option value="paid">已付款</option>
+          </select>
+        </label>
+        <div class="toast" id="toast"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>项目</th>
+              <th>客户</th>
+              <th>月份</th>
+              <th>工时</th>
+              <th>金额</th>
+              <th>状态</th>
+              <th>备注</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="invoice-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card two-col">
+      <div>
+        <h2>⏱️ 记录工时</h2>
+        <form id="time-form" class="form-grid" autocomplete="off">
+          <label>项目
+            <select id="te-project" required></select>
+          </label>
+          <label>日期
+            <input type="date" id="te-date" required>
+          </label>
+          <label>工时 (小时, 0-24)
+            <input type="number" id="te-hours" step="0.1" min="0" max="24" placeholder="例如 8" required>
+          </label>
+          <label class="full">工作内容
+            <input type="text" id="te-desc" placeholder="例如：登录接口联调">
+          </label>
+          <div class="full actions">
+            <button type="submit" class="primary">➕ 添加工时记录</button>
+            <button type="button" class="ghost" id="te-crazy">🤪 试试瞎输入 (25h / 负数时薪)</button>
+          </div>
+          <div class="full validation" id="te-validation"></div>
+        </form>
+      </div>
+      <div>
+        <h2>💰 生成账单</h2>
+        <form id="invoice-form" class="form-grid" autocomplete="off">
+          <label>项目
+            <select id="inv-project" required></select>
+          </label>
+          <label>年
+            <input type="number" id="inv-year" min="2000" max="2100" required>
+          </label>
+          <label>月
+            <input type="number" id="inv-month" min="1" max="12" required>
+          </label>
+          <div class="full actions">
+            <button type="submit" class="primary" id="gen-btn">🧾 生成 / 更新账单 (含硬币特效)</button>
+          </div>
+        </form>
+
+        <h3 style="margin-top:1.5rem">👤 新增客户 / 项目</h3>
+        <form id="client-form" class="form-grid" autocomplete="off">
+          <label>客户名
+            <input type="text" id="c-name" placeholder="例如：星辰科技集团" required>
+          </label>
+          <label>联系方式
+            <input type="text" id="c-contact" placeholder="例如：王经理 / stars@example.com">
+          </label>
+          <div class="full actions">
+            <button type="submit" class="ghost">➕ 添加客户</button>
+          </div>
+        </form>
+        <form id="project-form" class="form-grid" autocomplete="off">
+          <label>归属客户
+            <select id="p-client" required></select>
+          </label>
+          <label>项目名
+            <input type="text" id="p-name" placeholder="例如：官网二期重构" required>
+          </label>
+          <label>时薪 (¥ / 小时)
+            <input type="number" id="p-rate" step="0.01" min="0" placeholder="例如：400" required>
+          </label>
+          <label>计费方式
+            <select id="p-mode">
+              <option value="hourly">按时计费</option>
+              <option value="flat">按件计费</option>
+            </select>
+          </label>
+          <div class="full actions">
+            <button type="submit" class="ghost">➕ 添加项目</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>🕓 最近工时记录</h2>
+      <div class="table-wrap">
+        <table class="time-table">
+          <thead>
+            <tr><th>日期</th><th>项目</th><th>客户</th><th>工时</th><th>内容</th></tr>
+          </thead>
+          <tbody id="time-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- 硬币掉落动画容器 -->
+  <div id="coin-stage" aria-hidden="true"></div>
+
+  <footer class="app-footer">
+    <p>© 接单小助手 · 组件化 SPA · 工时数据存本地 SQLite (Fastify + better-sqlite3)</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
