@@ -278,10 +278,11 @@
     ctx.fillStyle = color; ctx.font = 'bold 12px monospace'; ctx.textAlign = 'right';
     ctx.fillText(fmtMoney(pts[pts.length-1].v), pad.l+cw-4, last.y - 10);
 
-    // trend arrow in top-right
-    ctx.font = 'bold 16px monospace'; ctx.textAlign = 'right';
     const firstV = pts[0].v, lastV = pts[pts.length-1].v;
     const pct = firstV ? (lastV - firstV)/firstV*100 : 0;
+
+    // trend arrow in top-right
+    ctx.font = 'bold 16px monospace'; ctx.textAlign = 'right';
     const up = pct >= 0;
     ctx.fillStyle = up ? '#00ff9d' : '#ff1744';
     ctx.fillText((up?'▲':'▼') + ' ' + (up?'+':'') + pct.toFixed(2) + '%', pad.l+cw-4, pad.t+14);
@@ -290,9 +291,7 @@
 
     // stats row
     const stat = document.getElementById('statRow');
-    const firstV = pts[0].v, lastV = pts[pts.length-1].v;
     const diff = lastV - firstV;
-    const pct = firstV ? diff/firstV*100 : 0;
     stat.innerHTML = `
       <div><span class="stat-label">起始市值</span><span class="stat-val">${fmtMoney(firstV)}</span></div>
       <div><span class="stat-label">当前市值</span><span class="stat-val">${fmtMoney(lastV)}</span></div>
