@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>地球健康度 · 3D 像素树 · 个人碳足迹追踪</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>🌍 地球健康度仪表盘</h1>
+    <div class="scenario-picker">
+      <span>演示预设：</span>
+      <button data-scenario="empty" class="sc-btn">🪵 初始荒芜</button>
+      <button data-scenario="commute" class="sc-btn">🚲 日常通勤</button>
+      <button data-scenario="warning" class="sc-btn">☁️ 高碳警告</button>
+      <button data-scenario="guardian" class="sc-btn">🌳 环保卫士</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="panel gauge-panel">
+      <h2>地球健康度</h2>
+      <div class="gauge-wrap">
+        <svg id="gauge" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#c0392b" />
+              <stop offset="35%" stop-color="#e67e22" />
+              <stop offset="65%" stop-color="#f1c40f" />
+              <stop offset="100%" stop-color="#27ae60" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="b" />
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <!-- arc -->
+          <path id="arc-bg" d="" stroke="#2c3e50" stroke-width="22" fill="none" stroke-linecap="round" />
+          <path id="arc-fg" d="" stroke="url(#grad)" stroke-width="22" fill="none" stroke-linecap="round" />
+          <!-- marks -->
+          <g id="ticks"></g>
+          <!-- needle -->
+          <g id="needle" transform="translate(160,180)">
+            <circle r="14" fill="#ecf0f1" stroke="#34495e" stroke-width="2" filter="url(#glow)"/>
+            <line id="needle-line" x1="0" y1="0" x2="0" y2="-130" stroke="#2c3e50" stroke-width="5" stroke-linecap="round" />
+            <circle r="5" fill="#e74c3c" />
+          </g>
+          <text id="health-num" x="160" y="210" text-anchor="middle" font-size="18" fill="#ecf0f1" font-weight="bold">50.0</text>
+          <text x="40" y="200" text-anchor="start" font-size="11" fill="#e74c3c">危险</text>
+          <text x="280" y="200" text-anchor="end" font-size="11" fill="#27ae60">健康</text>
+        </svg>
+        <div class="status-label" id="status-label">初始荒芜</div>
+        <div class="stats-row">
+          <div><span class="lbl">累计 Δ</span><span id="stat-delta">0</span></div>
+          <div><span class="lbl">绿色连续</span><span id="stat-streak">0 天</span></div>
+          <div><span class="lbl">记录天数</span><span id="stat-days">0</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel tree-panel">
+      <h2>3D 像素树 · 你的地球之树</h2>
+      <div class="tree-stage" id="tree-stage">
+        <div class="ground" id="ground"></div>
+        <div class="tree-wrap" id="tree-wrap">
+          <div class="voxel-scene" id="voxel-scene"></div>
+        </div>
+        <canvas id="particles" class="particles"></canvas>
+      </div>
+      <p class="hint" id="tree-hint">等待着第一滴汗水的浇灌……</p>
+    </section>
+
+    <section class="panel form-panel">
+      <h2>今日记录</h2>
+      <form id="entry-form">
+        <label>日期 <input type="date" id="f-date" /></label>
+        <label>出行方式
+          <select id="f-transport">
+            <option value="">无</option>
+            <option value="walk">🚶 步行 (+分)</option>
+            <option value="bike">🚲 骑车 (+分)</option>
+            <option value="bus">🚌 公交</option>
+            <option value="subway">🚇 地铁</option>
+            <option value="car">🚗 开车 (-分)</option>
+            <option value="plane">✈️ 飞机 (-分)</option>
+          </select>
+        </label>
+        <label>公里数 <input id="f-km" type="number" min="0" step="0.1" value="5" /></label>
+        <label>饮食
+          <select id="f-diet">
+            <option value="">不记录</option>
+            <option value="vegan">🥬 纯素</option>
+            <option value="vegetarian">🥗 素食</option>
+            <option value="mixed">🍽️ 混合</option>
+            <option value="meat">🥩 肉类为主</option>
+          </select>
+        </label>
+        <label>用电 (kWh) <input id="f-kwh" type="number" min="0" step="0.1" value="5" /></label>
+        <label>备注 <input id="f-note" type="text" placeholder="例如：加班了……" /></label>
+        <button type="submit" class="primary">💾 提交记录</button>
+        <div id="form-result" class="form-result"></div>
+      </form>
+    </section>
+
+    <section class="panel timeline-panel">
+      <h2>近 7 天通勤时间轴</h2>
+      <div class="timeline" id="timeline"></div>
+      <h3 style="margin-top:18px;">最近 12 条记录</h3>
+      <ul id="entries-list" class="entries-list"></ul>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

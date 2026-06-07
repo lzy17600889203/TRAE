@@ -1,0 +1,14 @@
+{
+  "name": "personal-carbon-footprint-tracker",
+  "version": "1.0.0",
+  "description": "给环保主义者的自我约束工具：地球健康度仪表盘 + 3D 像素树 + SQLite 碳排放日志",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0"
+  }
+}
