@@ -331,94 +331,115 @@ function renderTimer() { timerDisplay.textContent = fmt(timerRemaining); }
 renderTimer();
 
 function setState(s) {
-  timerState = s;
-  if (s === 'running' || s === 'completed') {
-    document.body.dataset.state = 'flow';
-  } else if (s === 'aborted') {
-    document.body.dataset.state = 'break';
-  } else if (s === 'night') {
-    document.body.dataset.state = 'night';
-  } else {
-    document.body.dataset.state = 'idle';
-  }
+  // 仅控制视觉状态 (dataset)，不覆盖 timerState
+  var visual = 'idle';
+  if (s === 'running') visual = 'running';
+  else if (s === 'paused') visual = 'paused';
+  else if (s === 'completed' || s === 'flow') visual = 'flow';
+  else if (s === 'aborted') visual = 'aborted';
+  else if (s === 'night') visual = 'night';
+  document.body.dataset.state = visual;
 }
+
+// 会话总专注时长(秒)，不受暂停/恢复影响
+let totalFocusSeconds = 0;
+// 会话开始时间戳(ms)，用于后端记录
+let sessionStartAt = null;
 
 startBtn.addEventListener('click', function(){
   ensureAudio();
   timerRemaining = FOCUS_SECONDS;
-  timerStartAt = Date.now();
-  pausedDuration = 0;
-  pauseStartTs = null;
+  totalFocusSeconds = 0;
+  sessionStartAt = Date.now();
   startZone.classList.add('hidden');
   controls.classList.remove('hidden');
   pauseBtn.textContent = '暂停';
+  stopBtn.textContent = '结束';
+  timerStatus.textContent = '专注中...';
   timerEl.classList.remove('shatter');
+  timerState = 'running';
   setState('running');
+  renderTimer();
+  renderEnergy();
   runTimer();
 });
 
 function runTimer() {
   clearInterval(timerInterval);
   timerInterval = setInterval(function(){
-    const elapsed = Math.floor((Date.now() - timerStartAt - pausedDuration) / 1000);
-    timerRemaining = Math.max(0, FOCUS_SECONDS - elapsed);
+    if (timerState !== 'running') return;
+    timerRemaining -= 1;
+    totalFocusSeconds += 1;
     renderTimer();
-    const pct = Math.min(100, (elapsed / FOCUS_SECONDS) * 100);
-    energyFill.style.width = pct + '%';
-    const mins = Math.floor(elapsed / 60);
-    const secs = elapsed % 60;
-    energyText.textContent = '专注中 · 已进行 ' + mins + ' 分 ' + secs + ' 秒';
+    renderEnergy();
     if (timerRemaining <= 0) {
       clearInterval(timerInterval);
       completeSession(true);
     }
-  }, 250);
+  }, 1000);
+}
+
+function renderEnergy() {
+  const elapsed = FOCUS_SECONDS - timerRemaining;
+  const pct = Math.min(100, Math.round((elapsed / FOCUS_SECONDS) * 100));
+  energyFill.style.width = pct + '%';
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  if (timerState === 'running') {
+    energyText.textContent = '专注中 · 已进行 ' + mins + ' 分 ' + secs + ' 秒';
+  } else if (timerState === 'paused') {
+    energyText.textContent = '已暂停 · 已进行 ' + mins + ' 分 ' + secs + ' 秒';
+  }
 }
 
 pauseBtn.addEventListener('click', function(){
   if (timerState === 'running') {
     clearInterval(timerInterval);
-    pauseStartTs = Date.now();
     timerState = 'paused';
     pauseBtn.textContent = '继续';
+    timerStatus.textContent = '已暂停 (点击继续恢复)';
     timerEl.classList.add('shatter');
-    setState('aborted');
+    setState('paused');
+    renderEnergy();
   } else if (timerState === 'paused') {
-    pausedDuration += Date.now() - pauseStartTs;
-    pauseStartTs = null;
+    timerState = 'running';
+    pauseBtn.textContent = '暂停';
+    timerStatus.textContent = '专注中...';
     timerEl.classList.remove('shatter');
     setState('running');
-    pauseBtn.textContent = '暂停';
+    renderEnergy();
     runTimer();
   }
 });
 
 stopBtn.addEventListener('click', function(){
-  if (confirm('确认结束本次专注？')) {
-    clearInterval(timerInterval);
-    completeSession(false);
-  }
+  if (timerState === 'idle' || timerState === 'completed' || timerState === 'aborted') return;
+  if (!confirm('确认结束本次专注？')) return;
+  clearInterval(timerInterval);
+  completeSession(false);
 });
 
 function completeSession(completed) {
   const end = Date.now();
-  const duration = Math.floor((end - timerStartAt - pausedDuration) / 1000);
+  const duration = totalFocusSeconds;
   const sources = {};
   Object.keys(trackVolumes).forEach(function(k){ sources[k] = trackVolumes[k]; });
   let score = 0;
   if (completed) {
     score = 100;
     timerStatus.textContent = '\u2726 心流达成! 45 分钟深度专注 \u2726';
+    timerState = 'completed';
   } else {
     const mins = Math.floor(duration / 60);
     score = Math.min(80, Math.floor((duration / FOCUS_SECONDS) * 100));
-    timerStatus.textContent = '专注记录 · ' + mins + ' 分钟';
+    timerStatus.textContent = '专注记录 · ' + mins + ' 分钟 (评分 ' + score + ')';
+    timerState = 'aborted';
   }
   fetch('/api/sessions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      start_time: timerStartAt,
+      start_time: sessionStartAt,
       end_time: end,
       duration_seconds: duration,
       sources: sources,
@@ -426,16 +447,17 @@ function completeSession(completed) {
       status: completed ? 'completed' : 'aborted'
     })
   }).catch(function(){});
+  setState(completed ? 'flow' : 'aborted');
+  renderEnergy();
+  if (completed) triggerCelebration();
   setTimeout(function(){
     controls.classList.add('hidden');
     startZone.classList.remove('hidden');
     startBtn.textContent = '再次专注';
-    setState(completed ? 'flow' : 'aborted');
     setTimeout(function(){
-      if (!completed) setState('idle');
+      if (timerState !== 'completed') setState('idle');
     }, 4000);
   }, 1500);
-  if (completed) triggerCelebration();
 }
 
 // ---------- 预设 ----------

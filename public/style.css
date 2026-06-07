@@ -37,8 +37,10 @@ html, body {
 #aurora { z-index: 2; opacity: 0; transition: opacity 1.2s ease; }
 
 body[data-state="flow"] #aurora { opacity: 1; }
-body[data-state="break"] { filter: grayscale(1) brightness(0.55); }
-body[data-state="break"] #aurora { opacity: 0; }
+body[data-state="running"] #aurora { opacity: 0.6; }
+body[data-state="paused"] #aurora { opacity: 0.3; }
+body[data-state="aborted"] { filter: grayscale(1) brightness(0.55); }
+body[data-state="aborted"] #aurora { opacity: 0; }
 body[data-state="night"] { background:
     radial-gradient(ellipse at top, #05051a 0%, #020208 70%, #000 100%); }
 
@@ -136,12 +138,14 @@ body[data-state="running"] #timerDisplay {
   text-shadow: 0 0 40px rgba(129, 140, 248, 0.6);
 }
 
-.timer.shatter { animation: shatter 1.2s ease forwards; }
+.timer.shatter { animation: shatter 1.2s ease; }
 @keyframes shatter {
-  0% { transform: translate(0,0) scale(1); opacity: 1; }
-  25% { transform: translate(4px,-2px) scale(1.02); }
-  50% { transform: translate(-3px,3px) scale(0.98); filter: blur(0.5px); }
-  100% { transform: translate(0,6px) scale(0.96); opacity: 0.2; filter: blur(2px); }
+  0% { transform: translate(0,0) scale(1); }
+  20% { transform: translate(4px,-2px) scale(1.02); }
+  40% { transform: translate(-3px,3px) scale(0.98); }
+  60% { transform: translate(2px,-1px) scale(1.01); }
+  80% { transform: translate(-1px,1px) scale(0.99); }
+  100% { transform: translate(0,0) scale(1); }
 }
 
 .start-zone {
@@ -194,6 +198,13 @@ body[data-state="running"] #timerDisplay {
 }
 .ctrl-btn:hover { background: rgba(167, 139, 250, 0.15); border-color: var(--accent); }
 .ctrl-btn.danger:hover { background: rgba(248, 113, 113, 0.15); border-color: var(--danger); color: var(--danger); }
+body[data-state="paused"] .ctrl-btn#pauseBtn {
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #1a1a2e;
+  border-color: #facc15;
+  box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+  font-weight: 600;
+}
 
 .preset-group { display: flex; gap: 8px; margin-left: 16px; }
 .preset-btn {
