@@ -84,6 +84,40 @@
       "score": 6,
       "status": "aborted",
       "created_at": "2026-06-07T07:46:05.645Z"
+    },
+    {
+      "id": 6,
+      "start_time": 1780819521242,
+      "end_time": 1780819610658,
+      "duration_seconds": 6,
+      "sources": {
+        "rain": 0,
+        "fire": 0,
+        "cafe": 0,
+        "ocean": 0,
+        "wind": 0,
+        "birds": 0
+      },
+      "score": 0,
+      "status": "aborted",
+      "created_at": "2026-06-07T08:06:50.973Z"
+    },
+    {
+      "id": 7,
+      "start_time": 1780819622423,
+      "end_time": 1780819648661,
+      "duration_seconds": 13,
+      "sources": {
+        "rain": 0,
+        "fire": 0,
+        "cafe": 0,
+        "ocean": 39,
+        "wind": 0,
+        "birds": 0
+      },
+      "score": 0,
+      "status": "aborted",
+      "created_at": "2026-06-07T08:07:28.662Z"
     }
   ]
 }
