@@ -416,9 +416,12 @@
       const left = 12 + (i + 0.5) * ((timeline.clientWidth - 24) / n);
       cell.className = 'day-cell';
       cell.style.left = left + 'px';
-      const firstTransport = days[i].transports && days[i].transports[0];
-      const icon = firstTransport ? (iconMap[firstTransport] || '🌿') : '🌿';
-      cell.innerHTML = `<div class="icon">${icon}</div><div>${days[i].date.slice(5)}</div><div style="color:${days[i].delta >= 0 ? '#7ed6a2' : '#e74c3c'}; font-weight:600;">${days[i].delta >= 0 ? '+' : ''}${days[i].delta}</div>`;
+      const primary = days[i].lastTransport || (days[i].transports && days[i].transports[days[i].transports.length - 1]);
+      const iconsHtml = days[i].transports && days[i].transports.length
+        ? days[i].transports.map((t) => iconMap[t] || '🌿').join('')
+        : '🌿';
+      const mainIcon = primary ? (iconMap[primary] || '🌿') : (iconsHtml ? iconsHtml : '🌿');
+      cell.innerHTML = `<div class="icon">${mainIcon}</div><div>${days[i].date.slice(5)}</div><div style="color:${days[i].delta >= 0 ? '#7ed6a2' : '#e74c3c'}; font-weight:600;">${days[i].delta >= 0 ? '+' : ''}${days[i].delta}</div>`;
       timeline.appendChild(cell);
     }
   }

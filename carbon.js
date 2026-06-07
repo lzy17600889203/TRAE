@@ -83,10 +83,14 @@ function buildSummary(rows) {
     totalDelta += d;
 
     if (!byDate.has(row.date)) {
-      byDate.set(row.date, { transports: new Set(), delta: 0 });
+      byDate.set(row.date, { transports: new Set(), delta: 0, lastTransport: null, lastCreatedAt: '' });
     }
     const info = byDate.get(row.date);
     if (row.transport) info.transports.add(row.transport);
+    if (row.transport && (row.created_at || '') >= info.lastCreatedAt) {
+      info.lastTransport = row.transport;
+      info.lastCreatedAt = row.created_at || '';
+    }
     info.delta += d;
   }
 
@@ -115,7 +119,8 @@ function buildSummary(rows) {
       date,
       delta: +info.delta.toFixed(2),
       isGreen,
-      transports
+      transports,
+      lastTransport: info.lastTransport
     });
     if (recent7.length >= 7) break;
   }
@@ -126,7 +131,8 @@ function buildSummary(rows) {
     return {
       date,
       delta: +info.delta.toFixed(2),
-      transports: [...info.transports]
+      transports: [...info.transports],
+      lastTransport: info.lastTransport
     };
   });
 
