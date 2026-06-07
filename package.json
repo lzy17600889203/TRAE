@@ -1,0 +1,13 @@
+{
+  "name": "immersive-white-noise-mixer",
+  "version": "1.0.0",
+  "description": "专注神器 - 多轨白噪音混音台 + 番茄钟 + 心流极光特效",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

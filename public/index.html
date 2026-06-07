@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>沉浸白噪音混音台 · Focus Mixer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-state="idle">
+  <canvas id="aurora"></canvas>
+  <canvas id="stars"></canvas>
+
+  <main class="app">
+    <header class="topbar">
+      <h1 class="title">✦ Focus Mixer ✦</h1>
+      <div class="subtitle">专注 · 心流 · 沉浸</div>
+    </header>
+
+    <section class="energy-bar">
+      <div class="energy-track">
+        <div class="energy-fill" id="energyFill"></div>
+      </div>
+      <div class="energy-label"><span id="energyText">准备开始</span> · 目标 45 分钟</div>
+    </section>
+
+    <section class="timer-panel">
+      <div class="timer" id="timer">
+        <div class="timer-inner" id="timerInner">
+          <span id="timerDisplay">45:00</span>
+          <div class="timer-label" id="timerStatus">点击下方按钮开始深度专注</div>
+        </div>
+      </div>
+
+      <div class="start-zone" id="startZone">
+        <button class="start-btn breathing" id="startBtn">Start Focus</button>
+      </div>
+
+      <div class="controls hidden" id="controls">
+        <button class="ctrl-btn" id="pauseBtn">暂停</button>
+        <button class="ctrl-btn danger" id="stopBtn">结束</button>
+        <div class="preset-group">
+          <button class="preset-btn" data-preset="flow">深度心流</button>
+          <button class="preset-btn" data-preset="night">深夜陪伴</button>
+          <button class="preset-btn" data-preset="reset">全新开始</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mixer">
+      <h2 class="mixer-title">多轨混音台</h2>
+      <div class="tracks" id="tracks"></div>
+      <div class="master">
+        <label>主音量</label>
+        <input type="range" min="0" max="100" value="80" id="masterVol">
+        <span id="masterVolLabel">80%</span>
+      </div>
+    </section>
+
+    <section class="stats hidden" id="stats">
+      <h3>今日专注记录</h3>
+      <div class="stats-grid" id="statsGrid"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+{
+  "sessions": [
+    {
+      "id": 1,
+      "start_time": 1780817825829,
+      "end_time": 1780817848680,
+      "duration_seconds": 22,
+      "sources": {
+        "rain": 70,
+        "fire": 30,
+        "cafe": 20,
+        "ocean": 40,
+        "wind": 0,
+        "birds": 15
+      },
+      "score": 0,
+      "status": "aborted",
+      "created_at": "2026-06-07T07:37:28.697Z"
+    },
+    {
+      "id": 2,
+      "start_time": 1780817869449,
+      "end_time": 1780817911818,
+      "duration_seconds": 42,
+      "sources": {
+        "rain": 18,
+        "fire": 0,
+        "cafe": 0,
+        "ocean": 0,
+        "wind": 0,
+        "birds": 0
+      },
+      "score": 1,
+      "status": "aborted",
+      "created_at": "2026-06-07T07:38:32.137Z"
+    },
+    {
+      "id": 3,
+      "start_time": 1780818141682,
+      "end_time": 1780818146152,
+      "duration_seconds": 4,
+      "sources": {
+        "rain": 0,
+        "fire": 0,
+        "cafe": 0,
+        "ocean": 0,
+        "wind": 0,
+        "birds": 0
+      },
+      "score": 0,
+      "status": "aborted",
+      "created_at": "2026-06-07T07:42:26.465Z"
+    },
+    {
+      "id": 4,
+      "start_time": 1780818155498,
+      "end_time": 1780818166183,
+      "duration_seconds": 10,
+      "sources": {
+        "rain": 0,
+        "fire": 0,
+        "cafe": 0,
+        "ocean": 0,
+        "wind": 0,
+        "birds": 0
+      },
+      "score": 0,
+      "status": "aborted",
+      "created_at": "2026-06-07T07:42:46.185Z"
+    },
+    {
+      "id": 5,
+      "start_time": 1780818197287,
+      "end_time": 1780818365643,
+      "duration_seconds": 168,
+      "sources": {
+        "rain": 0,
+        "fire": 0,
+        "cafe": 0,
+        "ocean": 0,
+        "wind": 0,
+        "birds": 0
+      },
+      "score": 6,
+      "status": "aborted",
+      "created_at": "2026-06-07T07:46:05.645Z"
+    }
+  ]
+}
