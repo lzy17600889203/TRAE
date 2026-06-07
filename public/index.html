@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CYBER // PORTFOLIO // LEDGER</title>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body data-preset="bull">
+<div class="scanlines"></div>
+<div class="grid-bg"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="glitch" data-text="CRYPTO-LEDGER">CRYPTO-LEDGER</span>
+    <span class="sub">v2.077 // ASSET DISTRIBUTION TERMINAL</span>
+  </div>
+  <div class="presets">
+    <button data-preset="bull" class="preset-btn active">🐂 牛市暴富</button>
+    <button data-preset="bear" class="preset-btn">🐻 熊市深套</button>
+    <button data-preset="hft" class="preset-btn">⚡ 高频交易</button>
+    <button data-preset="empty" class="preset-btn">❓ 空仓观望</button>
+  </div>
+  <div class="clock" id="clock">--:--:--</div>
+</header>
+
+<main class="dashboard">
+  <section class="panel donut-panel">
+    <div class="panel-title">
+      <span>◉ 资产分布 // ASSET DIST</span>
+      <span class="panel-tag" id="assetDistTag">ANALYZING...</span>
+    </div>
+    <div class="donut-wrap">
+      <canvas id="donutCanvas" width="480" height="480"></canvas>
+      <div class="donut-center" id="donutCenter">
+        <div class="center-label">TOTAL VALUE</div>
+        <div class="center-value" id="totalValue">$0</div>
+        <div class="center-pnl" id="totalPnl">+0.00%</div>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="panel line-panel">
+    <div class="panel-title">
+      <span>◉ 总资产曲线 // PORTFOLIO TRAJECTORY</span>
+      <span class="panel-tag" id="lineTag">--</span>
+    </div>
+    <canvas id="lineCanvas" width="900" height="380"></canvas>
+    <div class="stat-row" id="statRow"></div>
+  </section>
+
+  <section class="panel holdings-panel">
+    <div class="panel-title">
+      <span>◉ 持仓矩阵 // HOLDINGS MATRIX</span>
+      <span class="panel-tag" id="holdingsCount">0 ITEMS</span>
+    </div>
+    <div class="holdings-header">
+      <span>币种</span><span>持仓量</span><span>均价</span><span>现价</span><span>市值</span><span>24h</span><span>盈亏</span>
+    </div>
+    <div class="holdings-list" id="holdingsList"></div>
+  </section>
+
+  <section class="panel trades-panel">
+    <div class="panel-title">
+      <span>◉ 流水明细 // ORDER FLOW</span>
+      <span class="panel-tag" id="tradesCount">0 TX</span>
+    </div>
+    <div class="trades-header">
+      <span>时间</span><span>类型</span><span>币种</span><span>数量</span><span>单价</span><span>总额</span>
+    </div>
+    <div class="trades-list" id="tradesList"></div>
+  </section>
+
+  <section class="panel form-panel">
+    <div class="panel-title">
+      <span>◉ 手动录入 // MANUAL LEDGER</span>
+      <span class="panel-tag">DIRECT FEED</span>
+    </div>
+    <form id="tradeForm" class="trade-form">
+      <label>币种<input name="symbol" placeholder="BTC/ETH..." required/></label>
+      <label>类型
+        <select name="type">
+          <option value="buy">BUY</option>
+          <option value="sell">SELL</option>
+        </select>
+      </label>
+      <label>数量<input name="amount" type="number" step="any" required/></label>
+      <label>单价(USDT)<input name="price" type="number" step="any" required/></label>
+      <label>备注<input name="note" placeholder="optional"/></label>
+      <button type="submit">提交交易</button>
+    </form>
+    <form id="holdingForm" class="holding-form">
+      <h4>直接设置持仓</h4>
+      <label>币种<input name="symbol" placeholder="BTC" required/></label>
+      <label>数量<input name="amount" type="number" step="any" required/></label>
+      <label>均价<input name="avg_cost" type="number" step="any" required/></label>
+      <button type="submit">保存</button>
+    </form>
+  </section>
+</main>
+
+<footer class="statusbar">
+  <span>◈ SYSTEM: <span id="sysStatus" class="ok">ONLINE</span></span>
+  <span>◈ PING: <span id="pingMs">--ms</span></span>
+  <span>◈ MODE: <span id="curMode">BULL MARKET</span></span>
+  <span class="blink">● LIVE</span>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
