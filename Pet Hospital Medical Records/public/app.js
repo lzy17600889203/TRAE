@@ -100,17 +100,22 @@ async function loadPets() {
     } else {
       grid.innerHTML = pets.map(renderPetCard).join('') + renderAddCard();
     }
-    grid.querySelectorAll('.pet-card[data-id]').forEach(card => {
-      card.addEventListener('click', () => {
-        location.href = `/detail.html?id=${card.dataset.id}`;
-      });
-    });
-    const addBtn = document.getElementById('addCardBtn');
-    if (addBtn) addBtn.addEventListener('click', openAddModal);
   } catch (e) {
     grid.innerHTML = `<div class="loading">❌ 无法连接后端，请先运行 <code>npm install &amp;&amp; npm start</code></div>`;
   }
 }
+
+// 事件委托：在整个页面上一次性监听，点击 pet-card[data-id] 进入详情，点击 #addCardBtn 弹出模态框
+document.addEventListener('click', (e) => {
+  const petCard = e.target.closest('.pet-card[data-id]');
+  if (petCard) {
+    location.href = `/detail.html?id=${petCard.dataset.id}`;
+    return;
+  }
+  if (e.target.closest('#addCardBtn')) {
+    openAddModal();
+  }
+});
 
 async function loadPush() {
   const list = document.getElementById('pushList');
@@ -134,10 +139,10 @@ async function loadPush() {
 }
 
 function openAddModal() {
-  document.getElementById('addModal').hidden = false;
+  document.getElementById('addModal').classList.add('is-open');
 }
 function closeAddModal() {
-  document.getElementById('addModal').hidden = true;
+  document.getElementById('addModal').classList.remove('is-open');
   document.getElementById('addForm').reset();
 }
 
@@ -157,18 +162,39 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('cancelAdd').addEventListener('click', closeAddModal);
+  document.getElementById('addModal').addEventListener('click', (e) => {
+    if (e.target.id === 'addModal') closeAddModal();
+  });
   document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fd = new FormData(e.target);
-    const body = Object.fromEntries(fd.entries());
-    for (const k of ['age', 'weight', 'temperature', 'heart_rate']) {
-      if (body[k]) body[k] = parseFloat(body[k]);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; }
+    try {
+      const fd = new FormData(e.target);
+      const body = Object.fromEntries(fd.entries());
+      if (!body.name || !body.species) {
+        toast('请至少填写「姓名」与「品种」');
+        return;
+      }
+      for (const k of ['age', 'weight', 'temperature', 'heart_rate']) {
+        if (body[k]) body[k] = parseFloat(body[k]);
+      }
+      body.avatar = 'generic';
+      body.status = 'healthy';
+      const res = await fetch('/api/pets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast(`${body.name} 的档案已建立！`);
+      closeAddModal();
+      await loadPets();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      toast('建立档案失败：' + err.message);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
-    body.avatar = 'generic';
-    body.status = 'healthy';
-    await fetch('/api/pets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    toast(`${body.name} 的档案已建立！`);
-    closeAddModal();
-    loadPets();
   });
 });
