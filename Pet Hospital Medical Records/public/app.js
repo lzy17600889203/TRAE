@@ -48,7 +48,7 @@ function renderPetCard(pet) {
 
   const face = isCritical ? '😣' : '😊';
   const wCls = isCritical ? 'bad' : '';
-  const tCls = pet.temperature > 39.2 || pet.temperature < 37.8 ? 'warn' : '';
+  const tCls = (pet.temperature != null && (pet.temperature > 39.2 || pet.temperature < 37.8)) ? 'warn' : '';
   const hCls = isCritical ? 'bad' : '';
 
   const iv = isCritical ? `
@@ -61,6 +61,20 @@ function renderPetCard(pet) {
     ? `<div style="text-align:center;color:#b37a00;font-size:12px;margin-top:8px">⚠️ 狂犬疫苗 ${daysText(pet.rabies_days)}</div>`
     : '';
 
+  const chips = [];
+  if (pet.weight != null && pet.weight !== '') {
+    chips.push(metricChip('体重', `${pet.weight}kg`, wCls));
+  }
+  if (pet.temperature != null && pet.temperature !== '') {
+    chips.push(metricChip('体温', `${pet.temperature}℃`, tCls));
+  }
+  if (pet.heart_rate != null && pet.heart_rate !== '') {
+    chips.push(metricChip('心率', `${pet.heart_rate}`, hCls));
+  }
+  const metricsHtml = chips.length
+    ? `<div class="metric-row">${chips.join('')}</div>`
+    : `<div class="metric-row"><div class="metric">暂无健康数据</div></div>`;
+
   return `
     <div class="${classes.join(' ')}" data-id="${pet.id}">
       ${statusTag(pet.status)}
@@ -72,12 +86,8 @@ function renderPetCard(pet) {
         </div>
       </div>
       <div class="name">${pet.name}</div>
-      <div class="species">${pet.species}${pet.breed ? ' · ' + pet.breed : ''} · ${pet.age || '?'}岁</div>
-      <div class="metric-row">
-        ${metricChip('体重', pet.weight ? pet.weight + 'kg' : '—', wCls)}
-        ${metricChip('体温', pet.temperature ? pet.temperature + '℃' : '—', tCls)}
-        ${metricChip('心率', pet.heart_rate ? pet.heart_rate : '—', hCls)}
-      </div>
+      <div class="species">${pet.species}${pet.breed ? ' · ' + pet.breed : ''} · ${pet.age != null && pet.age !== '' ? pet.age + '岁' : '年龄未知'}</div>
+      ${metricsHtml}
       ${haloNote}
     </div>`;
 }

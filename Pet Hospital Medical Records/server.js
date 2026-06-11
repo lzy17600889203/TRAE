@@ -101,6 +101,35 @@ async function main() {
     res.status(201).json({ id: info.lastInsertRowid });
   });
 
+  app.put('/api/pets/:id', (req, res) => {
+    const id = Number(req.params.id);
+    const existing = db.get('SELECT * FROM pets WHERE id = ?', [id]);
+    if (!existing) return res.status(404).json({ error: 'Pet not found' });
+    const b = req.body || {};
+    // 未提供的字段保持原值；显式 null/空字符串 视为清空调
+    const pick = (key, incoming) => {
+      if (incoming === undefined) return existing[key];
+      if (incoming === '' || incoming === null) return null;
+      return incoming;
+    };
+    const name = pick('name', b.name);
+    const species = pick('species', b.species);
+    const breed = pick('breed', b.breed);
+    const age = pick('age', b.age);
+    const weight = pick('weight', b.weight);
+    const temperature = pick('temperature', b.temperature);
+    const heart_rate = pick('heart_rate', b.heart_rate);
+    const next_deworming = pick('next_deworming', b.next_deworming);
+    const next_rabies = pick('next_rabies', b.next_rabies);
+    if (!name || !species) return res.status(400).json({ error: 'name 和 species 不能为空' });
+    db.run(
+      'UPDATE pets SET name=?, species=?, breed=?, age=?, weight=?, temperature=?, heart_rate=?, next_deworming=?, next_rabies=? WHERE id=?',
+      [name, species, breed, age, weight, temperature, heart_rate, next_deworming, next_rabies, id]
+    );
+    const updated = db.get('SELECT * FROM pets WHERE id = ?', [id]);
+    res.json(updated);
+  });
+
   app.delete('/api/pets/:id', (req, res) => {
     db.run('DELETE FROM medical_records WHERE pet_id = ?', [Number(req.params.id)]);
     db.run('DELETE FROM pets WHERE id = ?', [Number(req.params.id)]);
