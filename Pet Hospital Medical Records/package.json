@@ -1,0 +1,16 @@
+{
+  "name": "pet-hospital-records",
+  "version": "1.0.0",
+  "description": "Pet hospital medical records",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "node-cron": "^3.0.3",
+    "sql.js": "^1.10.3"
+  }
+}

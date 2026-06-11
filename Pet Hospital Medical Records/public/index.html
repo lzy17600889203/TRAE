@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>宠物医疗记录 · 铲屎官和兽医的贴心助手</title>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🐾</span>
+      <h1>宠物医疗记录</h1>
+      <span class="subtitle">铲屎官 &amp; 兽医的贴心助手</span>
+    </div>
+    <div class="topbar-right">
+      <button id="scanBtn" class="btn btn-ghost">🔔 扫描提醒</button>
+      <span id="todayLabel" class="today-label"></span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="stats">
+      <div class="stat-chip healthy"><span class="dot"></span>健康活泼</div>
+      <div class="stat-chip critical"><span class="dot"></span>重症监护</div>
+      <div class="stat-chip halo"><span class="dot"></span>疫苗预警</div>
+      <div class="stat-chip new"><span class="dot"></span>新建档</div>
+    </section>
+
+    <section class="card-grid" id="cardGrid">
+      <div class="loading">正在从 API 加载宠物档案…</div>
+    </section>
+
+    <section class="push-panel">
+      <h2>近期提醒</h2>
+      <ul id="pushList" class="push-list">
+        <li class="empty">暂无消息</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-mask" id="addModal" hidden>
+    <div class="modal">
+      <h3>新增宠物档案</h3>
+      <form id="addForm" class="add-form">
+        <label>姓名<input name="name" required placeholder="例如：咪咪"/></label>
+        <label>品种<input name="species" required placeholder="例如：猫咪"/></label>
+        <label>毛色/详细品种<input name="breed" placeholder="例如：橘猫"/></label>
+        <label>年龄<input type="number" name="age" min="0" placeholder="岁"/></label>
+        <label>体重(kg)<input type="number" step="0.1" name="weight" placeholder="kg"/></label>
+        <label>下次驱虫日期<input type="date" name="next_deworming"/></label>
+        <label>下次狂犬疫苗日期<input type="date" name="next_rabies"/></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="cancelAdd">取消</button>
+          <button type="submit" class="btn btn-primary">保存档案</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
