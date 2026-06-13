@@ -9,6 +9,63 @@ const state = {
 
 const themeLabels = { minimal: '极简黑白', geek: '极客暗黑', academic: '学术严谨' };
 
+// ============ 工具：导出锁 + 页面内反馈 ============
+let _exporting = false;
+
+function notify(msg, type) {
+  try {
+    if (!document.body) return;
+    const bar = document.createElement('div');
+    bar.className = 'notify-bar ' + (type || '');
+    bar.style.display = 'block';
+    bar.innerHTML = '<span>' + msg + '</span><button class="notify-close" type="button">×</button>';
+    document.body.appendChild(bar);
+    const closeBtn = bar.querySelector('.notify-close');
+    if (closeBtn) {
+      closeBtn.onclick = function () {
+        if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+      };
+    }
+    setTimeout(function () {
+      if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+    }, 5000);
+  } catch (e) {
+    // 最后兜底：控制台输出
+    console.log('[通知]', msg);
+  }
+}
+
+function inlineComputedStyles(root, source) {
+  // 把每个元素实际计算后的关键颜色/字体属性内联到 style 中，
+  // 确保 html2pdf 生成 PDF 时无需解析 CSS 变量也能正确显示
+  const props = [
+    'color', 'background-color', 'background',
+    'border-color', 'border-top-color', 'border-bottom-color',
+    'border-left-color', 'border-right-color',
+    'font-family', 'font-size', 'font-weight',
+    'text-align', 'line-height', 'letter-spacing',
+    'padding', 'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
+    'margin', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
+    'border-radius', 'text-transform', 'text-decoration',
+    'justify-content', 'display', 'flex-wrap', 'gap'
+  ];
+  const nodes = root.querySelectorAll('*');
+  nodes.forEach(node => {
+    const cs = window.getComputedStyle(node);
+    let style = '';
+    props.forEach(p => {
+      const v = cs.getPropertyValue(p);
+      if (v) style += p + ': ' + v.trim() + '; ';
+    });
+    node.setAttribute('style', style);
+  });
+  // 根节点自身的背景色
+  const cs = window.getComputedStyle(source);
+  root.style.backgroundColor = cs.backgroundColor;
+  root.style.color = cs.color;
+  root.style.fontFamily = cs.fontFamily;
+}
+
 // ============ 初始化 ============
 document.addEventListener('DOMContentLoaded', async () => {
   await loadFromServer();
@@ -397,8 +454,8 @@ function checkOverflow() {
     const a4Px = 297 * 3.7795;
 
     const warning = document.getElementById('warningBar');
-    if (contentHeight > a4Px + 20) {
-      warning.hidden = false;
+    if (warning && contentHeight > a4Px + 20) {
+      warning.style.display = 'block';
     }
     // 不自动隐藏，用户可手动关掉
   }, 150);
@@ -408,7 +465,7 @@ function checkOverflow() {
 async function saveToServer() {
   const btn = document.getElementById('btnSave');
   const oldText = btn.textContent;
-  btn.textContent = '保存中...';
+  btn.textContent = '保存中…';
   try {
     const resp = await fetch('/api/resume', {
       method: 'POST',
@@ -423,11 +480,15 @@ async function saveToServer() {
     });
     if (resp.ok) {
       btn.textContent = '✓ 已保存';
-      setTimeout(() => { btn.textContent = oldText; }, 1200);
+      notify('简历数据已保存到服务器', 'success');
+      setTimeout(() => { btn.textContent = oldText; }, 1500);
+    } else {
+      throw new Error('HTTP ' + resp.status);
     }
   } catch (e) {
     btn.textContent = '保存失败';
-    setTimeout(() => { btn.textContent = oldText; }, 1200);
+    notify('保存失败：' + e.message, 'error');
+    setTimeout(() => { btn.textContent = oldText; }, 1500);
   }
 }
 
@@ -441,6 +502,7 @@ function clearAll() {
   document.querySelectorAll('[data-bind]').forEach(i => i.value = '');
   renderAllItemLists();
   renderResume();
+  notify('已清空所有内容', '');
 }
 
 function loadDemoData() {
@@ -508,66 +570,98 @@ function loadDemoData() {
   document.querySelectorAll('[data-bind]').forEach(i => { i.value = state.profile[i.dataset.bind] || ''; });
   renderAllItemLists();
   renderResume();
+  notify('已加载示例简历，可在左侧编辑；点击「导出 PDF」即可下载', 'success');
 }
 
 // ============ PDF 导出 ============
 async function exportPDF() {
+  // 防止重复点击
+  if (_exporting) {
+    notify('正在生成 PDF，请稍候…', 'warn');
+    return;
+  }
+  _exporting = true;
+
+  // 安全获取 DOM
   const mask = document.getElementById('loadingMask');
-  mask.hidden = false;
+  const btn = document.getElementById('btnExport');
+  const resumeNode = document.getElementById('resumePage');
+
+  const oldBtnText = btn ? btn.textContent : '导出 PDF';
+  if (mask) mask.style.display = 'flex';
+  if (btn) {
+    btn.textContent = '生成中…';
+    btn.disabled = true;
+  }
+
   try {
-    if (typeof html2pdf === 'undefined') {
-      throw new Error('PDF 导出库加载失败，请检查网络连接');
+    if (!resumeNode) throw new Error('找不到简历预览区');
+    const name = (state.profile && state.profile.name) || 'resume';
+    const filename = name + '-简历.pdf';
+
+    if (typeof html2pdf !== 'undefined') {
+      // --- 方案 A：html2pdf 生成 PDF ---
+      // 把 DOM 克隆到一个固定尺寸的容器，并内联计算样式
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-10000px';
+      container.style.top = '0';
+      container.style.width = '210mm';
+      container.style.minHeight = '297mm';
+      container.style.zIndex = '-1';
+
+      const resumeContent = resumeNode.cloneNode(true);
+      resumeContent.style.margin = '0';
+      resumeContent.style.padding = '0';
+      resumeContent.style.boxShadow = 'none';
+      container.appendChild(resumeContent);
+      document.body.appendChild(container);
+
+      inlineComputedStyles(resumeContent, resumeNode);
+
+      const opt = {
+        margin: 0,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.96 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false,
+          allowTaint: true,
+          windowWidth: resumeNode.offsetWidth || 794
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait'
+        },
+        pagebreak: { mode: ['css', 'legacy'] }
+      };
+
+      await html2pdf().set(opt).from(resumeContent).save();
+
+      setTimeout(function () {
+        if (container && container.parentNode) container.parentNode.removeChild(container);
+      }, 800);
+
+      notify('PDF 已生成并开始下载', 'success');
+    } else {
+      // --- 方案 B：回退到浏览器打印 ---
+      notify('PDF 库尚未加载完成，已打开打印预览，请选择「另存为 PDF」', 'warn');
+      setTimeout(function () { window.print(); }, 400);
     }
-
-    const resumeNode = document.getElementById('resumePage');
-    const name = state.profile.name || 'resume';
-    const filename = `${name}-简历.pdf`;
-
-    // 克隆节点并内联当前主题的 CSS 变量，确保 PDF 中的样式正确
-    const clone = resumeNode.cloneNode(true);
-    const styles = window.getComputedStyle(document.body);
-    const themeVars = [
-      '--c-bg', '--c-ink', '--c-muted', '--c-line', '--c-accent',
-      '--c-pill-bg', '--c-pill-ink', '--c-link', '--font-sans', '--font-serif', '--font-mono'
-    ];
-    let styleStr = '';
-    themeVars.forEach(v => {
-      styleStr += v + ': ' + styles.getPropertyValue(v).trim() + '; ';
-    });
-    clone.setAttribute('style', styleStr + ' box-shadow: none;');
-
-    // 隐藏滚动容器样式以确保截图干净
-    clone.querySelectorAll('*').forEach(el => {
-      const cs = window.getComputedStyle(el);
-      // 确保透明度和可见性
-      if (cs.visibility === 'hidden' || cs.display === 'none') {
-        el.style.display = 'none';
-      }
-    });
-
-    // A4: 210mm x 297mm
-    const opt = {
-      margin: 0,
-      filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: null,
-        logging: false
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait'
-      },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-
-    await html2pdf().set(opt).from(clone).save();
   } catch (err) {
-    alert('PDF 导出失败：' + err.message);
+    console.error('PDF 导出错误:', err);
+    notify('PDF 导出失败：' + err.message + '（备用方案：按 Ctrl+P 或 ⌘+P 打印另存）', 'error');
   } finally {
-    setTimeout(() => { mask.hidden = true; }, 800);
+    setTimeout(function () {
+      if (mask) mask.style.display = 'none';
+      if (btn) {
+        btn.textContent = oldBtnText;
+        btn.disabled = false;
+      }
+      _exporting = false;
+    }, 1200);
   }
 }

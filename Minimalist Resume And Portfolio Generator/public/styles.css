@@ -21,6 +21,8 @@
   --font-mono: "SF Mono", Menlo, Consolas, "Courier New", monospace;
 }
 
+[hidden] { display: none !important; }
+
 [data-theme="minimal"] {
   --c-bg: #ffffff;
   --c-ink: #1a1a1a;
@@ -538,40 +540,96 @@ body.app-body {
 .loading-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 999999;
+  backdrop-filter: blur(2px);
 }
 .loading-box {
   background: #fff;
-  padding: 24px 36px;
+  padding: 20px 28px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   gap: 14px;
   font-size: 14px;
-  color: var(--app-text);
+  color: #2d3748;
   box-shadow: 0 20px 50px rgba(0,0,0,0.3);
 }
 .spinner {
-  width: 20px; height: 20px;
-  border: 2.5px solid #dfe3e8;
-  border-top-color: var(--app-primary);
+  width: 22px; height: 22px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #2b6cb0;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Print mode - keep resume styling but hide editor */
+/* In-page notification (no-alert feedback) */
+.notify-bar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 14px 44px 14px 18px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-left: 4px solid #2b6cb0;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  font-size: 13px;
+  color: #2d3748;
+  line-height: 1.5;
+  z-index: 999999;
+  animation: notifySlideIn 0.3s ease;
+  min-width: 240px;
+  max-width: 380px;
+}
+.notify-bar.error { border-left-color: #e53e3e; background: #fff5f5; color: #742a2a; }
+.notify-bar.success { border-left-color: #38a169; background: #f0fff4; color: #22543d; }
+.notify-bar.warn { border-left-color: #dd6b20; background: #fffaf0; color: #7c2d12; }
+@keyframes notifySlideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.notify-bar .notify-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+}
+.notify-bar .notify-close:hover { color: #333; }
+
+/* Print mode - full A4 resume with theme colors preserved */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
 @media print {
+  html, body { height: auto !important; margin: 0; padding: 0; background: #fff; }
   body.app-body { background: #fff; overflow: visible; }
-  .topbar, .warning-bar, .editor-panel, .preview-wrap { display: none !important; }
-  .preview-panel { background: #fff; box-shadow: none; border: none; }
+  .topbar, .warning-bar, .editor-panel, .preview-wrap,
+  .loading-mask, .notify-bar, .workspace {
+    display: none !important;
+  }
+  .preview-panel { background: #fff; box-shadow: none; border: none; display: block; margin: 0; padding: 0; }
   .resume-page {
-    width: 100%;
-    min-height: auto;
-    box-shadow: none;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    box-shadow: none !important;
+    page-break-after: always;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .resume-content {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

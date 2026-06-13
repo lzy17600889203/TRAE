@@ -1,0 +1,114 @@
+{
+  "profile": {
+    "name": "测试用户",
+    "title": "高级前端工程师 · Full-stack Developer",
+    "email": "mingxuan.li@example.com",
+    "phone": "+86 138 6688 8866",
+    "location": "上海 · 浦东",
+    "summary": "8 年前端经验，专注于大型 Web 应用的架构设计与性能优化。主导过多个百万 DAU 产品的前端重构，熟悉 React/Vue/Node 全栈技术体系，擅长团队协作与技术选型决策。",
+    "theme": "minimal"
+  },
+  "experiences": [
+    {
+      "company": "字节跳动",
+      "position": "高级前端工程师 · 团队负责人",
+      "start_date": "2021.03",
+      "end_date": "至今",
+      "description": "主导核心业务 B 端平台的前端架构升级，设计微前端方案，支持 12 个子团队独立开发\n推动前端基础设施建设，搭建组件库与 CLI 工具链，研发效率提升 40%\n负责 6 人小组管理，完成季度目标并输出 2 项专利"
+    },
+    {
+      "company": "美团",
+      "position": "前端工程师",
+      "start_date": "2018.07",
+      "end_date": "2021.02",
+      "description": "参与外卖 C 端 H5 业务开发，负责订单流程与支付模块\n首屏加载优化至 1.2s 以内，转化率提升 3.5%\n推动 TypeScript 迁移，代码质量与可维护性显著提升"
+    }
+  ],
+  "skills": [
+    {
+      "name": "JavaScript、java",
+      "category": "编程语言"
+    },
+    {
+      "name": "TypeScript",
+      "category": "编程语言"
+    },
+    {
+      "name": "Python",
+      "category": "编程语言"
+    },
+    {
+      "name": "React",
+      "category": "前端框架"
+    },
+    {
+      "name": "Vue.js",
+      "category": "前端框架"
+    },
+    {
+      "name": "Next.js",
+      "category": "前端框架"
+    },
+    {
+      "name": "Node.js",
+      "category": "后端"
+    },
+    {
+      "name": "GraphQL",
+      "category": "后端"
+    },
+    {
+      "name": "Docker",
+      "category": "DevOps"
+    },
+    {
+      "name": "AWS",
+      "category": "DevOps"
+    },
+    {
+      "name": "团队管理",
+      "category": "软技能"
+    },
+    {
+      "name": "技术架构",
+      "category": "软技能"
+    }
+  ],
+  "projects": [
+    {
+      "name": "开源组件库 · UI-Core",
+      "description": "基于 TypeScript + React 的企业级组件库，GitHub 3.2k stars，支持主题定制与国际化",
+      "link": "https://github.com/example/ui-core"
+    },
+    {
+      "name": "个人技术博客",
+      "description": "独立搭建的技术博客平台，累计发表 80+ 篇深度文章，月访问量 10 万+",
+      "link": "https://mingxuan.dev"
+    },
+    {
+      "name": "Resume Builder",
+      "description": "所见即所得的简历生成器（即本项目），支持多主题与一键 PDF 导出",
+      "link": "https://resume.example.com"
+    }
+  ],
+  "education": [
+    {
+      "school": "上海交通大学",
+      "degree": "计算机科学与技术 · 硕士",
+      "start_date": "2014.09",
+      "end_date": "2017.06"
+    },
+    {
+      "school": "华中科技大学",
+      "degree": "软件工程 · 本科",
+      "start_date": "2010.09",
+      "end_date": "2014.06"
+    },
+    {
+      "school": "",
+      "degree": "",
+      "start_date": "",
+      "end_date": ""
+    }
+  ]
+}
