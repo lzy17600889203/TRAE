@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>梦想激励板 · Dream Board</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="confetti-canvas"></div>
+
+  <header class="app-header">
+    <h1>✦ 梦想激励板 ✦</h1>
+    <p class="subtitle">每一个小进步，都通向梦想的远方</p>
+
+    <div class="demo-switcher">
+      <span class="demo-label">演示模式：</span>
+      <button class="demo-btn active" data-mode="normal">日常推进</button>
+      <button class="demo-btn" data-mode="dream-true">梦想成真</button>
+      <button class="demo-btn" data-mode="half-give-up">半途而废</button>
+      <button class="demo-btn" data-mode="new-wish">全新愿望</button>
+    </div>
+  </header>
+
+  <main class="container" id="goals-container"></main>
+
+  <template id="new-goal-template">
+    <div class="goal-card new-goal-card" data-goal="new">
+      <div class="new-goal-icon">+</div>
+      <p class="new-goal-text">写下你的新愿望</p>
+
+      <div class="new-goal-form" hidden>
+        <input type="text" class="goal-input" placeholder="例如：学会弹吉他" maxlength="40" />
+        <div class="subtasks-inputs">
+          <input type="text" class="subtask-input" placeholder="子任务 1：买吉他" />
+          <input type="text" class="subtask-input" placeholder="子任务 2：学 C 和弦" />
+          <input type="text" class="subtask-input" placeholder="子任务 3：练习扫弦" />
+          <input type="text" class="subtask-input" placeholder="子任务 4：弹一首简单的歌" />
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-cancel">取消</button>
+          <button class="btn btn-primary">创建愿望</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="goal-card-template">
+    <div class="goal-card">
+      <div class="goal-card-header">
+        <h2 class="goal-title"></h2>
+        <span class="crown" aria-hidden="true">👑</span>
+      </div>
+
+      <div class="progress-wrapper">
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <span class="progress-text">0%</span>
+      </div>
+
+      <ul class="subtasks-list"></ul>
+
+      <div class="card-footer">
+        <span class="progress-summary"></span>
+        <button class="btn btn-delete">删除</button>
+      </div>
+
+      <div class="gray-overlay"></div>
+    </div>
+  </template>
+
+  <script src="/script.js"></script>
+</body>
+</html>
