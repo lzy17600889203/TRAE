@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数字名片 · 简历生成器</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="app-body" data-theme="minimal">
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo-dot"></span>
+    <h1 class="logo-text">数字名片</h1>
+    <span class="logo-sub">Digital Business Card</span>
+  </div>
+  <div class="theme-switcher" role="tablist" aria-label="主题切换">
+    <button class="theme-btn" data-theme="minimal" role="tab" aria-selected="true">
+      <span class="swatch minimal"></span> 极简黑白
+    </button>
+    <button class="theme-btn" data-theme="geek" role="tab" aria-selected="false">
+      <span class="swatch geek"></span> 极客暗黑
+    </button>
+    <button class="theme-btn" data-theme="academic" role="tab" aria-selected="false">
+      <span class="swatch academic"></span> 学术严谨
+    </button>
+  </div>
+  <div class="topbar-right">
+    <button id="btnSave" class="btn btn-ghost">保存</button>
+    <button id="btnDemo" class="btn btn-ghost">演示数据</button>
+    <button id="btnClear" class="btn btn-ghost">清空</button>
+    <button id="btnExport" class="btn btn-primary">导出 PDF</button>
+  </div>
+</div>
+
+<div id="warningBar" class="warning-bar" hidden>
+  <span class="warn-icon">⚠</span>
+  <span class="warn-text">内容溢出至第二页，建议精简文字以保持单页排版</span>
+  <button class="warn-close" onclick="document.getElementById('warningBar').hidden=true">×</button>
+</div>
+
+<div class="workspace">
+
+  <aside class="editor-panel">
+    <div class="panel-scroll">
+
+      <section class="field-group">
+        <h2 class="group-title">个人信息</h2>
+        <div class="field-row">
+          <label>姓名</label>
+          <input type="text" id="f-name" placeholder="张三" data-bind="name">
+        </div>
+        <div class="field-row">
+          <label>头衔</label>
+          <input type="text" id="f-title" placeholder="高级前端工程师" data-bind="title">
+        </div>
+        <div class="field-row-two">
+          <div class="field-row half">
+            <label>邮箱</label>
+            <input type="text" id="f-email" placeholder="name@example.com" data-bind="email">
+          </div>
+          <div class="field-row half">
+            <label>电话</label>
+            <input type="text" id="f-phone" placeholder="+86 138 0000 0000" data-bind="phone">
+          </div>
+        </div>
+        <div class="field-row">
+          <label>所在城市</label>
+          <input type="text" id="f-location" placeholder="北京 · 海淀" data-bind="location">
+        </div>
+        <div class="field-row">
+          <label>个人简介</label>
+          <textarea id="f-summary" rows="3" placeholder="一句话描述你自己..." data-bind="summary"></textarea>
+        </div>
+      </section>
+
+      <section class="field-group">
+        <div class="group-title-row">
+          <h2 class="group-title">教育背景</h2>
+          <button class="btn-add" data-add="education">+ 添加</button>
+        </div>
+        <div id="list-education" class="item-list"></div>
+      </section>
+
+      <section class="field-group">
+        <div class="group-title-row">
+          <h2 class="group-title">工作经历</h2>
+          <button class="btn-add" data-add="experience">+ 添加</button>
+        </div>
+        <div id="list-experiences" class="item-list"></div>
+      </section>
+
+      <section class="field-group">
+        <div class="group-title-row">
+          <h2 class="group-title">技能标签</h2>
+          <button class="btn-add" data-add="skill">+ 添加</button>
+        </div>
+        <div id="list-skills" class="item-list"></div>
+      </section>
+
+      <section class="field-group">
+        <div class="group-title-row">
+          <h2 class="group-title">项目链接</h2>
+          <button class="btn-add" data-add="project">+ 添加</button>
+        </div>
+        <div id="list-projects" class="item-list"></div>
+      </section>
+
+    </div>
+  </aside>
+
+  <main class="preview-panel">
+    <div class="preview-wrap">
+      <div id="resumePage" class="resume-page">
+        <div id="resumeContent" class="resume-content"></div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<div id="loadingMask" class="loading-mask" hidden>
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div>正在生成 PDF...</div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

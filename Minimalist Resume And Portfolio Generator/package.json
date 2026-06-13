@@ -1,0 +1,13 @@
+{
+  "name": "resume-generator",
+  "version": "1.0.0",
+  "description": "数字名片 - 所见即所得简历生成器",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
