@@ -36,34 +36,46 @@ function notify(msg, type) {
 }
 
 function inlineComputedStyles(root, source) {
-  // 把每个元素实际计算后的关键颜色/字体属性内联到 style 中，
-  // 确保 html2pdf 生成 PDF 时无需解析 CSS 变量也能正确显示
   const props = [
-    'color', 'background-color', 'background',
+    'color', 'background-color',
     'border-color', 'border-top-color', 'border-bottom-color',
     'border-left-color', 'border-right-color',
-    'font-family', 'font-size', 'font-weight',
-    'text-align', 'line-height', 'letter-spacing',
-    'padding', 'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
-    'margin', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
-    'border-radius', 'text-transform', 'text-decoration',
-    'justify-content', 'display', 'flex-wrap', 'gap'
+    'border-top-width', 'border-bottom-width', 'border-left-width', 'border-right-width',
+    'border-top-style', 'border-bottom-style', 'border-left-style', 'border-right-style',
+    'font-family', 'font-size', 'font-weight', 'font-style',
+    'line-height', 'letter-spacing', 'text-transform', 'text-decoration',
+    'text-align', 'vertical-align',
+    'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
+    'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
+    'width', 'min-width', 'max-width',
+    'height', 'min-height',
+    'border-radius',
+    'opacity', 'white-space',
+    'gap'
   ];
-  const nodes = root.querySelectorAll('*');
-  nodes.forEach(node => {
+
+  function apply(node) {
     const cs = window.getComputedStyle(node);
     let style = '';
     props.forEach(p => {
       const v = cs.getPropertyValue(p);
-      if (v) style += p + ': ' + v.trim() + '; ';
+      if (v !== undefined && v !== null && v !== '') style += p + ': ' + v.trim() + ' !important; ';
     });
+    // 显式保留 box-sizing，确保宽度测量一致
+    style += 'box-sizing: border-box !important; ';
     node.setAttribute('style', style);
-  });
-  // 根节点自身的背景色
-  const cs = window.getComputedStyle(source);
-  root.style.backgroundColor = cs.backgroundColor;
-  root.style.color = cs.color;
-  root.style.fontFamily = cs.fontFamily;
+  }
+
+  apply(root);
+  const children = root.querySelectorAll('*');
+  for (let i = 0; i < children.length; i++) {
+    apply(children[i]);
+  }
+
+  // 根节点额外确保背景和字体
+  const rootCs = window.getComputedStyle(source);
+  root.style.backgroundColor = rootCs.backgroundColor || '#ffffff';
+  root.style.color = rootCs.color || '#1a1a1a';
 }
 
 // ============ 初始化 ============
@@ -575,61 +587,94 @@ function loadDemoData() {
 
 // ============ PDF 导出 ============
 async function exportPDF() {
-  // 防止重复点击
   if (_exporting) {
     notify('正在生成 PDF，请稍候…', 'warn');
     return;
   }
   _exporting = true;
 
-  // 安全获取 DOM
   const mask = document.getElementById('loadingMask');
   const btn = document.getElementById('btnExport');
-  const resumeNode = document.getElementById('resumePage');
-
+  const resumePage = document.getElementById('resumePage');
   const oldBtnText = btn ? btn.textContent : '导出 PDF';
   if (mask) mask.style.display = 'flex';
-  if (btn) {
-    btn.textContent = '生成中…';
-    btn.disabled = true;
-  }
+  if (btn) { btn.textContent = '生成中…'; btn.disabled = true; }
 
   try {
-    if (!resumeNode) throw new Error('找不到简历预览区');
+    if (!resumePage) throw new Error('找不到简历预览区');
+
+    // ============ 关键修复 1：将 resumePage 克隆到独立的 A4 打印容器 ============
+    // 不直接移动原 DOM（避免闪烁），而是克隆到屏幕之外的精确 A4 容器
+    originalInlineStyle = resumePage.getAttribute('style') || '';
+
+    // 创建独立的打印容器（放到屏幕之外，但保持精确的 210mm 宽度）
+    const printContainer = document.createElement('div');
+    printContainer.style.position = 'fixed';
+    printContainer.style.top = '0';
+    printContainer.style.left = '-300mm';  // 放到屏幕左侧之外
+    printContainer.style.width = '210mm';
+    printContainer.style.minHeight = '297mm';
+    printContainer.style.backgroundColor = 'transparent';
+    printContainer.style.overflow = 'visible';
+    printContainer.style.zIndex = '9999';
+    printContainer.style.pointerEvents = 'none';
+    printContainer.setAttribute('id', 'pdfPrintContainer');
+    document.body.appendChild(printContainer);
+
+    // 克隆 resumePage 的内容
+    const clone = resumePage.cloneNode(true);
+    clone.style.margin = '0';
+    clone.style.padding = '0';
+    clone.style.boxShadow = 'none';
+    clone.style.borderRadius = '0';
+    clone.style.width = '210mm';
+    clone.style.height = 'auto';
+    clone.style.position = 'static';
+    clone.style.display = 'block';
+    clone.style.overflow = 'visible';
+    clone.removeAttribute('id');  // 避免 id 冲突
+    printContainer.appendChild(clone);
+
+    // 等待浏览器一帧时间完成重排
+    await new Promise(r => setTimeout(r, 80));
+
+    // ============ 关键修复 2：内联所有计算样式 ============
+    // 将 CSS 变量解析为实际颜色值，内联到每个元素
+    inlineComputedStyles(clone, resumePage);
+
+    // 显式设置页面背景
+    const sourceBg = window.getComputedStyle(resumePage).backgroundColor || '#ffffff';
+    clone.style.backgroundColor = sourceBg;
+
+    // 再次确保精确的 A4 宽度
+    clone.style.width = '210mm';
+    clone.style.overflow = 'visible';
+
+    // ============ 关键修复 3：精确的 html2pdf 参数 ============
     const name = (state.profile && state.profile.name) || 'resume';
     const filename = name + '-简历.pdf';
+    const actualWidth = clone.offsetWidth;
+    const actualHeight = clone.offsetHeight;
 
     if (typeof html2pdf !== 'undefined') {
-      // --- 方案 A：html2pdf 生成 PDF ---
-      // 把 DOM 克隆到一个固定尺寸的容器，并内联计算样式
-      const container = document.createElement('div');
-      container.style.position = 'fixed';
-      container.style.left = '-10000px';
-      container.style.top = '0';
-      container.style.width = '210mm';
-      container.style.minHeight = '297mm';
-      container.style.zIndex = '-1';
-
-      const resumeContent = resumeNode.cloneNode(true);
-      resumeContent.style.margin = '0';
-      resumeContent.style.padding = '0';
-      resumeContent.style.boxShadow = 'none';
-      container.appendChild(resumeContent);
-      document.body.appendChild(container);
-
-      inlineComputedStyles(resumeContent, resumeNode);
-
       const opt = {
         margin: 0,
         filename: filename,
-        image: { type: 'jpeg', quality: 0.96 },
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
-          backgroundColor: null,
-          logging: false,
           allowTaint: true,
-          windowWidth: resumeNode.offsetWidth || 794
+          backgroundColor: sourceBg,
+          logging: false,
+          windowWidth: actualWidth,
+          windowHeight: actualHeight,
+          ignoreElements: function(node) {
+            if (!node) return false;
+            const nid = node.id || '';
+            return nid === 'loadingMask' ||
+                   (node.classList && node.classList.contains('notify-bar'));
+          }
         },
         jsPDF: {
           unit: 'mm',
@@ -639,23 +684,29 @@ async function exportPDF() {
         pagebreak: { mode: ['css', 'legacy'] }
       };
 
-      await html2pdf().set(opt).from(resumeContent).save();
+      await html2pdf().set(opt).from(clone).save();
 
-      setTimeout(function () {
-        if (container && container.parentNode) container.parentNode.removeChild(container);
-      }, 800);
+      // 清理打印容器
+      if (printContainer.parentNode) printContainer.parentNode.removeChild(printContainer);
 
       notify('PDF 已生成并开始下载', 'success');
     } else {
-      // --- 方案 B：回退到浏览器打印 ---
+      // 备用方案：浏览器打印
+      if (printContainer.parentNode) printContainer.parentNode.removeChild(printContainer);
       notify('PDF 库尚未加载完成，已打开打印预览，请选择「另存为 PDF」', 'warn');
-      setTimeout(function () { window.print(); }, 400);
+      setTimeout(function() { window.print(); }, 400);
     }
   } catch (err) {
     console.error('PDF 导出错误:', err);
-    notify('PDF 导出失败：' + err.message + '（备用方案：按 Ctrl+P 或 ⌘+P 打印另存）', 'error');
+    notify('PDF 导出失败：' + err.message + '（备用方案：按 Ctrl+P 打印另存）', 'error');
   } finally {
-    setTimeout(function () {
+    // 确保清理任何残留的打印容器
+    try {
+      const leftover = document.getElementById('pdfPrintContainer');
+      if (leftover && leftover.parentNode) leftover.parentNode.removeChild(leftover);
+    } catch(e) {}
+
+    setTimeout(function() {
       if (mask) mask.style.display = 'none';
       if (btn) {
         btn.textContent = oldBtnText;
