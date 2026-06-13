@@ -1,0 +1,13 @@
+{
+  "name": "indie-radio-scheduler",
+  "version": "1.0.0",
+  "description": "24-hour schedule planner for indie podcast and radio show hosts",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

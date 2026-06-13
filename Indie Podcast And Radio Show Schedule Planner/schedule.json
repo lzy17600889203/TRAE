@@ -1,0 +1,420 @@
+{
+  "segments": [
+    {
+      "id": "s_maint_1",
+      "type": "intro",
+      "day": "2026-06-14",
+      "startMinute": 0,
+      "duration": 0,
+      "title": "__MAINTENANCE_DAY__"
+    },
+    {
+      "id": "preset_1781313621168_r6u3",
+      "type": "intro",
+      "day": "2026-06-12",
+      "startMinute": 1140,
+      "duration": 3,
+      "title": "开场曲"
+    },
+    {
+      "id": "preset_1781313621168_09xj",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 1143,
+      "duration": 22,
+      "title": "夜聊电台·第一回"
+    },
+    {
+      "id": "preset_1781313621168_mwtc",
+      "type": "ad",
+      "day": "2026-06-12",
+      "startMinute": 1165,
+      "duration": 5,
+      "title": "赞助商口播"
+    },
+    {
+      "id": "preset_1781313621168_d68n",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 1170,
+      "duration": 25,
+      "title": "夜聊电台·第二回"
+    },
+    {
+      "id": "preset_1781313621168_q80t",
+      "type": "ad",
+      "day": "2026-06-12",
+      "startMinute": 1195,
+      "duration": 5,
+      "title": "贴片广告"
+    },
+    {
+      "id": "preset_1781313621168_n7su",
+      "type": "outro",
+      "day": "2026-06-12",
+      "startMinute": 1200,
+      "duration": 4,
+      "title": "结语"
+    },
+    {
+      "id": "preset_1781313621168_k77a",
+      "type": "intro",
+      "day": "2026-06-12",
+      "startMinute": 1210,
+      "duration": 3,
+      "title": "第二档开场"
+    },
+    {
+      "id": "preset_1781313621168_xvko",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 1213,
+      "duration": 30,
+      "title": "深夜故事"
+    },
+    {
+      "id": "preset_1781313621168_5zo6",
+      "type": "ad",
+      "day": "2026-06-12",
+      "startMinute": 1243,
+      "duration": 7,
+      "title": "午夜咖啡"
+    },
+    {
+      "id": "preset_1781313621168_ro3e",
+      "type": "outro",
+      "day": "2026-06-12",
+      "startMinute": 1250,
+      "duration": 5,
+      "title": "晚安"
+    },
+    {
+      "id": "seg_1781313640092_lnwbb",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 1380,
+      "duration": 15,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313646378_93bzf",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 1380,
+      "duration": 15,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313650887_y24op",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 780,
+      "duration": 15,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313651193_18e6r",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 780,
+      "duration": 15,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313651581_ikj1w",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 780,
+      "duration": 15,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313661322_9u2i1",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 1080,
+      "duration": 33,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313696721_yx6gl",
+      "type": "main",
+      "day": "2026-06-12",
+      "startMinute": 61,
+      "duration": 33,
+      "title": "正片"
+    },
+    {
+      "id": "preset_1781313771529_ktj5",
+      "type": "intro",
+      "day": "2026-06-13",
+      "startMinute": 1140,
+      "duration": 3,
+      "title": "开场曲"
+    },
+    {
+      "id": "preset_1781313771529_vk4e",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 1143,
+      "duration": 22,
+      "title": "夜聊电台·第一回"
+    },
+    {
+      "id": "preset_1781313771529_vc7a",
+      "type": "ad",
+      "day": "2026-06-13",
+      "startMinute": 1165,
+      "duration": 5,
+      "title": "赞助商口播"
+    },
+    {
+      "id": "preset_1781313771529_5rgk",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 1170,
+      "duration": 25,
+      "title": "夜聊电台·第二回"
+    },
+    {
+      "id": "preset_1781313771529_0cxw",
+      "type": "ad",
+      "day": "2026-06-13",
+      "startMinute": 1195,
+      "duration": 5,
+      "title": "贴片广告"
+    },
+    {
+      "id": "preset_1781313771529_f0nk",
+      "type": "outro",
+      "day": "2026-06-13",
+      "startMinute": 1200,
+      "duration": 4,
+      "title": "结语"
+    },
+    {
+      "id": "preset_1781313771529_cduv",
+      "type": "intro",
+      "day": "2026-06-13",
+      "startMinute": 1210,
+      "duration": 3,
+      "title": "第二档开场"
+    },
+    {
+      "id": "preset_1781313771529_gvjt",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 1213,
+      "duration": 30,
+      "title": "深夜故事"
+    },
+    {
+      "id": "preset_1781313771529_jp7p",
+      "type": "ad",
+      "day": "2026-06-13",
+      "startMinute": 1243,
+      "duration": 7,
+      "title": "午夜咖啡"
+    },
+    {
+      "id": "preset_1781313771529_wh0q",
+      "type": "outro",
+      "day": "2026-06-13",
+      "startMinute": 1250,
+      "duration": 5,
+      "title": "晚安"
+    },
+    {
+      "id": "seg_1781313774300_lt3ad",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313774676_poote",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313774853_hbkhr",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313775010_3wrgq",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313775157_g5jvv",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313775304_vbye3",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313775487_93vbf",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313775646_4xvt5",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313775828_omvrx",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313775993_kvr42",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313776146_x9vc4",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313776308_6nwsr",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313776458_is95r",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313776729_zho49",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313777012_7jzqu",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313777185_2sspw",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313777339_i9eo2",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313777637_d62rc",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313777807_uczb9",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313777933_5osa2",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313778061_bn8jq",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313778212_0omgw",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313778364_yzsw0",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    },
+    {
+      "id": "seg_1781313778519_o45ag",
+      "type": "main",
+      "day": "2026-06-13",
+      "startMinute": 70,
+      "duration": 1,
+      "title": "正片"
+    }
+  ]
+}

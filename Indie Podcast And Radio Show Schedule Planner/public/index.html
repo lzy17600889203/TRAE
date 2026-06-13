@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>野生电台 · 24 小时排播表盘</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>野生电台 · 排播台</h1>
+    </div>
+    <div class="controls">
+      <label>日期
+        <input type="date" id="dayInput" />
+      </label>
+      <div class="presets">
+        <button data-preset="prime" class="preset-btn">黄金档爆满</button>
+        <button data-preset="latenight" class="preset-btn">深夜留白</button>
+        <button data-preset="overflow" class="preset-btn">严重超时</button>
+        <button data-preset="maintenance" class="preset-btn">停播检修</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel palette">
+      <h2>节目素材库</h2>
+      <p class="hint">把卡片拖到表盘上的时段即可排播</p>
+      <div class="palette-list">
+        <div class="chip" draggable="true" data-type="intro">
+          <span class="chip-dot"></span>
+          <div class="chip-text"><b>片头</b><small>默认 3 分钟</small></div>
+        </div>
+        <div class="chip" draggable="true" data-type="main">
+          <span class="chip-dot"></span>
+          <div class="chip-text"><b>正片</b><small>默认 45 分钟</small></div>
+        </div>
+        <div class="chip" draggable="true" data-type="ad">
+          <span class="chip-dot"></span>
+          <div class="chip-text"><b>广告</b><small>默认 8 分钟</small></div>
+        </div>
+        <div class="chip" draggable="true" data-type="outro">
+          <span class="chip-dot"></span>
+          <div class="chip-text"><b>片尾</b><small>默认 4 分钟</small></div>
+        </div>
+      </div>
+
+      <div class="form-block">
+        <h3>手动插入</h3>
+        <label>时段 (0-23)
+          <input type="number" id="hourInput" min="0" max="23" value="12" />
+        </label>
+        <label>分钟
+          <input type="number" id="minuteInput" min="0" max="59" value="0" />
+        </label>
+        <label>时长（分钟）
+          <input type="number" id="durationInput" min="1" max="240" value="15" />
+        </label>
+        <label>标题
+          <input type="text" id="titleInput" placeholder="节目名称" />
+        </label>
+        <label>类型
+          <select id="typeInput">
+            <option value="intro">片头</option>
+            <option value="main" selected>正片</option>
+            <option value="ad">广告</option>
+            <option value="outro">片尾</option>
+          </select>
+        </label>
+        <button id="insertBtn">插入到时段</button>
+      </div>
+
+      <div class="legend">
+        <h3>状态图例</h3>
+        <div class="legend-row"><span class="lg lg-warn"></span> 超过 60 分钟 / 警告红色</div>
+        <div class="legend-row"><span class="lg lg-blue"></span> 留白 / 自动白噪音</div>
+        <div class="legend-row"><span class="lg lg-gray"></span> 停播检修</div>
+      </div>
+    </section>
+
+    <section class="clock-wrap">
+      <div class="clock-shell">
+        <svg id="clock" viewBox="-320 -320 640 640" xmlns="http://www.w3.org/2000/svg" aria-label="24 小时排播表盘">
+          <defs>
+            <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#2d1b4e" stop-opacity="0.6" />
+              <stop offset="100%" stop-color="#0b0420" stop-opacity="0" />
+            </radialGradient>
+            <radialGradient id="primeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ff7a00" stop-opacity="0.55" />
+              <stop offset="80%" stop-color="#ff7a00" stop-opacity="0" />
+            </radialGradient>
+            <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2.5" />
+            </filter>
+          </defs>
+
+          <circle id="bgGlowCircle" r="300" fill="url(#bgGlow)" />
+          <g id="primeGlow"></g>
+
+          <!-- ring for each hour (24 slices) -->
+          <g id="hourRing"></g>
+
+          <!-- minute ticks / hour labels -->
+          <g id="ticks"></g>
+          <g id="labels"></g>
+
+          <!-- segments layer -->
+          <g id="segments"></g>
+
+          <!-- hour overflow markers -->
+          <g id="overflows"></g>
+
+          <!-- center hub -->
+          <g id="hub">
+            <circle r="60" fill="#0e0830" stroke="#5a4ba0" stroke-width="1.5" />
+            <circle r="50" fill="#150a3a" />
+            <text id="centerTitle" text-anchor="middle" y="-4" fill="#fff" font-size="14" font-weight="700">ON AIR</text>
+            <text id="centerSub" text-anchor="middle" y="16" fill="#9ea0ff" font-size="11">今天的节目</text>
+          </g>
+        </svg>
+
+        <div id="scissors" class="scissors hidden" aria-hidden="true">
+          <div class="scissors-body">
+            <svg viewBox="0 0 48 48" width="32" height="32">
+              <circle cx="15" cy="15" r="6" fill="none" stroke="#fff" stroke-width="2.5"/>
+              <circle cx="15" cy="33" r="6" fill="none" stroke="#fff" stroke-width="2.5"/>
+              <line x1="21" y1="15" x2="44" y2="42" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+              <line x1="21" y1="33" x2="44" y2="6" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <span>Cut!</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="clock-meta">
+        <div id="statusBadge" class="status-badge status-ok">状态：正常</div>
+        <div id="hourInfo" class="hour-info">将鼠标移到表盘上查看该小时的节目总时长</div>
+      </div>
+    </section>
+
+    <aside class="panel schedule">
+      <h2>当天排播清单</h2>
+      <p class="hint">每小时上限 60 分钟，超过自动变红警告</p>
+      <div id="scheduleList" class="schedule-list"></div>
+    </aside>
+  </main>
+
+  <footer class="footbar">
+    <span>后端：Express · 数据：JSON-DB（模拟 SQLite 查询）· 前端：Vanilla JS + SVG</span>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
