@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>银龄康养 · 居家适老化评估系统</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- 顶部品牌栏 -->
+  <header class="brand-header">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="17" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.1"/>
+          <path d="M12 22 C12 15 24 15 24 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="14" cy="17" r="1.5" fill="currentColor"/>
+          <circle cx="22" cy="17" r="1.5" fill="currentColor"/>
+          <circle cx="18" cy="10" r="3" fill="currentColor"/>
+        </svg>
+        <div>
+          <div class="brand-title">银龄康养</div>
+          <div class="brand-sub">社区康养顾问 · 居家适老化评估系统</div>
+        </div>
+      </div>
+      <nav class="state-nav">
+        <button class="state-btn active" data-state="profile">① 初始建档</button>
+        <button class="state-btn" data-state="assessing">② 正在评估</button>
+        <button class="state-btn" data-state="highrisk">③ 高危风险</button>
+        <button class="state-btn" data-state="safe">④ 安全居家</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- =============== 状态一：初始建档 =============== -->
+    <section class="screen screen-profile active" id="screen-profile">
+      <div class="profile-wrap">
+        <div class="profile-card">
+          <div class="profile-silhouette">
+            <svg width="180" height="200" viewBox="0 0 180 200">
+              <defs>
+                <linearGradient id="sil-g" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#a08060" stop-opacity="0.55"/>
+                  <stop offset="100%" stop-color="#6b4f3b" stop-opacity="0.35"/>
+                </linearGradient>
+              </defs>
+              <circle cx="90" cy="55" r="35" fill="url(#sil-g)"/>
+              <path d="M40 200 C40 130 60 110 90 110 C120 110 140 130 140 200 Z" fill="url(#sil-g)"/>
+            </svg>
+          </div>
+          <div class="profile-title">新档案</div>
+          <div class="profile-sub">等待第一次上门评估</div>
+
+          <div class="profile-form">
+            <div class="form-row">
+              <label>姓名</label>
+              <input type="text" id="p-name" placeholder="如：王爷爷" />
+            </div>
+            <div class="form-row two-col">
+              <div>
+                <label>年龄</label>
+                <input type="number" id="p-age" placeholder="75" min="50" max="120" />
+              </div>
+              <div>
+                <label>性别</label>
+                <select id="p-gender">
+                  <option value="">请选择</option>
+                  <option value="男">男</option>
+                  <option value="女">女</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>联系电话</label>
+              <input type="tel" id="p-phone" placeholder="138 **** 8888" />
+            </div>
+            <div class="form-row">
+              <label>家庭住址</label>
+              <input type="text" id="p-address" placeholder="北京市朝阳区 ** 街道 ** 号楼" />
+            </div>
+            <button class="primary-btn" id="btn-start-assess">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              开始上门评估
+            </button>
+            <div class="card-footnote">· 建档后即进入分步问卷评估流程 ·</div>
+          </div>
+        </div>
+
+        <aside class="profile-tips">
+          <h3>顾问操作提示</h3>
+          <ul>
+            <li>在老人家中现场开展评估，确保数据真实</li>
+            <li>六个维度每项独立打分 0-100，70 分以下触发改造建议</li>
+            <li>行动能力、浴室安全为重点关注维度</li>
+            <li>所有数据本地保存，保护老人隐私</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- =============== 状态二：正在评估 =============== -->
+    <section class="screen screen-assessing" id="screen-assessing">
+      <div class="assess-wrap">
+        <div class="progress-wrap">
+          <div class="progress-header">
+            <span id="progress-label">第 1 步 / 共 6 步</span>
+            <span id="progress-percent">17%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-steps">
+            <span class="step active" data-idx="0">行动</span>
+            <span class="step" data-idx="1">视力</span>
+            <span class="step" data-idx="2">听力</span>
+            <span class="step" data-idx="3">认知</span>
+            <span class="step" data-idx="4">浴室</span>
+            <span class="step" data-idx="5">客厅</span>
+          </div>
+        </div>
+
+        <div class="question-card" id="question-card">
+          <!-- 动态注入 -->
+        </div>
+
+        <div class="question-nav">
+          <button class="ghost-btn" id="btn-prev">← 上一步</button>
+          <button class="ghost-btn" id="btn-restart" style="display:none;">重新开始</button>
+          <button class="primary-btn" id="btn-next">下一步 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== 状态三：高危风险 =============== -->
+    <section class="screen screen-highrisk" id="screen-highrisk">
+      <div class="report-wrap report-highrisk">
+        <div class="danger-banner">
+          <div class="shield-badge">
+            <svg width="70" height="80" viewBox="0 0 70 80" fill="none">
+              <path d="M35 3 L65 13 L65 42 C65 60 50 74 35 78 C20 74 5 60 5 42 L5 13 Z" fill="#FFC400" stroke="#E69100" stroke-width="3"/>
+              <path d="M35 20 L35 52 M22 36 L48 36" stroke="#6B3C00" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="banner-text">
+            <div class="banner-title">⚠ 建议立即改造</div>
+            <div class="banner-sub">检测到多项高危风险指标，请优先处理以下高优先级改造项目</div>
+          </div>
+          <button class="ghost-btn on-yellow" id="btn-demo-highrisk">演示：高危案例</button>
+        </div>
+
+        <div class="report-score-row" id="highrisk-scores">
+          <!-- 动态注入 -->
+        </div>
+
+        <div class="report-grid">
+          <div class="report-panel">
+            <h3 class="panel-title danger">🚨 风险指标预警</h3>
+            <div class="warnings-list" id="highrisk-warnings"></div>
+          </div>
+          <div class="report-panel">
+            <h3 class="panel-title danger">🛠 适老化改造建议</h3>
+            <div class="recommendations-list" id="highrisk-recs"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== 状态四：安全居家 =============== -->
+    <section class="screen screen-safe" id="screen-safe">
+      <div class="report-wrap report-safe">
+        <div class="safe-hero">
+          <div class="sun-icon">
+            <svg width="90" height="90" viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="22" fill="#FFD86B"/>
+              <g stroke="#FFB547" stroke-width="3" stroke-linecap="round">
+                <line x1="45" y1="5" x2="45" y2="18"/>
+                <line x1="45" y1="72" x2="45" y2="85"/>
+                <line x1="5" y1="45" x2="18" y2="45"/>
+                <line x1="72" y1="45" x2="85" y2="45"/>
+                <line x1="16" y1="16" x2="26" y2="26"/>
+                <line x1="64" y1="64" x2="74" y2="74"/>
+                <line x1="16" y1="74" x2="26" y2="64"/>
+                <line x1="64" y1="26" x2="74" y2="16"/>
+              </g>
+            </svg>
+          </div>
+          <div class="safe-text">
+            <div class="safe-title">✓ 安全居家</div>
+            <div class="safe-sub">所有指标均处于绿色安全区，居家环境温馨安全</div>
+          </div>
+          <button class="ghost-btn on-warm" id="btn-demo-safe">演示：安全案例</button>
+        </div>
+
+        <div class="report-score-row safe-scores" id="safe-scores">
+          <!-- 动态注入 -->
+        </div>
+
+        <div class="report-panel warm-panel">
+          <h3 class="panel-title safe">🌟 温馨提示</h3>
+          <div class="safe-summary" id="safe-summary"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 工具按钮：快速演示切换 -->
+  <div class="demo-tools">
+    <span>快速演示：</span>
+    <button class="chip" onclick="switchState('profile')">初始建档</button>
+    <button class="chip" onclick="switchState('assessing')">正在评估</button>
+    <button class="chip danger" onclick="demoHighRisk()">高危风险</button>
+    <button class="chip safe" onclick="demoSafe()">安全居家</button>
+  </div>
+
+  <!-- 红色警示灯（悬浮） -->
+  <div class="warning-light hidden" id="warning-light">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="#FF3B30"><circle cx="12" cy="12" r="10"/></svg>
+  </div>
+
+  <footer class="app-foot">银龄康养 · 社区康养顾问评估工具 · v1.0</footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
