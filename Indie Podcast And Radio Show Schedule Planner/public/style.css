@@ -257,3 +257,98 @@ body {
   .layout { grid-template-columns: 1fr; }
   .clock-shell { width: min(90vmin, 560px); }
 }
+
+/* --------- 自定义插入节目 Modal --------- */
+.modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-root.open { display: flex; }
+.modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(5, 2, 20, 0.7);
+  backdrop-filter: blur(4px);
+}
+.modal-dialog {
+  position: relative;
+  width: min(420px, 92vw);
+  background: linear-gradient(180deg, #1c1350, #120933);
+  border: 1px solid #3a2e85;
+  border-radius: 16px;
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,0.7);
+  color: #e8e4ff;
+  animation: modalIn 180ms ease-out;
+  user-select: none;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #2c2366;
+}
+.modal-header h3 { margin: 0; font-size: 16px; letter-spacing: 1px; }
+.modal-close {
+  background: transparent; border: none; color: #9ea0ff;
+  font-size: 22px; line-height: 1; cursor: pointer;
+  width: 28px; height: 28px; border-radius: 6px;
+}
+.modal-close:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+.modal-body { padding: 16px 18px; }
+.drop-summary {
+  font-size: 13px; color: #c5bfff; background: rgba(255,122,0,0.08);
+  border: 1px solid rgba(255,122,0,0.35); border-radius: 10px;
+  padding: 10px 12px; margin-bottom: 14px; line-height: 1.5;
+}
+.form-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+.form-row label { width: 96px; font-size: 13px; color: #9a97d6; }
+.form-row input {
+  flex: 1;
+  background: #0b0730;
+  color: #fff;
+  border: 1px solid #2c2366;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  outline: none;
+}
+.form-row input:focus { border-color: #ff7a00; box-shadow: 0 0 0 3px rgba(255,122,0,0.25); }
+
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid #2c2366;
+}
+.btn {
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  border: 1px solid transparent;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: linear-gradient(180deg, #ff7a00, #e85a00);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.btn-primary:hover { box-shadow: 0 8px 22px -10px rgba(255,122,0,0.9); }
+.btn-ghost {
+  background: transparent;
+  color: #c5bfff;
+  border-color: #2c2366;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+.modal-error {
+  color: #ff6b6b; font-size: 12px; margin-top: 4px;
+}

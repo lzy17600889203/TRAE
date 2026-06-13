@@ -439,7 +439,7 @@
     clockSvg.addEventListener('dragleave', () => {
       document.querySelectorAll('#hourRing path').forEach((p) => p.classList.remove('hovered'));
     });
-    clockSvg.addEventListener('drop', async (e) => {
+    clockSvg.addEventListener('drop', (e) => {
       e.preventDefault();
       const type = e.dataTransfer.getData('text/plain') || dragType;
       document.querySelectorAll('#hourRing path').forEach((p) => p.classList.remove('hovered'));
@@ -447,13 +447,9 @@
       if (!type) return;
       const pt = svgPoint(e.clientX, e.clientY);
       const hour = pointToHour(pt);
+      if (hour < 0) return;
       const minute = pointToMinuteWithinHour(pt, hour);
-      const duration = Number(prompt(`在 ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} 插入 ${TYPE_LABEL[type]}。时长（分钟）`, DEFAULT_DURATION[type]) || 0);
-      if (!duration) return;
-      const title = prompt('节目名称（可留空）', '') || TYPE_LABEL[type];
-      const startMinute = hour * 60 + minute;
-      await addSegment({ type, day: currentDay, startMinute, duration, title });
-      refresh();
+      openDropModal({ type, hour, minute });
     });
 
     // hover tooltip for hours
@@ -466,6 +462,88 @@
       const min = bucket ? bucket.totalMinutes : 0;
       hourInfo.textContent = `${String(hour).padStart(2, '0')}:00 档 · 合计 ${min} / ${limit} 分钟${bucket && bucket.overflow ? ' · ⚠️ 溢出' : ''}`;
     });
+  }
+
+  // ---------- 自定义 drop modal ----------
+  let dropContext = null;
+
+  function openDropModal(ctx) {
+    dropContext = ctx;
+    const { type, hour, minute } = ctx;
+    const modal = document.getElementById('dropModal');
+    const summary = document.getElementById('dropSummary');
+    const durInput = document.getElementById('dropDuration');
+    const titleInput = document.getElementById('dropTitle');
+    const errEl = document.getElementById('dropError');
+    const confirmBtn = document.getElementById('dropConfirmBtn');
+
+    summary.innerHTML = `在 <b>${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}</b> 插入 <b style="color:#ffb347">${TYPE_LABEL[type]}</b>`;
+    durInput.value = DEFAULT_DURATION[type];
+    titleInput.value = '';
+    errEl.style.display = 'none';
+    errEl.textContent = '';
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+
+    const closeButtons = modal.querySelectorAll('[data-role="close"]');
+    closeButtons.forEach((b) => b.onclick = closeDropModal);
+
+    const onKey = (ev) => {
+      if (ev.key === 'Escape') { closeDropModal(); }
+      else if (ev.key === 'Enter' && (ev.target === durInput || ev.target === titleInput)) {
+        ev.preventDefault();
+        confirmBtn.click();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    modal._onKey = onKey;
+
+    // input validation while typing: show error & keep confirm button disabled if invalid
+    const validate = () => {
+      const v = Number(durInput.value) || 0;
+      if (v < 1 || v > 480) {
+        errEl.textContent = '请输入 1–480 之间的分钟数';
+        errEl.style.display = 'block';
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = '0.5';
+        confirmBtn.style.cursor = 'not-allowed';
+      } else {
+        errEl.style.display = 'none';
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = '';
+        confirmBtn.style.cursor = '';
+      }
+    };
+    durInput.addEventListener('input', validate);
+    titleInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); confirmBtn.click(); }
+    });
+    validate();
+
+    confirmBtn.onclick = async () => {
+      const d = Math.max(1, Math.min(480, Number(durInput.value) || 0));
+      if (!d) { durInput.focus(); return; }
+      const t = titleInput.value.trim() || TYPE_LABEL[type];
+      closeDropModal();
+      const startMinute = hour * 60 + minute;
+      await addSegment({ type, day: currentDay, startMinute, duration: d, title: t });
+      refresh();
+    };
+
+    // autofocus duration input with value pre-selected
+    setTimeout(() => { durInput.select(); durInput.focus(); }, 30);
+  }
+
+  function closeDropModal() {
+    const modal = document.getElementById('dropModal');
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    if (modal._onKey) {
+      document.removeEventListener('keydown', modal._onKey);
+      modal._onKey = null;
+    }
+    dropContext = null;
   }
 
   function svgPoint(clientX, clientY) {

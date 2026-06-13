@@ -153,6 +153,33 @@
     <span>后端：Express · 数据：JSON-DB（模拟 SQLite 查询）· 前端：Vanilla JS + SVG</span>
   </footer>
 
+  <!-- 自定义"插入节目"模态 -->
+  <div id="dropModal" class="modal-root" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dropModalTitle">
+    <div class="modal-backdrop" data-role="close"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="dropModalTitle">插入节目</h3>
+        <button class="modal-close" data-role="close" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="dropSummary" class="drop-summary"></div>
+        <div class="form-row">
+          <label for="dropDuration">时长（分钟）</label>
+          <input type="number" id="dropDuration" min="1" max="480" step="1" autofocus />
+        </div>
+        <div class="form-row">
+          <label for="dropTitle">节目名称</label>
+          <input type="text" id="dropTitle" placeholder="留空则使用默认名称" />
+        </div>
+        <div id="dropError" class="modal-error" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-role="close">取消</button>
+        <button class="btn btn-primary" id="dropConfirmBtn">确认插入</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/app.js"></script>
 </body>
 </html>
