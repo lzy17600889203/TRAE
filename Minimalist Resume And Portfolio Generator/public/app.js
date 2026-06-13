@@ -36,7 +36,9 @@ function notify(msg, type) {
 }
 
 function inlineComputedStyles(root, source) {
-  const props = [
+  // 仅内联视觉属性（颜色/字体/边框颜色），绝不内联 width/margin/padding/布局属性
+  // 防止破坏 A4 精确 210mm 宽的 CSS 布局
+  const visualProps = [
     'color', 'background-color',
     'border-color', 'border-top-color', 'border-bottom-color',
     'border-left-color', 'border-right-color',
@@ -45,37 +47,27 @@ function inlineComputedStyles(root, source) {
     'font-family', 'font-size', 'font-weight', 'font-style',
     'line-height', 'letter-spacing', 'text-transform', 'text-decoration',
     'text-align', 'vertical-align',
-    'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
-    'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
-    'width', 'min-width', 'max-width',
-    'height', 'min-height',
-    'border-radius',
-    'opacity', 'white-space',
-    'gap'
+    'border-radius', 'white-space'
   ];
 
   function apply(node) {
     const cs = window.getComputedStyle(node);
-    let style = '';
-    props.forEach(p => {
+    let style = node.getAttribute('style') || '';
+    if (style && !style.trim().endsWith(';')) style += '; ';
+    visualProps.forEach(p => {
       const v = cs.getPropertyValue(p);
       if (v !== undefined && v !== null && v !== '') style += p + ': ' + v.trim() + ' !important; ';
     });
-    // 显式保留 box-sizing，确保宽度测量一致
-    style += 'box-sizing: border-box !important; ';
-    node.setAttribute('style', style);
+    if (style) node.setAttribute('style', style);
   }
 
-  apply(root);
-  const children = root.querySelectorAll('*');
-  for (let i = 0; i < children.length; i++) {
-    apply(children[i]);
-  }
+  // 仅内联子元素（文本/标签/段落）的视觉属性
+  const allNodes = root.querySelectorAll('*');
+  for (let i = 0; i < allNodes.length; i++) apply(allNodes[i]);
 
-  // 根节点额外确保背景和字体
+  // 根节点确保背景色
   const rootCs = window.getComputedStyle(source);
   root.style.backgroundColor = rootCs.backgroundColor || '#ffffff';
-  root.style.color = rootCs.color || '#1a1a1a';
 }
 
 // ============ 初始化 ============
@@ -600,119 +592,182 @@ async function exportPDF() {
   if (mask) mask.style.display = 'flex';
   if (btn) { btn.textContent = '生成中…'; btn.disabled = true; }
 
-  try {
-    if (!resumePage) throw new Error('找不到简历预览区');
-
-    // ============ 关键修复 1：将 resumePage 克隆到独立的 A4 打印容器 ============
-    // 不直接移动原 DOM（避免闪烁），而是克隆到屏幕之外的精确 A4 容器
-    originalInlineStyle = resumePage.getAttribute('style') || '';
-
-    // 创建独立的打印容器（放到屏幕之外，但保持精确的 210mm 宽度）
-    const printContainer = document.createElement('div');
-    printContainer.style.position = 'fixed';
-    printContainer.style.top = '0';
-    printContainer.style.left = '-300mm';  // 放到屏幕左侧之外
-    printContainer.style.width = '210mm';
-    printContainer.style.minHeight = '297mm';
-    printContainer.style.backgroundColor = 'transparent';
-    printContainer.style.overflow = 'visible';
-    printContainer.style.zIndex = '9999';
-    printContainer.style.pointerEvents = 'none';
-    printContainer.setAttribute('id', 'pdfPrintContainer');
-    document.body.appendChild(printContainer);
-
-    // 克隆 resumePage 的内容
-    const clone = resumePage.cloneNode(true);
-    clone.style.margin = '0';
-    clone.style.padding = '0';
-    clone.style.boxShadow = 'none';
-    clone.style.borderRadius = '0';
-    clone.style.width = '210mm';
-    clone.style.height = 'auto';
-    clone.style.position = 'static';
-    clone.style.display = 'block';
-    clone.style.overflow = 'visible';
-    clone.removeAttribute('id');  // 避免 id 冲突
-    printContainer.appendChild(clone);
-
-    // 等待浏览器一帧时间完成重排
-    await new Promise(r => setTimeout(r, 80));
-
-    // ============ 关键修复 2：内联所有计算样式 ============
-    // 将 CSS 变量解析为实际颜色值，内联到每个元素
-    inlineComputedStyles(clone, resumePage);
-
-    // 显式设置页面背景
-    const sourceBg = window.getComputedStyle(resumePage).backgroundColor || '#ffffff';
-    clone.style.backgroundColor = sourceBg;
-
-    // 再次确保精确的 A4 宽度
-    clone.style.width = '210mm';
-    clone.style.overflow = 'visible';
-
-    // ============ 关键修复 3：精确的 html2pdf 参数 ============
-    const name = (state.profile && state.profile.name) || 'resume';
-    const filename = name + '-简历.pdf';
-    const actualWidth = clone.offsetWidth;
-    const actualHeight = clone.offsetHeight;
-
-    if (typeof html2pdf !== 'undefined') {
-      const opt = {
-        margin: 0,
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: sourceBg,
-          logging: false,
-          windowWidth: actualWidth,
-          windowHeight: actualHeight,
-          ignoreElements: function(node) {
-            if (!node) return false;
-            const nid = node.id || '';
-            return nid === 'loadingMask' ||
-                   (node.classList && node.classList.contains('notify-bar'));
-          }
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait'
-        },
-        pagebreak: { mode: ['css', 'legacy'] }
-      };
-
-      await html2pdf().set(opt).from(clone).save();
-
-      // 清理打印容器
-      if (printContainer.parentNode) printContainer.parentNode.removeChild(printContainer);
-
-      notify('PDF 已生成并开始下载', 'success');
-    } else {
-      // 备用方案：浏览器打印
-      if (printContainer.parentNode) printContainer.parentNode.removeChild(printContainer);
-      notify('PDF 库尚未加载完成，已打开打印预览，请选择「另存为 PDF」', 'warn');
-      setTimeout(function() { window.print(); }, 400);
-    }
-  } catch (err) {
-    console.error('PDF 导出错误:', err);
-    notify('PDF 导出失败：' + err.message + '（备用方案：按 Ctrl+P 打印另存）', 'error');
-  } finally {
-    // 确保清理任何残留的打印容器
+  // 统一清理函数
+  function cleanup() {
     try {
       const leftover = document.getElementById('pdfPrintContainer');
       if (leftover && leftover.parentNode) leftover.parentNode.removeChild(leftover);
     } catch(e) {}
+    if (mask) mask.style.display = 'none';
+    if (btn) {
+      btn.textContent = oldBtnText;
+      btn.disabled = false;
+    }
+    _exporting = false;
+  }
 
-    setTimeout(function() {
-      if (mask) mask.style.display = 'none';
-      if (btn) {
-        btn.textContent = oldBtnText;
-        btn.disabled = false;
-      }
-      _exporting = false;
-    }, 1200);
+  try {
+    if (!resumePage) throw new Error('找不到简历预览区');
+
+    // ============================================================
+    // 关键修复：创建 A4 打印容器放在屏幕左上角可视区 (0,0)
+    // 用 opacity:0 让它在 html2canvas 看来可见（能截图），对用户不可见
+    // ============================================================
+    const printContainer = document.createElement('div');
+    printContainer.setAttribute('id', 'pdfPrintContainer');
+    printContainer.style.cssText = [
+      'position: fixed',
+      'left: 0',
+      'top: 0',
+      'width: 210mm',
+      'height: auto',
+      'min-height: 297mm',
+      'margin: 0',
+      'padding: 0',
+      'background-color: #ffffff',
+      'overflow: visible',
+      'z-index: 1',
+      'pointer-events: none',
+      'opacity: 0',
+      'box-shadow: none',
+      'border: 0'
+    ].join(' !important; ') + ' !important;';
+    document.body.appendChild(printContainer);
+
+    // 克隆简历内容
+    const clone = resumePage.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.style.cssText = [
+      'position: static',
+      'display: block',
+      'width: 210mm',
+      'height: auto',
+      'margin: 0',
+      'padding: 18mm 18mm 16mm',
+      'box-sizing: border-box',
+      'box-shadow: none',
+      'border-radius: 0',
+      'overflow: visible',
+      'transform: none',
+      'top: auto',
+      'left: auto',
+      'page-break-inside: auto'
+    ].join(' !important; ') + ' !important;';
+    printContainer.appendChild(clone);
+
+    // 等待浏览器布局
+    await new Promise(r => setTimeout(r, 120));
+
+    // 内联视觉样式（颜色/字体/边框），不碰布局
+    inlineComputedStyles(clone, resumePage);
+
+    // 精确设置背景
+    const sourceBg = window.getComputedStyle(resumePage).backgroundColor || '#ffffff';
+    clone.style.backgroundColor = sourceBg;
+    printContainer.style.backgroundColor = sourceBg;
+
+    // 清空滚动状态（html2canvas 用 scroll 做裁剪起点，必须清零）
+    window.scrollTo(0, 0);
+    printContainer.scrollLeft = 0;
+    printContainer.scrollTop = 0;
+
+    // 精确测量
+    const widthPx = clone.offsetWidth;
+    const heightPx = clone.offsetHeight;
+    console.log('[PDF] clone size:', widthPx, 'x', heightPx, 'px;  210mm ≈', (210 * 96 / 25.4).toFixed(1), 'px');
+
+    // ============================================================
+    // 关键修复：直接使用 html2canvas + jsPDF 手动分页
+    // 绕过 html2pdf.js 自动分页/偏移的 bug
+    // ============================================================
+
+    // Step 1: 用 html2canvas 截取完整克隆节点（不裁剪、不分页）
+    const canvas = await html2canvas(clone, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: sourceBg,
+      logging: false,
+      windowWidth: widthPx,
+      windowHeight: heightPx,
+      scrollX: 0,
+      scrollY: 0
+    });
+
+    // Step 2: 手动通过 jsPDF 按 A4 高度分页
+    // A4: 210mm x 297mm,  1mm = 96/25.4 ≈ 3.7795 px
+    const MM_TO_PX = 96 / 25.4;
+    const A4_WIDTH_MM = 210;
+    const A4_HEIGHT_MM = 297;
+    const A4_HEIGHT_PX = A4_HEIGHT_MM * MM_TO_PX;
+
+    // 计算 canvas 实际每毫米对应的像素（scale=2 所以 canvas.width ≈ 2*widthPx）
+    const pxPerMm = canvas.width / A4_WIDTH_MM;
+    const pageHeightPxInCanvas = pxPerMm * A4_HEIGHT_MM;
+
+    // 生成 PDF
+    const name = (state.profile && state.profile.name) || 'resume';
+    const filename = name + '-简历.pdf';
+
+    const { jsPDF } = window.jspdf || {};
+    let pdf;
+    if (jsPDF) {
+      // 标准 jsPDF v2.x API
+      pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    } else if (window.jsPDF) {
+      pdf = new window.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    } else {
+      throw new Error('jsPDF 未加载');
+    }
+
+    const totalHeightPx = canvas.height;
+    let renderedHeightPx = 0;
+    let pageIndex = 0;
+
+    while (renderedHeightPx < totalHeightPx) {
+      // 当前页在 canvas 中的高度（最后一页可能不足 A4 高）
+      const remainingPx = totalHeightPx - renderedHeightPx;
+      const pageCanvasHeightPx = Math.min(remainingPx, pageHeightPxInCanvas);
+
+      // 创建一个仅为本页高度的新 canvas
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = pageCanvasHeightPx;
+      const pctx = pageCanvas.getContext('2d');
+
+      // 用白色填充背景（防止透明区域）
+      pctx.fillStyle = sourceBg && sourceBg !== 'rgba(0, 0, 0, 0)' ? sourceBg : '#ffffff';
+      pctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+      // 从大 canvas 中按 y 偏移取当前页
+      pctx.drawImage(
+        canvas,
+        0, renderedHeightPx,                  // 源: x, y
+        canvas.width, pageCanvasHeightPx,     // 源: w, h
+        0, 0,                                 // 目标: x, y
+        canvas.width, pageCanvasHeightPx      // 目标: w, h
+      );
+
+      // 将本页 canvas 作为 JPEG 放入 PDF
+      const imgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+      if (pageIndex > 0) pdf.addPage();
+      // addImage(imageData, format, x, y, w, h)
+      pdf.addImage(imgData, 'JPEG', 0, 0, A4_WIDTH_MM, (pageCanvasHeightPx / pxPerMm));
+
+      renderedHeightPx += pageCanvasHeightPx;
+      pageIndex++;
+    }
+
+    pdf.save(filename);
+
+    // 清理打印容器
+    if (printContainer.parentNode) printContainer.parentNode.removeChild(printContainer);
+
+    notify('PDF 已生成并开始下载（' + pageIndex + ' 页）', 'success');
+  } catch (err) {
+    console.error('PDF 导出错误:', err);
+    notify('PDF 导出失败：' + err.message + '（备用方案：按 Ctrl+P 打印另存）', 'error');
+  } finally {
+    setTimeout(cleanup, 800);
   }
 }
