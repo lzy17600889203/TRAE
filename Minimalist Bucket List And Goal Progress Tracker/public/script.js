@@ -4,6 +4,10 @@ let demoMode = 'normal';
 
 const CONTAINER = document.getElementById('goals-container');
 const CONFETTI_CANVAS = document.getElementById('confetti-canvas');
+const CONFIRM_MODAL = document.getElementById('confirm-modal');
+
+let confirmHandler = null;  // 当前确认弹窗的回调函数
+let isConfirmShowing = false;  // 防止重复弹窗
 
 // ============= 预设演示数据 =============
 const DEMO_PRESETS = {
@@ -43,6 +47,50 @@ const DEMO_PRESETS = {
 };
 
 // ============= 工具函数 =============
+function showConfirmDialog(message, onConfirm, title) {
+  if (isConfirmShowing) return;
+  isConfirmShowing = true;
+
+  CONFIRM_MODAL.querySelector('.confirm-message').textContent =
+    message || '确定要执行此操作吗？';
+  CONFIRM_MODAL.querySelector('.confirm-title').textContent =
+    title || '确认操作';
+
+  const okBtn = CONFIRM_MODAL.querySelector('.confirm-btn-ok');
+  const cancelBtn = CONFIRM_MODAL.querySelector('.confirm-btn-cancel');
+  const backdrop = CONFIRM_MODAL.querySelector('.confirm-backdrop');
+
+  confirmHandler = () => {
+    hideConfirmDialog();
+    if (typeof onConfirm === 'function') onConfirm();
+  };
+
+  const cancelHandler = () => hideConfirmDialog();
+
+  okBtn.onclick = confirmHandler;
+  cancelBtn.onclick = cancelHandler;
+  backdrop.onclick = cancelHandler;
+
+  document.onkeydown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      hideConfirmDialog();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (confirmHandler) confirmHandler();
+    }
+  };
+
+  CONFIRM_MODAL.hidden = false;
+}
+
+function hideConfirmDialog() {
+  CONFIRM_MODAL.hidden = true;
+  isConfirmShowing = false;
+  confirmHandler = null;
+  document.onkeydown = null;
+}
+
 function playDingSound() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -226,7 +274,10 @@ function renderGoalCard(goal) {
     card.classList.add('abandoned');
   }
 
-  card.querySelector('.btn-delete').addEventListener('click', () => handleDeleteGoal(goal.id));
+  card.querySelector('.btn-delete').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleDeleteGoal(goal.id, goal.title);
+  });
 
   CONTAINER.appendChild(card);
 }
@@ -349,13 +400,19 @@ function handleCreateGoal(card) {
     });
 }
 
-function handleDeleteGoal(goalId) {
-  if (!confirm('确定要删除这个愿望吗？')) return;
-  goals = goals.filter(g => g.id !== goalId);
-  renderGoals();
-  if (typeof goalId === 'number') {
-    fetch(`/api/goals/${goalId}`, { method: 'DELETE' }).catch(() => {});
-  }
+function handleDeleteGoal(goalId, goalTitle) {
+  const displayTitle = goalTitle ? `「${goalTitle}」` : '这个愿望';
+
+  showConfirmDialog(
+    `删除后无法恢复，确定要删除${displayTitle}吗？`,
+    () => {
+      goals = goals.filter(g => g.id !== goalId);
+      renderGoals();
+      // 无论 ID 类型都发送 DELETE 请求 — 确保删除一定落库
+      fetch(`/api/goals/${goalId}`, { method: 'DELETE' }).catch(() => {});
+    },
+    '删除愿望'
+  );
 }
 
 // ============= 演示模式切换 =============
@@ -409,15 +466,48 @@ function fetchAndRender() {
           title: g.title,
           subtasks: g.subtasks.map(s => ({ ...s, completed: !!s.completed })),
         }));
+        renderGoals();
       } else {
+        // 数据库为空 — 通过 POST 真正创建一条演示数据（带数字 ID），而不是在内存中伪造
         const preset = DEMO_PRESETS['normal'];
-        goals = [{
-          id: 'demo-normal',
-          title: preset.title,
-          subtasks: preset.subtasks.map((s, i) => ({ id: i, text: s.text, completed: s.completed })),
-        }];
+        fetch('/api/goals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: preset.title,
+            subtasks: preset.subtasks.map(s => s.text),
+          }),
+        })
+          .then(res => res.json())
+          .then(newGoal => {
+            goals = [{
+              id: newGoal.id,
+              title: newGoal.title,
+              subtasks: newGoal.subtasks.map(s => ({ ...s, completed: !!s.completed })),
+            }];
+            // 将前 3 个子任务设为已完成（匹配预设的"日常推进"状态）
+            goals[0].subtasks.forEach((s, i) => {
+              if (preset.subtasks[i] && preset.subtasks[i].completed) {
+                s.completed = true;
+                fetch(`/api/subtasks/${s.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ completed: true }),
+                }).catch(() => {});
+              }
+            });
+            renderGoals();
+          })
+          .catch(() => {
+            // 兜底：网络失败时仍然在内存中渲染演示数据
+            goals = [{
+              id: 'demo-normal',
+              title: preset.title,
+              subtasks: preset.subtasks.map((s, i) => ({ id: i, text: s.text, completed: s.completed })),
+            }];
+            renderGoals();
+          });
       }
-      renderGoals();
     })
     .catch(() => {
       const preset = DEMO_PRESETS['normal'];
