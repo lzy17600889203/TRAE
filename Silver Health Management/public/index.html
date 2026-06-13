@@ -54,17 +54,17 @@
 
           <div class="profile-form">
             <div class="form-row">
-              <label>姓名</label>
-              <input type="text" id="p-name" placeholder="如：王爷爷" />
+              <label><span class="req">*</span> 姓名</label>
+              <input type="text" id="p-name" placeholder="如：王爷爷" required />
             </div>
             <div class="form-row two-col">
               <div>
-                <label>年龄</label>
-                <input type="number" id="p-age" placeholder="75" min="50" max="120" />
+                <label><span class="req">*</span> 年龄</label>
+                <input type="number" id="p-age" placeholder="75" min="50" max="120" required />
               </div>
               <div>
-                <label>性别</label>
-                <select id="p-gender">
+                <label><span class="req">*</span> 性别</label>
+                <select id="p-gender" required>
                   <option value="">请选择</option>
                   <option value="男">男</option>
                   <option value="女">女</option>
@@ -79,13 +79,14 @@
               <label>家庭住址</label>
               <input type="text" id="p-address" placeholder="北京市朝阳区 ** 街道 ** 号楼" />
             </div>
+            <div class="form-error" id="form-error" hidden></div>
             <button class="primary-btn" id="btn-start-assess">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              开始上门评估
+              先建档 · 再开始评估
             </button>
-            <div class="card-footnote">· 建档后即进入分步问卷评估流程 ·</div>
+            <div class="card-footnote">· 身份信息是评估报告的依据，需完整填写 ·</div>
           </div>
         </div>
 
@@ -104,6 +105,11 @@
     <!-- =============== 状态二：正在评估 =============== -->
     <section class="screen screen-assessing" id="screen-assessing">
       <div class="assess-wrap">
+        <div class="assess-subject" id="assess-subject">
+          <span class="subj-tag">评估对象</span>
+          <span class="subj-name" id="subj-name">—</span>
+          <span class="subj-info" id="subj-info">—</span>
+        </div>
         <div class="progress-wrap">
           <div class="progress-header">
             <span id="progress-label">第 1 步 / 共 6 步</span>
@@ -137,6 +143,10 @@
     <!-- =============== 状态三：高危风险 =============== -->
     <section class="screen screen-highrisk" id="screen-highrisk">
       <div class="report-wrap report-highrisk">
+        <div class="report-subject" id="highrisk-subject">
+          <span class="subj-tag">评估对象</span>
+          <span class="subj-info" id="highrisk-info">—</span>
+        </div>
         <div class="danger-banner">
           <div class="shield-badge">
             <svg width="70" height="80" viewBox="0 0 70 80" fill="none">
@@ -171,6 +181,10 @@
     <!-- =============== 状态四：安全居家 =============== -->
     <section class="screen screen-safe" id="screen-safe">
       <div class="report-wrap report-safe">
+        <div class="report-subject warm" id="safe-subject">
+          <span class="subj-tag">评估对象</span>
+          <span class="subj-info" id="safe-info">—</span>
+        </div>
         <div class="safe-hero">
           <div class="sun-icon">
             <svg width="90" height="90" viewBox="0 0 90 90">

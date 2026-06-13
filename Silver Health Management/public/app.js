@@ -109,23 +109,102 @@
 
   // ---------- 初始建档 ----------
   function startAssessment() {
-    const profile = {
-      name: $('p-name').value || '匿名老人',
-      age: parseInt($('p-age').value) || null,
-      gender: $('p-gender').value,
-      phone: $('p-phone').value,
-      address: $('p-address').value
+    // 清除上一次的错误提示
+    const errorBox = $('form-error');
+    errorBox.hidden = true;
+    errorBox.textContent = '';
+
+    // 收集输入值并做前端必填校验
+    const nameRaw = $('p-name').value.trim();
+    const ageRaw = $('p-age').value.trim();
+    const genderRaw = $('p-gender').value;
+    const phoneRaw = $('p-phone').value.trim();
+    const addressRaw = $('p-address').value.trim();
+
+    const missing = [];
+    if (!nameRaw) missing.push('姓名');
+    if (!ageRaw) missing.push('年龄');
+    if (!genderRaw) missing.push('性别');
+
+    if (missing.length > 0) {
+      errorBox.textContent = '⚠ 请先填写：' + missing.join('、') + '，这是评估报告的身份依据。';
+      errorBox.hidden = false;
+      // 给缺失的输入框加红框提示
+      ['p-name', 'p-age'].forEach((id) => {
+        const el = $(id);
+        if (!el.value.trim()) el.classList.add('input-error');
+        else el.classList.remove('input-error');
+      });
+      if (!genderRaw) $('p-gender').classList.add('input-error');
+      else $('p-gender').classList.remove('input-error');
+      return;
+    }
+    // 年龄合法性
+    const ageNum = parseInt(ageRaw, 10);
+    if (isNaN(ageNum) || ageNum < 50 || ageNum > 120) {
+      errorBox.textContent = '⚠ 年龄应在 50-120 之间，这是康养评估的有效年龄范围。';
+      errorBox.hidden = false;
+      $('p-age').classList.add('input-error');
+      return;
+    }
+
+    // 清除输入错误样式
+    ['p-name', 'p-age', 'p-gender'].forEach((id) => $(id).classList.remove('input-error'));
+
+    // 先向后端创建档案，拿到 profile_id，使评估与身份绑定
+    const payload = {
+      name: nameRaw,
+      age: ageNum,
+      gender: genderRaw,
+      phone: phoneRaw || null,
+      address: addressRaw || null
     };
-    currentProfile = profile;
-    currentStep = 0;
-    Object.keys(scores).forEach((k) => delete scores[k]);
-    switchState('assessing');
+
+    fetch('/api/profiles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then((r) => r.json())
+      .then((resp) => {
+        if (!resp || !resp.success || !resp.data) {
+          errorBox.textContent = '⚠ 建档失败：' + (resp && resp.error ? resp.error : '系统异常');
+          errorBox.hidden = false;
+          return;
+        }
+        const profile = resp.data;
+        currentProfile = profile;
+        currentStep = 0;
+        Object.keys(scores).forEach((k) => delete scores[k]);
+        switchState('assessing');
+      })
+      .catch((err) => {
+        // 后端不可用时仍然允许进入评估（本地退化模式），但提示顾问
+        currentProfile = Object.assign({}, payload, { id: null, offline: true });
+        currentStep = 0;
+        Object.keys(scores).forEach((k) => delete scores[k]);
+        alert('⚠ 当前网络异常，已切换到本地评估模式，完成后请再次接入系统建档。');
+        switchState('assessing');
+      });
   }
 
   // ---------- 分步问卷渲染 ----------
   function renderQuestion() {
     const q = QUESTIONS[currentStep];
     if (!q) return;
+
+    // 顶部展示评估对象信息（让评测有身份依据）
+    const subjName = $('subj-name');
+    const subjInfo = $('subj-info');
+    if (subjName && subjInfo && currentProfile) {
+      subjName.textContent = (currentProfile.name || '—') +
+        (currentProfile.gender ? ' · ' + currentProfile.gender : '') +
+        (currentProfile.age ? ' · ' + currentProfile.age + '岁' : '');
+      const infoParts = [];
+      if (currentProfile.phone) infoParts.push('电话：' + currentProfile.phone);
+      if (currentProfile.address) infoParts.push('住址：' + currentProfile.address);
+      subjInfo.textContent = infoParts.length > 0 ? infoParts.join('  |  ') : '（未填写更多信息）';
+    }
 
     // 进度
     const total = QUESTIONS.length;
@@ -261,7 +340,11 @@
     fetch('/api/assessments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profile_id: null, scores: scores })
+      body: JSON.stringify({
+        profile_id: currentProfile && currentProfile.id ? currentProfile.id : null,
+        profile: currentProfile,
+        scores: scores
+      })
     })
       .then((r) => r.json())
       .then((data) => {
@@ -366,6 +449,19 @@
 
   // ---------- 高危报告页渲染 ----------
   function renderHighRiskReport(report) {
+    // 报告页顶部：展示评估对象与评估时间，让报告具备可追溯性
+    const hrInfo = $('highrisk-info');
+    if (hrInfo) {
+      const who = currentProfile
+        ? (currentProfile.name || '—') + (currentProfile.gender ? ' · ' + currentProfile.gender : '') +
+          (currentProfile.age ? ' · ' + currentProfile.age + '岁' : '')
+        : '未建档';
+      const now = new Date();
+      const time = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      hrInfo.textContent = who + '  |  评估时间：' + time;
+    }
     const scoresData = report.scores || {};
     const labelsMap = {
       mobility_score: '行动能力',
@@ -441,6 +537,19 @@
 
   // ---------- 安全报告页渲染 ----------
   function renderSafeReport(report) {
+    // 报告页顶部：展示评估对象与评估时间
+    const sfInfo = $('safe-info');
+    if (sfInfo) {
+      const who = currentProfile
+        ? (currentProfile.name || '—') + (currentProfile.gender ? ' · ' + currentProfile.gender : '') +
+          (currentProfile.age ? ' · ' + currentProfile.age + '岁' : '')
+        : '未建档';
+      const now = new Date();
+      const time = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      sfInfo.textContent = who + '  |  评估时间：' + time;
+    }
     const scoresData = report.scores || {};
     const labelsMap = {
       mobility_score: '行动能力',
@@ -477,7 +586,11 @@
   }
 
   // ---------- 快速演示高危/安全 ----------
+  // 演示模式使用固定演示老人信息，便于顾问展示效果
+  const DEMO_ELDER = { id: 0, name: '王爷爷', age: 78, gender: '男', phone: '138-****-8888', address: '北京市朝阳区阳光街道 5 号楼' };
+
   function demoHighRisk() {
+    currentProfile = DEMO_ELDER;
     fetch('/api/demo/high-risk', { method: 'POST' })
       .then((r) => r.json())
       .then((data) => {
