@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>县域预制菜溯源看板 · 从田间到餐桌</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+
+  <header class="top-bar">
+    <div class="brand">
+      <div class="logo">🌾</div>
+      <div>
+        <h1>县域预制菜溯源看板</h1>
+        <p class="subtitle">County Specialty · Pre-made Food Traceability</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="live-tag">
+        <span class="live-dot"></span>
+        <span>实时看板</span>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <section class="stage-switch">
+    <button class="stage-btn active" data-stage="normal">🟢 全程冷链达标</button>
+    <button class="stage-btn" data-stage="alert">🔴 温度异常预警</button>
+    <button class="stage-btn" data-stage="pending">⚪ 待录入状态</button>
+    <button class="stage-btn" data-stage="reload">🔄 读取真实批次</button>
+  </section>
+
+  <main class="board">
+    <section class="batch-meta">
+      <div class="meta-card">
+        <div class="meta-label">批次编号</div>
+        <div class="meta-value mono" id="meta-code">—</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">产品名称</div>
+        <div class="meta-value" id="meta-product">—</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">产地 / 农户</div>
+        <div class="meta-value" id="meta-origin">—</div>
+      </div>
+      <div class="meta-card alert-card" id="alert-card" hidden>
+        <div class="thermo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="64" height="64">
+            <defs>
+              <linearGradient id="mercury" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="#ff2d55"/>
+                <stop offset="100%" stop-color="#ff8a3d"/>
+              </linearGradient>
+            </defs>
+            <circle cx="32" cy="48" r="10" fill="url(#mercury)" />
+            <rect x="28" y="12" width="8" height="32" rx="4" fill="#e5e7eb"/>
+            <rect x="28" y="16" width="8" height="28" rx="4" fill="url(#mercury)" class="mercury-fill"/>
+            <g stroke="#9ca3af" stroke-width="1.5">
+              <line x1="38" y1="18" x2="44" y2="18"/>
+              <line x1="38" y1="24" x2="44" y2="24"/>
+              <line x1="38" y1="30" x2="44" y2="30"/>
+              <line x1="38" y1="36" x2="44" y2="36"/>
+            </g>
+            <g class="shards">
+              <polygon points="24,8 30,14 22,18 18,12" fill="#ff5252"/>
+              <polygon points="40,4 36,10 44,14 46,6" fill="#ff8a3d"/>
+            </g>
+          </svg>
+        </div>
+        <div>
+          <div class="meta-label danger">冷链温度异常</div>
+          <div class="meta-value danger" id="meta-temp">—</div>
+          <div class="meta-sub" id="meta-temp-sub">超过 4℃ 安全阈值</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline-wrap">
+      <div class="timeline" id="timeline">
+        <svg class="timeline-svg" id="timeline-svg" preserveAspectRatio="none"></svg>
+        <div class="nodes" id="nodes"></div>
+        <div class="flow-light" id="flow-light"></div>
+      </div>
+      <p class="tip">点击任一节点查看该批次产地照片与质检报告 ↓</p>
+    </section>
+
+    <section class="detail-panel" id="detail-panel" hidden>
+      <div class="detail-inner">
+        <button class="close-btn" id="close-detail" aria-label="关闭">✕</button>
+        <div class="detail-grid">
+          <div class="photo">
+            <img id="detail-img" alt="产地照片" />
+            <div class="photo-caption" id="detail-origin">—</div>
+          </div>
+          <div class="report">
+            <h3 id="detail-title">批次追溯详情</h3>
+            <div class="report-row"><span>批次号</span><b class="mono" id="detail-code">—</b></div>
+            <div class="report-row"><span>产品</span><b id="detail-product">—</b></div>
+            <div class="report-row"><span>采摘时间</span><b id="detail-pickup">—</b></div>
+            <div class="report-row"><span>加工时间</span><b id="detail-process">—</b></div>
+            <div class="report-row"><span>冷链温度</span><b id="detail-temp">—</b></div>
+            <div class="report-row"><span>上架时间</span><b id="detail-shelf">—</b></div>
+            <div class="report-block">
+              <div class="report-label">质检报告</div>
+              <div class="report-text" id="detail-report">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="batches-table">
+      <div class="table-header">
+        <h2>批次生产流水</h2>
+        <button class="ghost-btn" id="demo-scan">🎯 模拟扫码枪录入</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>批次号</th>
+            <th>产品</th>
+            <th>产地</th>
+            <th>冷链温度</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="batch-rows"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
