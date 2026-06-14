@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>企业 ESG 碳排放数据采集</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">🌍</div>
+        <div>
+          <h1>企业 ESG 碳排放数据采集</h1>
+          <p class="subtitle">Enterprise ESG Data Collector · 环保咨询公司专用</p>
+        </div>
+      </div>
+      <div class="status-chip" id="statusChip">
+        <span class="status-dot"></span>
+        <span id="statusText">初始采集状态</span>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-labels">
+          <span class="step-label is-active" data-step="0">企业信息</span>
+          <span class="step-label" data-step="1">能源</span>
+          <span class="step-label" data-step="2">差旅</span>
+          <span class="step-label" data-step="3">废弃物</span>
+          <span class="step-label" data-step="4">结果</span>
+        </div>
+      </div>
+
+      <!-- STEP 0 -->
+      <section class="form-step is-active" data-step="0">
+        <div class="card">
+          <h2 class="step-title">🌍 欢迎来到 ESG 数据采集系统</h2>
+          <p class="step-desc">
+            请先填写基础信息，再依次录入能源消耗、差旅里程及废弃物数据，系统将自动核算企业碳排放总量。
+          </p>
+          <div class="grid-2">
+            <div class="field">
+              <label for="companyName">企业名称</label>
+              <input id="companyName" type="text" data-field="companyName" placeholder="例如：青山绿能科技有限公司" />
+            </div>
+            <div class="field">
+              <label for="reportPeriod">报告期</label>
+              <input id="reportPeriod" type="text" data-field="reportPeriod" placeholder="例如：2025 年度" />
+            </div>
+          </div>
+          <div class="tip">💡 所有输入项默认为 0，仅填写已发生的数据即可。</div>
+        </div>
+      </section>
+
+      <!-- STEP 1 -->
+      <section class="form-step" data-step="1">
+        <div class="card">
+          <h2 class="step-title">⚡ 能源消耗</h2>
+          <p class="step-desc">
+            请填写企业在报告期内的用电量与用水量。
+          </p>
+          <div class="grid-2">
+            <div class="field">
+              <label for="electricity">用电量（kWh）</label>
+              <input id="electricity" type="number" min="0" step="any" data-field="electricity" data-warn="500000" placeholder="例如：120000" />
+              <small class="hint">排放因子：0.5810 kg CO₂e / kWh</small>
+            </div>
+            <div class="field">
+              <label for="water">用水量（m³）</label>
+              <input id="water" type="number" min="0" step="any" data-field="water" placeholder="例如：8000" />
+              <small class="hint">排放因子：0.910 kg CO₂e / m³</small>
+            </div>
+            <div class="field full">
+              <label for="paper">办公用纸消耗（kg）</label>
+              <input id="paper" type="number" min="0" step="any" data-field="paper" placeholder="例如：300" />
+              <small class="hint">排放因子：0.021 kg CO₂e / kg</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 2 -->
+      <section class="form-step" data-step="2">
+        <div class="card">
+          <h2 class="step-title">✈️ 商务差旅</h2>
+          <p class="step-desc">
+            分别统计航空、铁路、公路的年度差旅里程。
+          </p>
+          <div class="grid-3">
+            <div class="field">
+              <label for="businessTravelAir">航空里程（km）</label>
+              <input id="businessTravelAir" type="number" min="0" step="any" data-field="businessTravelAir" data-warn="100000" placeholder="例如：45000" />
+              <small class="hint">0.255 kg CO₂e / km</small>
+            </div>
+            <div class="field">
+              <label for="businessTravelRail">铁路里程（km）</label>
+              <input id="businessTravelRail" type="number" min="0" step="any" data-field="businessTravelRail" placeholder="例如：12000" />
+              <small class="hint">0.041 kg CO₂e / km</small>
+            </div>
+            <div class="field">
+              <label for="businessTravelRoad">公路里程（km）</label>
+              <input id="businessTravelRoad" type="number" min="0" step="any" data-field="businessTravelRoad" placeholder="例如：8000" />
+              <small class="hint">0.192 kg CO₂e / km</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 3 -->
+      <section class="form-step" data-step="3">
+        <div class="card">
+          <h2 class="step-title">🗑️ 废弃物处理</h2>
+          <p class="step-desc">
+            若某项数据异常偏高（如未分类垃圾），输入框将显示<span class="warn-inline">警告橙色</span>。
+          </p>
+          <div class="grid-2">
+            <div class="field">
+              <label for="wasteUnclassified">未分类垃圾量（kg）</label>
+              <input id="wasteUnclassified" type="number" min="0" step="any" data-field="wasteUnclassified" data-warn="5000" placeholder="例如：2000" />
+              <small class="hint">警告阈值：5,000 kg · 排放因子：0.408 kg CO₂e / kg</small>
+            </div>
+            <div class="field">
+              <label for="wasteHazardous">危险废弃物（kg）</label>
+              <input id="wasteHazardous" type="number" min="0" step="any" data-field="wasteHazardous" placeholder="例如：120" />
+              <small class="hint">排放因子：1.357 kg CO₂e / kg</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 4 - 结果 -->
+      <section class="form-step" data-step="4">
+        <div class="card result-card" id="resultCard">
+          <div class="result-hero" id="resultHero">
+            <div class="result-hero-icon" id="resultHeroIcon">🌱</div>
+            <div class="result-hero-text">
+              <div class="result-label">总碳排放量</div>
+              <div class="result-number" id="resultNumber">0.00 <small>kg CO₂e</small></div>
+              <div class="result-class" id="resultClass">计算中…</div>
+            </div>
+            <div class="badge-wrap" id="badgeWrap"></div>
+          </div>
+          <div class="warning-banner" id="warningBanner" hidden>
+            <span class="warn-icon">⚠️</span>
+            <div>
+              <strong>建议立即整改</strong>
+              <div>贵企业碳排放显著偏高，建议立即启动节能改造、差旅优化与废弃物分类计划。</div>
+            </div>
+          </div>
+          <div class="breakdown" id="breakdown"></div>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="btn btn-ghost" id="prevBtn" disabled>上一步</button>
+        <button class="btn btn-primary" id="nextBtn">下一步 →</button>
+        <button class="btn btn-success" id="submitBtn" hidden>提交并保存</button>
+      </div>
+
+      <section class="records" id="recordsSection" hidden>
+        <h3>历史记录（最近 50 条）</h3>
+        <div class="records-grid" id="recordsGrid"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
