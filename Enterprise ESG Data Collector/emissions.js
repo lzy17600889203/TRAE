@@ -50,8 +50,8 @@ function detectAnomalies(data) {
 }
 
 function classifyCompany(emissionTotal) {
-  if (emissionTotal < 1000) return 'excellent';
-  if (emissionTotal < 10000) return 'normal';
+  if (emissionTotal < 10000) return 'excellent';
+  if (emissionTotal < 500000) return 'normal';
   return 'warning';
 }
 

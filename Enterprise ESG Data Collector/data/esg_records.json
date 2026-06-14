@@ -1,0 +1,45 @@
+[
+  {
+    "id": 2,
+    "companyName": "未命名企业",
+    "reportPeriod": "",
+    "electricity": 0,
+    "water": 0,
+    "businessTravelAir": 0,
+    "businessTravelRail": 0,
+    "businessTravelRoad": 0,
+    "wasteHazardous": 0,
+    "wasteUnclassified": 0,
+    "paper": 0,
+    "totalEmission": 0,
+    "classification": "excellent",
+    "anomalies": {},
+    "createdAt": "2026-06-14T05:39:30.862Z"
+  },
+  {
+    "id": 1,
+    "companyName": "青山绿能科技",
+    "reportPeriod": "",
+    "electricity": 10000000,
+    "water": 0,
+    "businessTravelAir": 200000,
+    "businessTravelRail": 0,
+    "businessTravelRoad": 0,
+    "wasteHazardous": 0,
+    "wasteUnclassified": 0,
+    "paper": 0,
+    "totalEmission": 5861000,
+    "classification": "warning",
+    "anomalies": {
+      "electricity": {
+        "value": 10000000,
+        "threshold": 500000
+      },
+      "businessTravelAir": {
+        "value": 200000,
+        "threshold": 100000
+      }
+    },
+    "createdAt": "2026-06-14T03:46:05.603Z"
+  }
+]
