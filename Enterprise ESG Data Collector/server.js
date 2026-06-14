@@ -56,6 +56,9 @@ function computeFromPayload(raw) {
 
 app.post('/api/submit', (req, res) => {
   const raw = req.body || {};
+  if (!raw.companyName || !String(raw.companyName).trim()) {
+    return res.status(400).json({ ok: false, error: '企业名称不能为空' });
+  }
   const { payload, result, anomalies, classification } = computeFromPayload(raw);
 
   const records = readRecords();

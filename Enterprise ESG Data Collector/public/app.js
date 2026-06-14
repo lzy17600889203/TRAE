@@ -48,7 +48,57 @@
     recordsGrid: document.getElementById('recordsGrid'),
   };
 
-  function goToStep(step) {
+  const STEP_VALIDATIONS = {
+    0: (data) => {
+      const errors = [];
+      if (!data.companyName || !String(data.companyName).trim()) {
+        errors.push({ field: 'companyName', msg: '请填写企业名称' });
+      }
+      return errors;
+    },
+  };
+
+  function validateStep(step) {
+    const validator = STEP_VALIDATIONS[step];
+    if (!validator) return { ok: true, errors: [] };
+    const errors = validator(state.data);
+    return { ok: errors.length === 0, errors };
+  }
+
+  function highlightErrors(errors) {
+    document.querySelectorAll('.field-error').forEach((el) => el.remove());
+    document.querySelectorAll('input.is-required-error').forEach((el) =>
+      el.classList.remove('is-required-error')
+    );
+    errors.forEach((err) => {
+      const input = document.querySelector(
+        `input[data-field="${err.field}"]`
+      );
+      if (!input) return;
+      input.classList.add('is-required-error');
+      const msg = document.createElement('div');
+      msg.className = 'field-error';
+      msg.textContent = err.msg;
+      input.parentElement.appendChild(msg);
+    });
+  }
+
+  function goToStep(step, { skipValidation } = {}) {
+    // 向前推进时需要校验当前步骤
+    if (!skipValidation && step > state.step) {
+      const { ok, errors } = validateStep(state.step);
+      if (!ok) {
+        highlightErrors(errors);
+        const firstErr = errors[0];
+        const input = document.querySelector(
+          `input[data-field="${firstErr.field}"]`
+        );
+        if (input) input.focus();
+        return false;
+      }
+      highlightErrors([]);
+    }
+
     state.step = Math.max(0, Math.min(state.totalSteps - 1, step));
     els.steps.forEach((s, i) => s.classList.toggle('is-active', i === state.step));
     els.labels.forEach((l, i) => l.classList.toggle('is-active', i === state.step));
@@ -66,6 +116,7 @@
     }
 
     updateStatusChip();
+    return true;
   }
 
   function updateStatusChip() {
@@ -92,6 +143,14 @@
     const field = input.dataset.field;
     const value = input.value;
     state.data[field] = value;
+
+    // 输入时清除对应字段的必填错误态
+    input.classList.remove('is-required-error');
+    const parent = input.parentElement;
+    if (parent) {
+      const existing = parent.querySelector('.field-error');
+      if (existing) existing.remove();
+    }
 
     const numericFields = ['electricity', 'water', 'businessTravelAir',
       'businessTravelRail', 'businessTravelRoad', 'wasteHazardous',
