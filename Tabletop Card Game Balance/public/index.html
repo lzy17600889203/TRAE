@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>桌面对战卡牌数值调优沙盘 · Monte Carlo Sandbox</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-status="balanced">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">♠</div>
+      <div>
+        <h1>卡牌数值调优沙盘</h1>
+        <p class="subtitle">蒙特卡洛模拟 · 胜率 / 先手优势 / 对局回合分析</p>
+      </div>
+    </div>
+    <div class="status-panel">
+      <div class="status-badge" id="statusBadge">
+        <span class="status-dot"></span>
+        <span id="statusText">加载中...</span>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span class="m-label">最高胜率</span><span class="m-value" id="mMaxWR">—</span></div>
+        <div class="metric"><span class="m-label">平均回合</span><span class="m-value" id="mAvgTurns">—</span></div>
+        <div class="metric"><span class="m-label">先手优势</span><span class="m-value" id="mFirstAdv">—</span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="tool-group">
+      <h3>演示预设</h3>
+      <button data-preset="balanced" class="preset-btn preset-balanced">完美平衡</button>
+      <button data-preset="broken" class="preset-btn preset-broken">数值崩坏</button>
+      <button data-preset="stall" class="preset-btn preset-stall">卡死僵局</button>
+    </div>
+    <div class="tool-group">
+      <h3>模拟</h3>
+      <label>对局次数
+        <select id="iterations">
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+          <option value="2000" selected>2000</option>
+          <option value="5000">5000</option>
+        </select>
+      </label>
+      <button id="runSimBtn" class="primary">▶ 运行蒙特卡洛</button>
+    </div>
+    <div class="tool-group">
+      <h3>新增卡牌</h3>
+      <input id="newName" placeholder="卡名" />
+      <input id="newCost" type="number" min="0" max="10" value="2" placeholder="费" />
+      <input id="newAttack" type="number" min="0" value="2" placeholder="攻" />
+      <input id="newHealth" type="number" min="1" value="2" placeholder="血" />
+      <button id="addCardBtn">+ 添加</button>
+    </div>
+  </div>
+
+  <main class="layout">
+    <section class="panel cards-panel">
+      <div class="panel-head">
+        <h2>卡牌库</h2>
+        <span class="hint">胜率 &gt; 65% 的卡将显示为 🕶️ 毒瘤</span>
+      </div>
+      <div id="cardsList" class="cards-list"></div>
+    </section>
+
+    <section class="panel center-panel">
+      <div class="panel-head">
+        <h2>对战沙盘</h2>
+        <span class="hint">点击卡牌选择以查看单独折线图</span>
+      </div>
+      <canvas id="sandboxCanvas"></canvas>
+      <div class="legend">
+        <div><span class="legend-swatch" style="background:#ff3b5c"></span>严重超模 (胜率 &gt; 65%)</div>
+        <div><span class="legend-swatch" style="background:#ffd23f"></span>偏强 (55%–65%)</div>
+        <div><span class="legend-swatch" style="background:#57d68c"></span>平衡 (45%–55%)</div>
+        <div><span class="legend-swatch" style="background:#4aa8ff"></span>偏弱 (35%–45%)</div>
+        <div><span class="legend-swatch" style="background:#7d5fff"></span>过弱 (&lt; 35%)</div>
+      </div>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="panel-head">
+        <h2 id="chartTitle">胜率收敛曲线</h2>
+        <span class="hint">所选卡牌：<span id="selectedCardName">—</span></span>
+      </div>
+      <canvas id="chartCanvas"></canvas>
+      <div class="threshold-line">
+        <div class="thresh thresh-bad">65% 超模警戒线</div>
+        <div class="thresh thresh-good">50% 理想中线</div>
+        <div class="thresh thresh-weak">35% 弱势警戒线</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>🎲 每一次模拟，都是向平衡之神的一次献祭。</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

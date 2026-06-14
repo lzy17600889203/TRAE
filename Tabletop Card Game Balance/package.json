@@ -1,0 +1,14 @@
+{
+  "name": "tabletop-card-balance",
+  "version": "1.0.0",
+  "description": "Card game balance tuning tool with Monte Carlo simulation sandbox",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
