@@ -42,6 +42,7 @@ function renderCards() {
     const row = document.createElement('div');
     row.className = 'card-row' + (broken ? ' op' : '') +
       (state.selectedCardId === c.id ? ' selected' : '');
+    row.dataset.id = c.id;
     row.innerHTML = `
       <div class="card-icon" title="${broken ? '毒瘤卡' : '普通卡'}">
         ${broken ? '🕶️' : '⚔'}
@@ -60,65 +61,11 @@ function renderCards() {
       </div>
       <button class="del-btn" data-del="${c.id}">删除</button>
     `;
-    row.addEventListener('click', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.classList.contains('del-btn')) return;
-      state.selectedCardId = c.id;
-      $('#selectedCardName').textContent = c.name;
-      $('#chartTitle').textContent = `${c.name} · 胜率收敛曲线`;
-      renderCards();
-      drawChart();
-    });
     list.appendChild(row);
   });
 
-  // 绑定编辑
-  $$('#cardsList input[type="number"]').forEach((inp) => {
-    inp.addEventListener('change', async () => {
-      const id = parseInt(inp.dataset.id, 10);
-      const field = inp.dataset.field;
-      const card = state.cards.find((c) => c.id === id);
-      if (!card) return;
-      card[field] = parseInt(inp.value, 10) || 0;
-      await api('/cards/' + id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: card.name, cost: card.cost, attack: card.attack, health: card.health,
-          copies: card.copies, type: card.type,
-        }),
-      });
-      renderCards();
-      drawSandbox();
-    });
-  });
-
-  $$('#cardsList .edit-name').forEach((inp) => {
-    inp.addEventListener('change', async () => {
-      const id = parseInt(inp.dataset.id, 10);
-      const card = state.cards.find((c) => c.id === id);
-      if (!card) return;
-      card.name = inp.value;
-      await api('/cards/' + id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: card.name, cost: card.cost, attack: card.attack, health: card.health,
-          copies: card.copies, type: card.type,
-        }),
-      });
-    });
-  });
-
-  $$('#cardsList .del-btn').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const id = parseInt(btn.dataset.del, 10);
-      if (!confirm('删除这张卡？')) return;
-      await api('/cards/' + id, { method: 'DELETE' });
-      if (state.selectedCardId === id) state.selectedCardId = null;
-      await loadCards();
-    });
-  });
+  // 绑定编辑（事件委托：由 #cardsList 统一处理，避免重复绑定）
+  // —— 事件监听器在 init 中对 #cardsList 绑定一次
 
   // 自动选中第一张
   if (!state.selectedCardId && state.cards.length > 0) {
@@ -547,6 +494,66 @@ function bindEvents() {
       // 运行模拟让演示效果生效
       await runSimulation(true);
     });
+  });
+
+  // ===== 卡牌列表：事件委托（只绑定一次，避免重复监听导致 confirm 被多次弹出）
+  const cardsList = $('#cardsList');
+
+  cardsList.addEventListener('click', async (e) => {
+    const delBtn = e.target.closest('.del-btn');
+    const input = e.target.closest('input');
+    if (delBtn) {
+      e.stopPropagation();
+      const id = parseInt(delBtn.dataset.del, 10);
+      if (!confirm('删除这张卡？')) return;
+      await api('/cards/' + id, { method: 'DELETE' });
+      if (state.selectedCardId === id) state.selectedCardId = null;
+      await loadCards();
+      return;
+    }
+    if (input) return; // 输入框在父行上不要触发选中
+    // 点击行：选中
+    const row = e.target.closest('.card-row');
+    if (!row || !row.dataset.id) return;
+    const id = parseInt(row.dataset.id, 10);
+    if (!id) return;
+    state.selectedCardId = id;
+    const c = state.cards.find((x) => x.id === id);
+    $('#selectedCardName').textContent = c?.name || '—';
+    $('#chartTitle').textContent = `${c?.name || '—'} · 胜率收敛曲线`;
+    renderCards();
+    drawChart();
+  });
+
+  cardsList.addEventListener('change', async (e) => {
+    const inp = e.target;
+    if (inp.tagName !== 'INPUT') return;
+    const id = parseInt(inp.dataset.id, 10);
+    if (isNaN(id)) return;
+    const card = state.cards.find((c) => c.id === id);
+    if (!card) return;
+    const field = inp.dataset.field;
+    if (field === 'cost' || field === 'attack' || field === 'health') {
+      card[field] = parseInt(inp.value, 10) || 0;
+    } else if (inp.classList.contains('edit-name')) {
+      card.name = inp.value;
+    } else {
+      return;
+    }
+    await api('/cards/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: card.name, cost: card.cost, attack: card.attack, health: card.health,
+        copies: card.copies, type: card.type,
+      }),
+    });
+    if (field === 'cost' || field === 'attack' || field === 'health') {
+      renderCards();
+      drawSandbox();
+    } else {
+      renderCards();
+    }
   });
 }
 
