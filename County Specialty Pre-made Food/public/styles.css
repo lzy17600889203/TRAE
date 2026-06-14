@@ -651,6 +651,13 @@ th, td {
   border-bottom: 1px solid var(--line);
 }
 
+tr.row-active td {
+  background: rgba(56, 189, 248, 0.08);
+}
+tr.row-active td:first-child {
+  border-left: 3px solid #38bdf8;
+}
+
 th {
   color: var(--ink-soft);
   font-weight: 500;

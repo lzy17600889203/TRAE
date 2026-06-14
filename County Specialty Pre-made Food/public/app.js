@@ -92,8 +92,19 @@ function tickClock() {
 setInterval(tickClock, 1000);
 tickClock();
 
+/* 根据批次状态/名称选一张产地照片（数据库批次没有 photo 字段时使用） */
+function pickPhoto(batch) {
+  if (batch && typeof batch.photo === 'string' && batch.photo.length > 0) return batch.photo;
+  if (batch && batch.status === 'alert') return DEMO_BATCHES.alert.photo;
+  if (batch && batch.status === 'pending') return DEMO_BATCHES.pending.photo;
+  return DEMO_BATCHES.normal.photo;
+}
+
 /* ================== 渲染时间轴 ================== */
 function renderTimeline(batch) {
+  if (!batch) return;
+  /* 确保 batch 含有 photo 字段，避免详情面板图片加载失败 */
+  if (!batch.photo) batch = Object.assign({}, batch, { photo: pickPhoto(batch) });
   currentBatch = batch;
   const overallStatus =
     batch.status === 'alert' ? 'alert' :
@@ -287,7 +298,18 @@ document.querySelectorAll('.stage-btn').forEach((btn) => {
     if (stage === 'reload') {
       await loadRealBatches();
     } else {
-      renderTimeline(DEMO_BATCHES[stage]);
+      const batch = DEMO_BATCHES[stage];
+      renderTimeline(batch);
+      /* 切换预设场景时，流水表也同步显示对应的演示批次，
+         并按时间倒序排列，与真实数据的渲染一致 */
+      const byKey = { normal: 0, alert: 1, pending: 2 };
+      const order = byKey[stage];
+      const table = [
+        { ...DEMO_BATCHES.normal, _order: order === 0 ? 0 : 1 },
+        { ...DEMO_BATCHES.alert, _order: order === 1 ? 0 : 2 },
+        { ...DEMO_BATCHES.pending, _order: order === 2 ? 0 : 3 },
+      ].sort((a, b) => a._order - b._order).map(({ _order, ...rest }) => rest);
+      renderBatchTable(table);
     }
   });
 });
@@ -301,7 +323,7 @@ function renderBatchTable(batches) {
       b.status === 'pending' ? `<span class="badge wait">◌ 待录入</span>` :
       `<span class="badge ok">✓ 正常</span>`;
     return `
-      <tr>
+      <tr data-code="${b.batch_code}">
         <td class="mono">${b.batch_code}</td>
         <td>${b.product_name}</td>
         <td>${b.origin || '—'}</td>
@@ -312,11 +334,29 @@ function renderBatchTable(batches) {
     `;
   }).join('');
 
+  /* 通过事件委托绑定点击，避免每次 innerHTML 重建时重复注册 */
   $batchRows.querySelectorAll('.row-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const code = btn.dataset.code;
       const hit = batches.find((b) => b.batch_code === code);
-      if (hit) renderTimeline(hit);
+      if (!hit) return;
+
+      /* 1. 更新时间轴和顶部卡片 */
+      renderTimeline(hit);
+
+      /* 2. 自动打开详情面板（用户的直接诉求：点击后要有"反应"） */
+      openDetail(currentBatch, {
+        key: 'coldchain',
+        name: '冷链运输',
+        icon: '❄️',
+      });
+
+      /* 3. 行高亮 + 平滑滚动到时间轴，给用户明确的视觉反馈 */
+      $batchRows.querySelectorAll('tr').forEach((tr) => tr.classList.remove('row-active'));
+      const row = $batchRows.querySelector(`tr[data-code="${CSS.escape(code)}"]`);
+      if (row) row.classList.add('row-active');
+
+      showToast(`已切换到批次 ${code} · ${hit.product_name}`);
     });
   });
 }
@@ -414,4 +454,7 @@ function showToast(msg) {
 
 /* ================== 启动 ================== */
 renderTimeline(DEMO_BATCHES.normal);
+/* 启动时先渲染一份演示流水表（按正常状态优先排序），让页面一加载就有数据；
+   loadRealBatches 成功后会覆盖为数据库真实数据 */
+renderBatchTable([DEMO_BATCHES.normal, DEMO_BATCHES.alert, DEMO_BATCHES.pending]);
 loadRealBatches();
