@@ -184,13 +184,24 @@ body {
 .dot-working { background: var(--working); }
 .dot-done { background: var(--done); }
 
+.column {
+  min-height: 0;
+}
+
 .cards {
   display: flex;
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
   padding-right: 4px;
-  max-height: calc(100vh - 260px);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* 防止卡片在积压场景被 flex 压缩，导致按钮区域被裁掉 */
+.card {
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 .cards::-webkit-scrollbar { width: 6px; }
