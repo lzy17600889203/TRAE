@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旧衣改造工作室 · 订单看板</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">✂️</span>
+      <div>
+        <h1>旧衣改造工作室</h1>
+        <p class="subtitle">Upcycled Clothing Studio · 订单看板</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-ghost" id="btn-new">＋ 新订单</button>
+      <button class="btn-ghost" id="btn-refresh">⟳ 刷新</button>
+      <div class="preset-menu">
+        <label>演示预设：</label>
+        <select id="preset-select">
+          <option value="mixed">混合常态</option>
+          <option value="productive">🌿 高效交付</option>
+          <option value="backlog">⚠ 严重积压</option>
+          <option value="working">🧵 改造中</option>
+          <option value="empty">🏠 空店</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="board" id="board">
+    <section class="column" data-status="pending">
+      <header class="column-header">
+        <span class="dot dot-pending"></span>
+        <h2>待改造</h2>
+        <span class="count" id="count-pending">0</span>
+        <p class="col-desc">等待灵感与排程</p>
+      </header>
+      <div class="cards" id="col-pending"></div>
+    </section>
+
+    <section class="column" data-status="working">
+      <header class="column-header">
+        <span class="dot dot-working"></span>
+        <h2>改造中</h2>
+        <span class="count" id="count-working">0</span>
+        <p class="col-desc">缝纫机正在工作</p>
+      </header>
+      <div class="cards" id="col-working"></div>
+    </section>
+
+    <section class="column" data-status="done">
+      <header class="column-header">
+        <span class="dot dot-done"></span>
+        <h2>已完成</h2>
+        <span class="count" id="count-done">0</span>
+        <p class="col-desc">环保再利用成功</p>
+      </header>
+      <div class="cards" id="col-done"></div>
+    </section>
+  </main>
+
+  <div class="empty-state" id="empty-state" hidden>
+    <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#fef3c7" />
+          <stop offset="100%" stop-color="#fde68a" />
+        </linearGradient>
+      </defs>
+      <rect x="80" y="70" width="240" height="150" rx="18" fill="url(#g1)" stroke="#d97706" stroke-width="3" />
+      <line x1="95" y1="95" x2="315" y2="95" stroke="#f59e0b" stroke-dasharray="6 6" stroke-width="2" />
+      <line x1="95" y1="200" x2="315" y2="200" stroke="#f59e0b" stroke-dasharray="6 6" stroke-width="2" />
+      <path d="M170 110 l60 0 l-30 50 z" fill="#fff7ed" stroke="#b45309" stroke-width="2.5" />
+      <text x="200" y="180" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="#92400e">欢迎来到旧衣改造</text>
+      <g transform="translate(315 85)">
+        <circle cx="0" cy="0" r="8" fill="#fef3c7" stroke="#b45309" stroke-width="2" />
+        <line x1="-6" y1="0" x2="6" y2="0" stroke="#b45309" stroke-width="2" />
+      </g>
+    </svg>
+    <p class="empty-title">店里还没有订单</p>
+    <p class="empty-sub">点击右上角「＋ 新订单」开始接收第一件旧衣改造吧。</p>
+  </div>
+
+  <div class="backlog-banner" id="backlog-banner" hidden>
+    <span class="banner-icon">!</span>
+    <span class="banner-text">待改造订单积压严重，需要帮手！</span>
+  </div>
+
+  <dialog id="new-order-dialog" class="dialog">
+    <form method="dialog" id="new-order-form">
+      <h3>添加新订单</h3>
+      <label>服装名称<input type="text" name="title" placeholder="如：蓝色牛仔裤" required /></label>
+      <label>原物品<input type="text" name="original" placeholder="如：旧牛仔裤" required /></label>
+      <label>改造目标<input type="text" name="target" placeholder="如：托特包" required /></label>
+      <label>备注<textarea name="notes" placeholder="选填"></textarea></label>
+      <div class="dialog-actions">
+        <button value="cancel" formnovalidate class="btn-ghost">取消</button>
+        <button type="submit" class="btn-primary">创建</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="./app.js"></script>
+</body>
+</html>
