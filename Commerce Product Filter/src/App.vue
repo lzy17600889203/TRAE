@@ -106,7 +106,7 @@
             <div class="stat__label">平均水位</div>
             <div class="stat__value">{{ avgLevel }}%</div>
           </div>
-          <div class="stat :class="alertCount > 0 ? '--alert' : ''">
+          <div :class="['stat', alertCount > 0 ? '--alert' : '']">
             <div class="stat__label">预警 SKU</div>
             <div class="stat__value">{{ alertCount }}</div>
           </div>
