@@ -2,13 +2,13 @@
   <el-dialog
     v-model="visibleState"
     :title="`角色管理（共 ${roleStore.roles.length} 个）`"
-    width="820px"
+    width="900px"
     :close-on-click-modal="false"
     align-center
     destroy-on-close
   >
     <div class="role-toolbar">
-      <el-button type="primary" size="large" @click="startAdd">
+      <el-button type="primary" size="large" @click="openAddDialog">
         <el-icon><Plus /></el-icon>
         新增角色
       </el-button>
@@ -17,27 +17,28 @@
 
     <el-table :data="roleStore.roles" border stripe style="margin-top: 14px">
       <el-table-column type="index" label="序号" width="60" />
-      <el-table-column label="角色 ID" prop="id" width="200" show-overflow-tooltip>
+      <el-table-column label="角色 ID" prop="id" width="210" show-overflow-tooltip>
         <template #default="{ row }">
-          <code style="color: #4f46e5">{{ row.id }}</code>
+          <code class="role-id-code">{{ row.id }}</code>
         </template>
       </el-table-column>
-      <el-table-column label="角色名称" prop="name" min-width="140">
+      <el-table-column label="角色名称" prop="name" min-width="160">
         <template #default="{ row }">
           <el-input
             v-if="editingId === row.id"
-            v-model="form.name"
+            v-model="rowForm.name"
             size="small"
             placeholder="请输入角色名称"
+            @keyup.enter="saveRowEdit(row)"
           />
-          <span v-else>{{ row.name }}</span>
+          <span v-else style="font-weight: 600; color: #1f2937">{{ row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="所属租户" prop="tenant" min-width="130">
+      <el-table-column label="所属租户" prop="tenant" min-width="150">
         <template #default="{ row }">
           <el-select
             v-if="editingId === row.id"
-            v-model="form.tenant"
+            v-model="rowForm.tenant"
             size="small"
             filterable
             allow-create
@@ -53,9 +54,10 @@
         <template #default="{ row }">
           <el-input
             v-if="editingId === row.id"
-            v-model="form.description"
+            v-model="rowForm.description"
             size="small"
             placeholder="可填写角色职责描述"
+            @keyup.enter="saveRowEdit(row)"
           />
           <span v-else style="color: #6b7280">{{ row.description || '—' }}</span>
         </template>
@@ -67,14 +69,14 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="220" align="center" fixed="right">
+      <el-table-column label="操作" width="200" align="center" fixed="right">
         <template #default="{ row }">
           <template v-if="editingId === row.id">
-            <el-button size="small" type="primary" @click="saveEdit">保存</el-button>
-            <el-button size="small" @click="cancelEdit">取消</el-button>
+            <el-button size="small" type="primary" @click="saveRowEdit(row)">保存</el-button>
+            <el-button size="small" @click="cancelRowEdit">取消</el-button>
           </template>
           <template v-else>
-            <el-button size="small" @click="startEdit(row)">编辑</el-button>
+            <el-button size="small" @click="startRowEdit(row)">编辑</el-button>
             <el-popconfirm
               title="删除后不可恢复，确认删除此角色吗？"
               confirm-button-text="删除"
@@ -110,10 +112,59 @@
       </el-button>
     </template>
   </el-dialog>
+
+  <!-- 新增角色：独立弹窗，避免与“编辑已有行”的编辑态冲突 -->
+  <el-dialog
+    v-model="addDialogVisible"
+    title="新增角色"
+    width="520px"
+    align-center
+    :close-on-click-modal="false"
+    destroy-on-close
+  >
+    <el-form
+      ref="addFormRef"
+      :model="addForm"
+      :rules="addRules"
+      label-width="96px"
+      size="large"
+    >
+      <el-form-item label="角色名称" prop="name">
+        <el-input v-model="addForm.name" placeholder="例如：审核员" maxlength="32" show-word-limit />
+      </el-form-item>
+      <el-form-item label="所属租户" prop="tenant">
+        <el-select
+          v-model="addForm.tenant"
+          filterable
+          allow-create
+          default-first-option
+          placeholder="选择或输入租户"
+          style="width: 100%"
+        >
+          <el-option v-for="t in tenantOptions" :key="t" :value="t" :label="t" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="角色描述" prop="description">
+        <el-input
+          v-model="addForm.description"
+          type="textarea"
+          :rows="3"
+          maxlength="120"
+          show-word-limit
+          placeholder="可填写角色职责描述（选填）"
+        />
+      </el-form-item>
+    </el-form>
+
+    <template #footer>
+      <el-button size="large" @click="cancelAdd">取消</el-button>
+      <el-button size="large" type="primary" @click="submitAdd">确认新增</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
-import { computed, ref, reactive } from 'vue'
+import { computed, ref, reactive, nextTick } from 'vue'
 import { Plus, InfoFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import {
@@ -133,61 +184,88 @@ const visibleState = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
-const editingId = ref('')
-const form = reactive({ name: '', tenant: '', description: '' })
-
 const tenantOptions = computed(() => {
   const set = new Set(roleStore.roles.map((r) => r.tenant).filter(Boolean))
   return [...set]
 })
 
-function startAdd() {
-  editingId.value = '__new__'
-  form.name = ''
-  form.tenant = tenantOptions.value[0] || '默认租户'
-  form.description = ''
-}
+// 行内编辑态：只保存一个处于编辑态的行
+const editingId = ref('')
+const rowForm = reactive({ name: '', tenant: '', description: '' })
 
-function startEdit(row) {
+function startRowEdit(row) {
   editingId.value = row.id
-  form.name = row.name
-  form.tenant = row.tenant
-  form.description = row.description
+  rowForm.name = row.name
+  rowForm.tenant = row.tenant
+  rowForm.description = row.description || ''
 }
 
-function cancelEdit() {
+function cancelRowEdit() {
   editingId.value = ''
-  form.name = ''
-  form.tenant = ''
-  form.description = ''
+  rowForm.name = ''
+  rowForm.tenant = ''
+  rowForm.description = ''
 }
 
-function saveEdit() {
-  if (!form.name.trim()) {
+function saveRowEdit(row) {
+  if (!rowForm.name.trim()) {
     ElMessage.warning('角色名称不能为空')
     return
   }
-  if (!form.tenant.trim()) {
+  if (!rowForm.tenant.trim()) {
     ElMessage.warning('请选择或填写所属租户')
     return
   }
-  if (editingId.value === '__new__') {
-    addRole({ name: form.name.trim(), tenant: form.tenant.trim(), description: form.description })
-    ElMessage.success('角色已创建，请在主界面为其分配权限')
-  } else {
-    updateRole(editingId.value, {
-      name: form.name.trim(),
-      tenant: form.tenant.trim(),
-      description: form.description,
-    })
-    ElMessage.success('角色信息已更新')
-  }
-  cancelEdit()
+  updateRole(row.id, {
+    name: rowForm.name.trim(),
+    tenant: rowForm.tenant.trim(),
+    description: rowForm.description,
+  })
+  ElMessage.success('角色信息已更新')
+  cancelRowEdit()
 }
 
 function handleRemove(row) {
   removeRole(row.id)
+  if (editingId.value === row.id) {
+    cancelRowEdit()
+  }
   ElMessage.success(`已删除角色：${row.name}`)
+}
+
+// 新增角色（独立弹窗 + 表单校验）
+const addDialogVisible = ref(false)
+const addFormRef = ref(null)
+const addForm = reactive({ name: '', tenant: '', description: '' })
+const addRules = {
+  name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
+  tenant: [{ required: true, message: '请选择或输入所属租户', trigger: 'change' }],
+}
+
+function openAddDialog() {
+  addForm.name = ''
+  addForm.tenant = tenantOptions.value[0] || '默认租户'
+  addForm.description = ''
+  addDialogVisible.value = true
+  nextTick(() => {
+    addFormRef.value?.clearValidate?.()
+  })
+}
+
+function cancelAdd() {
+  addDialogVisible.value = false
+}
+
+async function submitAdd() {
+  const valid = await addFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+  addRole({
+    name: addForm.name.trim(),
+    tenant: addForm.tenant.trim(),
+    description: addForm.description,
+  })
+  ElMessage.success(`角色「${addForm.name.trim()}」已创建，请在主界面为其分配权限`)
+  addDialogVisible.value = false
 }
 
 function goSave() {
@@ -219,8 +297,9 @@ function goSave() {
   align-items: center;
   gap: 6px;
 }
-code {
+.role-id-code {
   background: #eef2ff;
+  color: #4f46e5;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;

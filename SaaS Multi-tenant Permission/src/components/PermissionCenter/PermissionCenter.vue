@@ -272,7 +272,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, markRaw } from 'vue'
 import {
   UserFilled,
   Menu,
@@ -306,7 +306,12 @@ import {
 } from '../../data/permissions.js'
 import { detectConflicts, buildMatrixChangeDiff } from './conflicts.js'
 
-const iconMap = { Setting, TrendCharts, Money, DataAnalysis }
+const iconMap = {
+  Setting: markRaw(Setting),
+  TrendCharts: markRaw(TrendCharts),
+  Money: markRaw(Money),
+  DataAnalysis: markRaw(DataAnalysis),
+}
 menuTree.forEach((node) => {
   if (node.icon) node.icon = iconMap[node.icon] || null
 })
