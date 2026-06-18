@@ -5,19 +5,48 @@
         <el-icon :size="26" class="brand-icon"><UserFilled /></el-icon>
         <div>
           <h2>可视化权限配置中心</h2>
-          <p>为 SaaS 多租户系统 · 按角色精细分配菜单与操作权限</p>
+          <p>
+            为 SaaS 多租户系统 · 当前共
+            <strong>{{ roleStore.roles.length }}</strong>
+            个角色，其中
+            <strong :style="{ color: roleSummary.dirtyCount ? '#d97706' : '#16a34a' }">
+              {{ roleSummary.dirtyCount }}
+            </strong>
+            个角色的权限待确认保存
+          </p>
         </div>
       </div>
       <div class="pc-role">
+        <el-button size="large" @click="roleManagerVisible = true">
+          <el-icon><User /></el-icon>
+          角色管理
+        </el-button>
         <span class="role-label">当前角色</span>
-        <el-select v-model="currentRoleId" size="large" style="width: 230px" @change="handleRoleChange">
+        <el-select
+          v-model="roleStore.currentRoleId"
+          size="large"
+          style="width: 230px"
+          @change="handleRoleChange"
+        >
           <el-option
-            v-for="r in roles"
+            v-for="r in roleStore.roles"
             :key="r.id"
             :value="r.id"
             :label="r.name"
           >
-            <span style="float: left">{{ r.name }}</span>
+            <span style="float: left">
+              {{ r.name }}
+              <el-tag
+                v-if="isRoleDirty(r.id)"
+                size="small"
+                type="warning"
+                effect="dark"
+                round
+                style="margin-left: 6px"
+              >
+                变更
+              </el-tag>
+            </span>
             <span style="float: right; color: #8492a6; font-size: 12px">{{ r.tenant }}</span>
           </el-option>
         </el-select>
@@ -30,7 +59,7 @@
           <template #header>
             <div class="card-title">
               <el-icon><Menu /></el-icon>
-              菜单树 · {{ filteredNodes.length }} 项
+              菜单树 · {{ flatMenus.length }} 项
             </div>
           </template>
           <el-input
@@ -55,16 +84,6 @@
                 <span class="tree-node">
                   <el-icon v-if="data.icon"><component :is="data.icon" /></el-icon>
                   <span :class="{ 'tree-leaf': !data.children.length }">{{ data.title }}</span>
-                  <el-tag
-                    v-if="!data.children.length && isDirtyForMenu(data.id)"
-                    size="small"
-                    type="danger"
-                    effect="dark"
-                    round
-                    style="margin-left: 6px"
-                  >
-                    变更
-                  </el-tag>
                 </span>
               </template>
             </el-tree>
@@ -78,10 +97,31 @@
             <div class="matrix-header">
               <div class="card-title">
                 <el-icon><Grid /></el-icon>
-                权限矩阵 · {{ currentRoleName }}
+                权限矩阵 · {{ currentRole?.name || '未选择角色' }}
+                <el-tag
+                  v-if="currentRole?.tenant"
+                  type="info"
+                  effect="plain"
+                  style="margin-left: 8px"
+                >
+                  {{ currentRole.tenant }}
+                </el-tag>
+                <el-tag
+                  v-if="currentRole?.description"
+                  type="warning"
+                  effect="light"
+                  style="margin-left: 8px; max-width: 320px"
+                  show-overflow-tooltip
+                >
+                  {{ currentRole.description }}
+                </el-tag>
               </div>
               <div class="matrix-actions">
-                <el-badge v-if="pendingCount > 0" :value="pendingCount" class="pending-badge">
+                <el-badge
+                  v-if="pendingCount > 0"
+                  :value="pendingCount"
+                  class="pending-badge"
+                >
                   <el-button type="success" size="large" @click="triggerSave">
                     <el-icon><DocumentChecked /></el-icon>
                     保存权限变更
@@ -106,7 +146,8 @@
             <template #title>
               <span>
                 <el-icon style="vertical-align: middle"><Warning /></el-icon>
-                检测到 <strong>{{ conflictCount }}</strong> 处权限冲突，请点击黄色格子查看提示或直接忽略后保存。
+                检测到 <strong>{{ conflictCount }}</strong>
+                处权限冲突，请点击黄色格子查看提示或直接忽略后保存。
               </span>
             </template>
           </el-alert>
@@ -117,7 +158,6 @@
             stripe
             size="default"
             style="width: 100%; margin-top: 12px"
-            :row-class-name="rowClassName"
             :header-cell-style="{ background: '#f9fafb', color: '#374151' }"
           >
             <el-table-column label="所属分组" prop="parentTitle" width="140" fixed />
@@ -146,7 +186,7 @@
                   :title="cellTooltip(row, action.key)"
                 >
                   <el-checkbox
-                    :model-value="getPermission(row.id, action.key)"
+                    :model-value="row.actions?.[action.key]"
                     @change="(v) => togglePermission(row.id, action.key, v)"
                   />
                   <ScaleIcon
@@ -184,25 +224,22 @@
 
     <ChangePreview
       v-model="previewVisible"
-      :role-name="currentRoleName"
+      :role-name="currentRole?.name || ''"
       :changes="pendingChanges"
-      @save="openSafeConfirm(false)"
-      @ignore-and-save="openSafeConfirm(true)"
+      @save="openSafeConfirm"
+      @ignore-and-save="openSafeConfirm"
     />
 
     <SafeConfirm
       :visible="safeVisible"
-      :role-name="currentRoleName"
+      :role-name="currentRole?.name || ''"
       @confirm="commitChanges"
       @cancel="safeVisible = false"
     />
 
-    <el-dialog
-      v-model="conflictDialogVisible"
-      title="权限冲突详情"
-      width="520px"
-      align-center
-    >
+    <RoleManager v-model="roleManagerVisible" @save-changes="triggerSave" />
+
+    <el-dialog v-model="conflictDialogVisible" title="权限冲突详情" width="520px" align-center>
       <div v-if="conflictDialogRow">
         <div class="conflict-dialog-title">
           <el-icon :size="22" color="#d97706"><Warning /></el-icon>
@@ -212,7 +249,7 @@
           <el-timeline-item
             v-for="(c, idx) in conflictDialogRow.conflicts"
             :key="idx"
-            :color="'#f59e0b'"
+            color="#f59e0b"
             timestamp="已触发冲突规则"
             placement="top"
           >
@@ -228,14 +265,14 @@
     <transition name="slide-top">
       <div v-if="saveSuccess" class="success-banner">
         <el-icon :size="20"><CircleCheckFilled /></el-icon>
-        <span>配置已生效 · {{ currentRoleName }} 的权限已更新</span>
+        <span>配置已生效 · {{ currentRole?.name }} 的权限已更新</span>
       </div>
     </transition>
   </div>
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
   UserFilled,
   Menu,
@@ -249,65 +286,59 @@ import {
   TrendCharts,
   Money,
   DataAnalysis,
+  User,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification } from 'element-plus'
 import ScaleIcon from './ScaleIcon.vue'
 import ChangePreview from './ChangePreview.vue'
 import SafeConfirm from './SafeConfirm.vue'
-import { roles, actionTypes, menuTree, initialPermissionMatrix, flattenMenu } from '../../data/permissions.js'
+import RoleManager from './RoleManager.vue'
+import {
+  actionTypes,
+  menuTree,
+  flattenMenuNodes,
+  roleStore,
+  roleSummary,
+  setPermission,
+  commitRoleMatrix,
+  resetRoleToSaved,
+  isRoleDirty,
+} from '../../data/permissions.js'
 import { detectConflicts, buildMatrixChangeDiff } from './conflicts.js'
 
 const iconMap = { Setting, TrendCharts, Money, DataAnalysis }
-const normalizedTree = menuTree.map((node) => ({
-  ...node,
-  icon: node.icon ? iconMap[node.icon] || null : null,
-}))
-const menuTreeRef = normalizedTree
+menuTree.forEach((node) => {
+  if (node.icon) node.icon = iconMap[node.icon] || null
+})
 
-const currentRoleId = ref('admin')
 const filterKeyword = ref('')
 const activeMenuParent = ref(null)
+const flatMenus = flattenMenuNodes()
 
-const flatMenus = flattenMenu(menuTreeRef)
+const previewVisible = ref(false)
+const safeVisible = ref(false)
+const saveSuccess = ref(false)
+const roleManagerVisible = ref(false)
 
-const originalMatrix = reactive(
-  Object.fromEntries(roles.map((r) => [r.id, JSON.parse(JSON.stringify(initialPermissionMatrix[r.id] || {}))])),
+const conflictDialogVisible = ref(false)
+const conflictDialogRow = ref(null)
+
+const currentRole = computed(() =>
+  roleStore.roles.find((r) => r.id === roleStore.currentRoleId) || null,
 )
-
-const currentMatrix = reactive(
-  Object.fromEntries(roles.map((r) => [r.id, JSON.parse(JSON.stringify(initialPermissionMatrix[r.id] || {}))])),
-)
-
-const currentRoleName = computed(() => roles.find((r) => r.id === currentRoleId.value)?.name || '')
-
-function getPermission(menuId, action) {
-  return !!(currentMatrix[currentRoleId.value]?.[menuId]?.[action])
-}
-
-function togglePermission(menuId, action, value) {
-  if (!currentMatrix[currentRoleId.value]) return
-  if (!currentMatrix[currentRoleId.value][menuId]) {
-    currentMatrix[currentRoleId.value][menuId] = {}
-  }
-  currentMatrix[currentRoleId.value][menuId][action] = !!value
-}
-
-function roleMatrix(roleId) {
-  return currentMatrix[roleId] || {}
-}
-function origRoleMatrix(roleId) {
-  return originalMatrix[roleId] || {}
-}
 
 function rowForMenu(menuNode) {
-  const row = roleMatrix(currentRoleId.value)[menuNode.id] || {}
-  const origRow = origRoleMatrix(currentRoleId.value)[menuNode.id] || {}
-  const conflicts = detectConflicts(row)
+  const roleId = roleStore.currentRoleId
+  const cur = roleStore.matrix[roleId]?.[menuNode.id] || {}
+  const saved = roleStore.savedMatrix[roleId]?.[menuNode.id] || {}
+  const conflicts = detectConflicts(cur)
   const conflictActions = new Set()
   conflicts.forEach((c) => c.cells.forEach((cell) => conflictActions.add(cell.action)))
   const changedActions = actionTypes
-    .filter((a) => !!row[a.key] !== !!origRow[a.key])
+    .filter((a) => !!cur[a.key] !== !!saved[a.key])
     .map((a) => a.key)
+  const actions = {}
+  actionTypes.forEach((a) => (actions[a.key] = !!cur[a.key]))
   return {
     id: menuNode.id,
     title: menuNode.title,
@@ -317,56 +348,41 @@ function rowForMenu(menuNode) {
     conflictActions: [...conflictActions],
     changedActions,
     conflicts,
+    actions,
   }
 }
 
 const visibleRows = computed(() => {
   const kw = (filterKeyword.value || '').trim().toLowerCase()
-  const base = flatMenus.map(rowForMenu)
-  if (!kw) return base
-  return base.filter(
-    (r) =>
-      r.title.toLowerCase().includes(kw) ||
-      (r.parentTitle || '').toLowerCase().includes(kw),
-  )
+  if (!kw) return flatMenus.map(rowForMenu)
+  return flatMenus
+    .map(rowForMenu)
+    .filter(
+      (r) =>
+        r.title.toLowerCase().includes(kw) ||
+        (r.parentTitle || '').toLowerCase().includes(kw),
+    )
 })
-
-const filteredNodes = computed(() => flatMenus.length)
 
 const pendingChanges = computed(() =>
   buildMatrixChangeDiff(
-    roleMatrix(currentRoleId.value),
-    origRoleMatrix(currentRoleId.value),
+    roleStore.matrix[roleStore.currentRoleId] || {},
+    roleStore.savedMatrix[roleStore.currentRoleId] || {},
     flatMenus,
     actionTypes,
   ),
 )
-
 const pendingCount = computed(() => pendingChanges.value.length)
 const hasAnyConflict = computed(() => visibleRows.value.some((r) => r.hasConflict))
 const conflictCount = computed(() => visibleRows.value.filter((r) => r.hasConflict).length)
 
-const previewVisible = ref(false)
-const safeVisible = ref(false)
-const saveSuccess = ref(false)
-
-const conflictDialogVisible = ref(false)
-const conflictDialogRow = ref(null)
-
-function isDirtyForMenu(menuId) {
-  const orig = origRoleMatrix(currentRoleId.value)[menuId] || {}
-  const cur = roleMatrix(currentRoleId.value)[menuId] || {}
-  return actionTypes.some((a) => !!cur[a.key] !== !!orig[a.key])
-}
-
-function rowClassName() {
-  return ''
+function togglePermission(menuId, action, value) {
+  setPermission(roleStore.currentRoleId, menuId, action, value)
 }
 
 function cellTooltip(row, action) {
   if (row.conflictActions?.includes(action)) {
-    const msg = (row.conflicts || []).map((c) => c.message).join('；')
-    return '⚠ 冲突：' + msg
+    return '⚠ 冲突：' + (row.conflicts || []).map((c) => c.message).join('；')
   }
   if (row.changedActions?.includes(action)) {
     return '● 已修改，未保存'
@@ -389,7 +405,7 @@ function handleRoleChange() {
 
 function triggerSave() {
   if (pendingCount.value === 0) {
-    ElMessage.info('当前没有待保存的变更')
+    ElMessage.info('当前角色没有待保存的变更')
     return
   }
   previewVisible.value = true
@@ -401,17 +417,12 @@ function openSafeConfirm() {
 }
 
 function commitChanges() {
-  const matrix = roleMatrix(currentRoleId.value)
-  const orig = origRoleMatrix(currentRoleId.value)
-  // 写入 originalMatrix，标记“已保存”
-  Object.keys(matrix).forEach((key) => {
-    orig[key] = JSON.parse(JSON.stringify(matrix[key]))
-  })
+  commitRoleMatrix(roleStore.currentRoleId)
   safeVisible.value = false
   saveSuccess.value = true
   ElNotification({
     title: '保存成功',
-    message: `${currentRoleName.value} 的权限配置已写入系统，共 ${pendingChanges.value.length} 项变更`,
+    message: `${currentRole.value?.name || '角色'} 的权限配置已写入系统，共 ${pendingCount.value} 项变更`,
     type: 'success',
     duration: 3000,
   })
@@ -421,15 +432,7 @@ function commitChanges() {
 }
 
 function resetToOriginal() {
-  const orig = origRoleMatrix(currentRoleId.value)
-  const cur = roleMatrix(currentRoleId.value)
-  Object.keys(cur).forEach((key) => {
-    if (orig[key]) {
-      cur[key] = JSON.parse(JSON.stringify(orig[key]))
-    } else {
-      cur[key] = {}
-    }
-  })
+  resetRoleToSaved(roleStore.currentRoleId)
   ElMessage.success('已还原为上次保存的配置')
 }
 
@@ -438,14 +441,11 @@ function showConflictDialog(row) {
   conflictDialogVisible.value = true
 }
 
-watch(
-  hasAnyConflict,
-  (v, old) => {
-    if (v && !old) {
-      ElMessage.warning('检测到权限冲突，请在矩阵或下方变更预览中核实')
-    }
-  },
-)
+watch(hasAnyConflict, (v, old) => {
+  if (v && !old) {
+    ElMessage.warning('检测到权限冲突，请在矩阵或变更预览中核实')
+  }
+})
 </script>
 
 <style scoped>
@@ -465,6 +465,8 @@ watch(
   border-radius: 14px;
   margin-bottom: 18px;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .pc-title {
   display: flex;
@@ -491,6 +493,7 @@ watch(
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 .role-label {
   color: #6b7280;
@@ -507,6 +510,7 @@ watch(
   gap: 8px;
   color: #1f2937;
   font-weight: 600;
+  flex-wrap: wrap;
 }
 
 .tree-node {
@@ -567,6 +571,7 @@ watch(
   gap: 18px;
   color: #6b7280;
   font-size: 13px;
+  flex-wrap: wrap;
 }
 .legend i.dot {
   display: inline-block;
