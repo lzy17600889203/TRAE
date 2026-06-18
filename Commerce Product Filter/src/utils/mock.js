@@ -19,7 +19,20 @@ const STATUSES = [
 
 const PLATFORMS = ['天猫', '京东', '抖音商城', '拼多多', '小红书']
 
-const CUSTOMERS = ['张**', '李**', '王**', '陈**', '刘**', '杨**', '赵**', '黄**']
+const CUSTOMERS = [
+  { name: '张**', phone: '138****1234', city: '北京' },
+  { name: '李**', phone: '139****5678', city: '上海' },
+  { name: '王**', phone: '137****9012', city: '广州' },
+  { name: '陈**', phone: '136****3456', city: '深圳' },
+  { name: '刘**', phone: '135****7890', city: '成都' },
+  { name: '杨**', phone: '158****2345', city: '杭州' },
+  { name: '赵**', phone: '159****6789', city: '武汉' },
+  { name: '黄**', phone: '186****0123', city: '南京' }
+]
+
+const CARRIERS = ['顺丰速运', '京东物流', '中通快递', '圆通速递', '韵达快递']
+const PAYMENTS = ['支付宝', '微信支付', '银行卡', '花呗分期']
+const ABNORMAL_REASONS = ['库存不足', '地址异常', '支付超时', '买家取消', '快递丢失']
 
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
 const pick = (arr) => arr[randInt(0, arr.length - 1)]
@@ -36,22 +49,52 @@ export function createOrder() {
   const qty = randInt(1, 3)
   const unitPrice = randInt(99, 2999)
   const now = new Date()
+  const customer = pick(CUSTOMERS)
+  const payTime = new Date(now.getTime() - randInt(30, 600) * 1000)
+  const shipTime =
+    status === 'shipped'
+      ? new Date(payTime.getTime() + randInt(60, 1800) * 1000)
+      : null
+
+  const fmt = (d) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+      d.getHours()
+    )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 
   return {
     id: `D${orderSeq++}`,
     platform: pick(PLATFORMS),
-    customer: pick(CUSTOMERS),
+    customer: customer.name,
+    phone: customer.phone,
+    city: customer.city,
+    address: `${customer.city}市某某区幸福小区 ${randInt(1, 30)}号楼 ${randInt(101, 3000)}室`,
     sku: skuInfo.sku,
     skuName: skuInfo.name,
     icon: skuInfo.icon,
+    spec: ['标准版', '高配版', '尊享版', 'Pro 版'][randInt(0, 3)],
+    color: ['曜石黑', '星河银', '极光蓝', '云雾白', '玫瑰金'][randInt(0, 4)],
     qty,
+    unitPrice,
     amount: qty * unitPrice,
+    freight: randInt(0, 1) ? 0 : randInt(8, 25),
+    payment: pick(PAYMENTS),
     warehouse: pick(WAREHOUSES),
+    carrier: status === 'shipped' ? pick(CARRIERS) : '',
+    trackingNo:
+      status === 'shipped'
+        ? `SF${Math.floor(Math.random() * 1e12)}`
+        : status === 'pending'
+        ? '待生成'
+        : '—',
+    remark:
+      status === 'abnormal'
+        ? pick(ABNORMAL_REASONS)
+        : ['请尽快发货', '包装请加固', '送货前电话联系', ''][randInt(0, 3)],
     status,
     statusLabel: STATUSES.find((s) => s.key === status).label,
-    createdAt: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
-      now.getDate()
-    )} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+    payTime: fmt(payTime),
+    shipTime: shipTime ? fmt(shipTime) : '—',
+    createdAt: fmt(now),
     isNew: true
   }
 }

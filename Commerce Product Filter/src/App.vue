@@ -133,13 +133,131 @@
         />
       </div>
     </div>
+
+    <!-- 订单详情弹窗 -->
+    <el-dialog
+      v-model="detailVisible"
+      :title="`订单详情 · ${currentOrder?.id ?? ''}`"
+      width="760px"
+      top="6vh"
+      destroy-on-close
+    >
+        <template v-if="currentOrder">
+          <div class="order-detail__header">
+            <div class="order-detail__emoji">{{ currentOrder.icon }}</div>
+            <div style="flex:1;">
+              <div class="order-detail__title">
+                {{ currentOrder.skuName }}
+                <el-tag size="small" effect="dark" :type="statusTagType(currentOrder.status)">
+                  {{ currentOrder.statusLabel }}
+                </el-tag>
+              </div>
+              <div class="order-detail__sub">
+                SKU: {{ currentOrder.sku }} · 规格：{{ currentOrder.spec }} · 颜色：{{ currentOrder.color }}
+              </div>
+            </div>
+            <div class="order-detail__amount">
+              <div class="order-detail__amount-label">应付金额</div>
+              <div class="order-detail__amount-value">
+                ¥ {{ (currentOrder.amount + currentOrder.freight).toLocaleString() }}
+              </div>
+            </div>
+          </div>
+
+          <el-divider content-position="left">买家 & 收货信息</el-divider>
+          <el-descriptions :column="2" border size="default">
+            <el-descriptions-item label="客户">{{ currentOrder.customer }}</el-descriptions-item>
+            <el-descriptions-item label="联系电话">{{ currentOrder.phone }}</el-descriptions-item>
+            <el-descriptions-item label="所在城市">{{ currentOrder.city }}</el-descriptions-item>
+            <el-descriptions-item label="收货地址" :span="2">
+              {{ currentOrder.address }}
+            </el-descriptions-item>
+            <el-descriptions-item label="下单平台">{{ currentOrder.platform }}</el-descriptions-item>
+            <el-descriptions-item label="支付方式">{{ currentOrder.payment }}</el-descriptions-item>
+            <el-descriptions-item label="买家备注">
+              <span v-if="currentOrder.remark">{{ currentOrder.remark }}</span>
+              <span v-else style="color:#909399;">—</span>
+            </el-descriptions-item>
+          </el-descriptions>
+
+          <el-divider content-position="left">商品明细</el-divider>
+          <el-table :data="[currentOrder]" size="default" border stripe>
+            <el-table-column prop="sku" label="SKU" width="130" />
+            <el-table-column prop="skuName" label="商品名称" />
+            <el-table-column label="规格">
+              <template #default="{ row }">
+                {{ row.spec }} / {{ row.color }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="unitPrice" label="单价(¥)" width="100" align="right">
+              <template #default="{ row }">
+                {{ Number(row.unitPrice).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="qty" label="数量" width="80" align="right" />
+            <el-table-column label="小计(¥)" width="110" align="right">
+              <template #default="{ row }">
+                {{ (row.unitPrice * row.qty).toLocaleString() }}
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <el-divider content-position="left">物流 & 财务</el-divider>
+          <el-descriptions :column="2" border size="default">
+            <el-descriptions-item label="发货仓库">{{ currentOrder.warehouse }}</el-descriptions-item>
+            <el-descriptions-item label="承运商">
+              <span v-if="currentOrder.carrier">{{ currentOrder.carrier }}</span>
+              <span v-else style="color:#909399;">未发货</span>
+            </el-descriptions-item>
+            <el-descriptions-item label="运单号" :span="2">
+              <el-tooltip content="点击复制" placement="top">
+                <span style="cursor:copy;" @click="copyText(currentOrder.trackingNo)">
+                  <el-icon style="vertical-align:-2px;"><Document /></el-icon>
+                  {{ currentOrder.trackingNo }}
+                </span>
+              </el-tooltip>
+            </el-descriptions-item>
+            <el-descriptions-item label="商品金额">¥ {{ currentOrder.amount.toLocaleString() }}</el-descriptions-item>
+            <el-descriptions-item label="运费">
+              {{ currentOrder.freight === 0 ? '包邮' : '¥ ' + currentOrder.freight }}
+            </el-descriptions-item>
+            <el-descriptions-item label="下单时间">{{ currentOrder.createdAt }}</el-descriptions-item>
+            <el-descriptions-item label="支付时间">{{ currentOrder.payTime }}</el-descriptions-item>
+            <el-descriptions-item label="发货时间">
+              <span v-if="currentOrder.status === 'shipped'">{{ currentOrder.shipTime }}</span>
+              <span v-else style="color:#909399;">未发货</span>
+            </el-descriptions-item>
+          </el-descriptions>
+
+          <el-alert
+            v-if="currentOrder.status === 'abnormal'"
+            :title="'异常原因：' + (currentOrder.remark || '未填写')"
+            type="error"
+            show-icon
+            :closable="false"
+            style="margin-top:16px;"
+          />
+        </template>
+
+        <template #footer>
+          <el-button @click="detailVisible = false">关闭</el-button>
+          <el-button
+            type="warning"
+            :disabled="currentOrder?.status === 'shipped'"
+            @click="markShipped"
+          >
+            标记已发货
+          </el-button>
+          <el-button type="primary" @click="printOrder">打印面单</el-button>
+        </template>
+      </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Bell, DataLine, PieChart, Search, Warning } from '@element-plus/icons-vue'
+import { Bell, DataLine, Document, PieChart, Search, Warning, Printer } from '@element-plus/icons-vue'
 import InventoryChart from './components/InventoryChart.vue'
 import StockWarning from './components/StockWarning.vue'
 import EmptyRobot from './components/EmptyRobot.vue'
@@ -163,6 +281,8 @@ const activeFilters = ref(['pending', 'shipped', 'abnormal'])
 const keyword = ref('')
 const nowTime = ref('')
 const showWarning = ref(false)
+const detailVisible = ref(false)
+const currentOrder = ref(null)
 
 // 二维库存矩阵 [warehouseIdx][skuIdx]
 const matrix = ref(buildWarehouseInventory())
@@ -235,11 +355,36 @@ const statusTagType = (k) =>
   k === 'pending' ? 'warning' : k === 'shipped' ? 'success' : 'danger'
 
 const openOrder = (o) => {
-  ElMessage({
-    message: `已打开订单 ${o.id} · ${o.skuName}`,
-    type: 'info',
-    customClass: 'order-msg'
-  })
+  currentOrder.value = o
+  detailVisible.value = true
+}
+
+const copyText = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    ElMessage.success('已复制：' + text)
+  } catch {
+    ElMessage.warning('当前环境不支持剪贴板 API')
+  }
+}
+
+const markShipped = () => {
+  if (!currentOrder.value) return
+  const o = orders.value.find((x) => x.id === currentOrder.value.id)
+  if (!o) return
+  o.status = 'shipped'
+  o.statusLabel = '已发货'
+  const now = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  o.shipTime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+  o.carrier = o.carrier || '顺丰速运'
+  o.trackingNo = `SF${Math.floor(Math.random() * 1e12)}`
+  ElMessage.success(`${o.id} 已标记为已发货`)
+}
+
+const printOrder = () => {
+  if (!currentOrder.value) return
+  ElMessage.info(`正在为 ${currentOrder.value.id} 打印面单（演示）`)
 }
 
 const dispatchOrder = () => {
