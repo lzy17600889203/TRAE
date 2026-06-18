@@ -39,17 +39,24 @@
             <strong>{{ roleName }}</strong> 角色当前的权限配置。
           </p>
 
-          <el-form :model="form" label-position="top" size="large" @submit.prevent="handleConfirm">
-            <el-form-item label="二次授权码">
+          <el-form
+            ref="formRef"
+            :model="form"
+            :rules="rules"
+            label-position="top"
+            size="large"
+            @submit.prevent="handleConfirm"
+          >
+            <el-form-item label="二次授权码" prop="code">
               <el-input
                 v-model="form.code"
-                placeholder="输入 AUTH-<strong>2026</strong> 解锁（示意）"
+                placeholder="请输入授权码（至少 4 位，演示模式：AUTH-2026）"
                 show-password
                 clearable
                 maxlength="24"
                 @keyup.enter="handleConfirm"
               />
-              <small style="color:#8592a6">提示：任意内容均可通过（演示模式）</small>
+              <small style="color:#8592a6">提示：仅用于示意校验，未连接真实鉴权服务</small>
             </el-form-item>
 
             <el-form-item label="变更说明（可选）">
@@ -77,6 +84,7 @@
 <script setup>
 import { ref, reactive, watch } from 'vue'
 import { Lock } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   visible: Boolean,
@@ -88,7 +96,15 @@ const emit = defineEmits(['confirm', 'cancel', 'closed'])
 const locked = ref(true)
 const confirming = ref(false)
 const dial = ref(0)
+const formRef = ref(null)
 const form = reactive({ code: '', reason: '' })
+
+const rules = {
+  code: [
+    { required: true, message: '请输入二级授权码', trigger: ['blur', 'submit'] },
+    { min: 4, message: '授权码至少 4 位', trigger: 'blur' },
+  ],
+}
 
 watch(
   () => props.visible,
@@ -99,6 +115,7 @@ watch(
       form.code = ''
       form.reason = ''
       dial.value = 0
+      if (formRef.value) formRef.value.clearValidate()
       const spin = window.setInterval(() => {
         dial.value += 12
       }, 60)
@@ -125,8 +142,13 @@ function playClick() {
   }
 }
 
-function handleConfirm() {
+async function handleConfirm() {
   if (confirming.value) return
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) {
+    ElMessage.warning('请先填写合法的二次授权码')
+    return
+  }
   confirming.value = true
   playClick()
   window.setTimeout(() => {
