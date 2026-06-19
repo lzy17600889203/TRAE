@@ -1,0 +1,191 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f5f7fa;
+  color: #2c3e50;
+}
+
+/* ========= 闹钟震动动画 ========= */
+@keyframes alarm-shake {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-18deg); }
+  20% { transform: rotate(16deg); }
+  30% { transform: rotate(-14deg); }
+  40% { transform: rotate(12deg); }
+  50% { transform: rotate(-10deg); }
+  60% { transform: rotate(8deg); }
+  70% { transform: rotate(-6deg); }
+  80% { transform: rotate(4deg); }
+  90% { transform: rotate(-2deg); }
+}
+
+.alarm-icon-shake {
+  display: inline-block;
+  animation: alarm-shake 1.2s ease-in-out infinite;
+  color: #e6a23c;
+}
+
+@keyframes bubble-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bubble-slide-in {
+  animation: bubble-slide-up 0.45s ease-out;
+}
+
+/* ========= 时间轴 / 聊天样式 ========= */
+.timeline-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 4px 16px 4px;
+}
+
+.timeline-bubble {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.timeline-bubble .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409eff, #36cfc9);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.timeline-bubble .content {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  padding: 10px 14px;
+  flex: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.timeline-bubble .meta {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+
+.timeline-bubble .text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #303133;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.timeline-bubble .attachment {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecf5ff;
+  color: #409eff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ========= 卡片自定义 ========= */
+.follow-card {
+  border-radius: 10px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.follow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.follow-card.need-follow {
+  background: linear-gradient(90deg, #fff7e6 0%, #fffdf8 100%);
+  border-color: #ffd591;
+}
+
+.card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.customer-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409eff, #67c23a);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* 漏斗图下方浮层 */
+.funnel-popover {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  min-width: 260px;
+  font-size: 13px;
+}
+
+.funnel-popover h4 {
+  margin: 0 0 6px 0;
+  color: #303133;
+  font-size: 14px;
+}
+
+.funnel-popover .rate {
+  color: #67c23a;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.funnel-popover ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.funnel-popover li {
+  padding: 4px 0;
+  border-bottom: 1px dashed #f0f2f5;
+  color: #606266;
+  font-size: 12px;
+}
+
+.funnel-popover li:last-child {
+  border-bottom: none;
+}
