@@ -31,12 +31,12 @@
             </div>
             <div v-if="r.text" class="text">{{ r.text }}</div>
             <div
-              v-for="f in r.files"
-              :key="f.name"
+              v-for="(f, j) in r.files"
+              :key="j"
               class="attachment"
-              @click="previewFile(f)"
+              @click.prevent.stop="downloadFile(f)"
             >
-              <el-icon><Paperclip /></el-icon>
+              <el-icon><Download /></el-icon>
               {{ f.name }}
               <span style="color:#909399; margin-left:6px;">({{ f.size }})</span>
             </div>
@@ -163,9 +163,12 @@ function stageTagType(key) {
 
 function handleFileChange(file) {
   if (!file || !file.raw) return
+  const rawFile = file.raw
+  // 同时保存真实 File 对象（raw），用于后续下载
   pendingFiles.value.push({
     name: file.name,
-    size: humanSize(file.size || 0)
+    size: humanSize(file.size || 0),
+    raw: rawFile
   })
 }
 
@@ -176,6 +179,8 @@ function humanSize(bytes) {
 }
 
 function removeFile(idx) {
+  const f = pendingFiles.value[idx]
+  if (f && f._blobUrl) URL.revokeObjectURL(f._blobUrl)
   pendingFiles.value.splice(idx, 1)
 }
 
@@ -185,13 +190,11 @@ function sendRecord() {
     time: new Date(),
     user: '我',
     text: inputText.value.trim(),
+    // 发送时保留 raw，供点击下载使用
     files: pendingFiles.value.slice()
   }
-  // 插入到本地（气泡滑入动画由 .bubble-slide-in 触发）
   localRecords.value.unshift(record)
-  // 同时回传给父组件更新原数据
   emit('add-record', { customerId: props.customer.id, record })
-  // 清空输入
   inputText.value = ''
   pendingFiles.value = []
 }
@@ -202,8 +205,38 @@ function scrollToBottom() {
   }
 }
 
-function previewFile(f) {
-  window.alert(`预览 / 下载附件：${f.name}（${f.size}）`)
+function downloadFile(f) {
+  if (!f) return
+  try {
+    let url = f._blobUrl
+    if (!url) {
+      if (f.raw instanceof Blob || f.raw instanceof File) {
+        url = URL.createObjectURL(f.raw)
+      } else if (f.url) {
+        url = f.url
+      } else {
+        // 历史 mock 附件：生成一段演示文本作为下载占位
+        const content =
+          '演示附件：' + f.name + '\n' +
+          '大小：' + (f.size || '未知') + '\n' +
+          '对接真实后端后，此处应改为调用下载接口拿到 Blob。\n'
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+        url = URL.createObjectURL(blob)
+      }
+      f._blobUrl = url
+    }
+
+    const a = document.createElement('a')
+    a.href = url
+    const hasRealFile = f.raw instanceof Blob || f.raw instanceof File || f.url
+    a.download = hasRealFile ? f.name : f.name.replace(/\.[^.]+$/, '') + '.txt'
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => document.body.removeChild(a), 200)
+  } catch (e) {
+    window.alert('附件下载失败：' + f.name + '\n' + (e.message || e))
+  }
 }
 </script>
 
