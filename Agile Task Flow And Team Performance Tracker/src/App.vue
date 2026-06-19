@@ -16,7 +16,7 @@
           <div class="row"><span>总任务</span><b>{{ totalTasks }}</b></div>
           <div class="row"><span>已完成</span><b>{{ doneCount }}</b></div>
           <div class="row"><span>完成率</span><b>{{ completionRate }}%</b></div>
-          <div class="row" style="color:#e8833a"><span>停滞(&gt;3天)</span><b>{{ stuckCount }}</b></div>
+          <div class="row" style="color:#e83e3a"><span>停滞(&gt;3天)</span><b>{{ stuckCount }}</b></div>
         </div>
         <div class="chart-wrap">
           <v-chart :option="gaugeOption" autoresize />
@@ -59,7 +59,7 @@
         </div>
 
         <draggable
-          v-model="tasksByCol[col.key]"
+          :list="tasksByCol[col.key]"
           group="kanban-tasks"
           item-key="id"
           class="col-body"
@@ -67,9 +67,10 @@
           drag-class="sortable-drag"
           chosen-class="sortable-chosen"
           animation="300"
+          :data-col="col.key"
           @start="onDragStart"
           @change="(evt) => onDragChange(evt, col.key)"
-          @end="onDragEnd"
+          @end="(evt) => onDragEnd(evt, col.key)"
         >
           <template #item="{ element }">
             <div
@@ -195,61 +196,45 @@ const STUCK_DAYS = 3
 const uid = () => 't_' + Math.random().toString(36).slice(2, 9)
 
 const initialTasks = () => [
-  { id: uid(), title: '设计登录页视觉稿', description: '产出登录/注册页 UI 稿及切图', owner: 'Amy', priority: 'high', tags: ['设计', 'UI'], column: 'todo', createdAt: Date.now() - 1 * MS_PER_DAY, movedInAt: Date.now() - 1 * MS_PER_DAY },
-  { id: uid(), title: '搭建项目脚手架', description: 'Vue3 + Vite + Element Plus 基础工程', owner: 'Bob', priority: 'mid', tags: ['工程化'], column: 'todo', createdAt: Date.now() - 2 * MS_PER_DAY, movedInAt: Date.now() - 2 * MS_PER_DAY },
-  { id: uid(), title: '后端接口文档对齐', description: '与后端同学对齐 REST 接口字段', owner: 'Cathy', priority: 'mid', tags: ['协作'], column: 'inprogress', createdAt: Date.now() - 5 * MS_PER_DAY, movedInAt: Date.now() - 5 * MS_PER_DAY },
-  { id: uid(), title: '登录/鉴权前端实现', description: '完成登录流程、Token 本地管理', owner: 'David', priority: 'high', tags: ['前端'], column: 'inprogress', createdAt: Date.now() - 2 * MS_PER_DAY, movedInAt: Date.now() - 2 * MS_PER_DAY },
-  { id: uid(), title: '看板拖拽交互联调', description: '打通 VueDraggable 与数据层', owner: 'Evan', priority: 'high', tags: ['交互'], column: 'testing', createdAt: Date.now() - 1 * MS_PER_DAY, movedInAt: Date.now() - 1 * MS_PER_DAY },
-  { id: uid(), title: '首屏加载性能优化', description: '首屏 < 2s，核心指标达标', owner: 'Fiona', priority: 'low', tags: ['性能'], column: 'done', createdAt: Date.now() - 7 * MS_PER_DAY, movedInAt: Date.now() - 4 * MS_PER_DAY },
-  { id: uid(), title: '埋点数据上报', description: '完成关键用户行为事件上报', owner: 'George', priority: 'low', tags: ['数据'], column: 'done', createdAt: Date.now() - 10 * MS_PER_DAY, movedInAt: Date.now() - 6 * MS_PER_DAY }
+  { id: uid(), title: '设计登录页视觉稿', description: '产出登录/注册页 UI 稿及切图', owner: 'Amy',   priority: 'high', tags: ['设计', 'UI'], column: 'todo',       createdAt: Date.now() - 1 * MS_PER_DAY, movedInAt: Date.now() - 1 * MS_PER_DAY },
+  { id: uid(), title: '搭建项目脚手架',   description: 'Vue3 + Vite + Element Plus 基础工程',  owner: 'Bob',   priority: 'mid',  tags: ['工程化'],     column: 'todo',       createdAt: Date.now() - 2 * MS_PER_DAY, movedInAt: Date.now() - 2 * MS_PER_DAY },
+  { id: uid(), title: '后端接口文档对齐', description: '与后端同学对齐 REST 接口字段',          owner: 'Cathy', priority: 'mid',  tags: ['协作'],       column: 'inprogress', createdAt: Date.now() - 5 * MS_PER_DAY, movedInAt: Date.now() - 5 * MS_PER_DAY },
+  { id: uid(), title: '登录/鉴权前端实现', description: '完成登录流程、Token 本地管理',          owner: 'David', priority: 'high', tags: ['前端'],       column: 'inprogress', createdAt: Date.now() - 2 * MS_PER_DAY, movedInAt: Date.now() - 2 * MS_PER_DAY },
+  { id: uid(), title: '看板拖拽交互联调', description: '打通 VueDraggable 与数据层',             owner: 'Evan',  priority: 'high', tags: ['交互'],       column: 'testing',    createdAt: Date.now() - 1 * MS_PER_DAY, movedInAt: Date.now() - 1 * MS_PER_DAY },
+  { id: uid(), title: '首屏加载性能优化', description: '首屏 < 2s，核心指标达标',                 owner: 'Fiona', priority: 'low',  tags: ['性能'],       column: 'done',       createdAt: Date.now() - 7 * MS_PER_DAY, movedInAt: Date.now() - 4 * MS_PER_DAY },
+  { id: uid(), title: '埋点数据上报',     description: '完成关键用户行为事件上报',               owner: 'George',priority: 'low',  tags: ['数据'],       column: 'done',       createdAt: Date.now() - 10 * MS_PER_DAY, movedInAt: Date.now() - 6 * MS_PER_DAY }
 ]
 
 const columns = [
-  { key: 'todo', title: '待办', color: '#94a3b8', icon: Document },
+  { key: 'todo',       title: '待办',   color: '#94a3b8', icon: Document },
   { key: 'inprogress', title: '进行中', color: '#5b6cff', icon: Loading },
-  { key: 'testing', title: '测试中', color: '#f6a723', icon: Finished },
-  { key: 'done', title: '已完成', color: '#2f9e44', icon: CircleCheck }
+  { key: 'testing',    title: '测试中', color: '#f6a723', icon: Finished },
+  { key: 'done',       title: '已完成', color: '#2f9e44', icon: CircleCheck }
 ]
+const COLUMN_KEYS = columns.map(c => c.key)
 
-// 每列使用独立的 reactive 数组，直接绑定给 VueDraggable 的 v-model
-const todoList = reactive([])
-const inprogressList = reactive([])
-const testingList = reactive([])
-const doneList = reactive([])
+// ===== 唯一真实数据源：所有显示都从它派生 =====
+const flatTasks = ref([])
 
+// 每列数据都是 computed（按 column 字段过滤 + 保持原有顺序）
+// 这样无论列内部排序、还是跨列移动，统一由 flatTasks 决定。
 const tasksByCol = reactive({
-  todo: todoList,
-  inprogress: inprogressList,
-  testing: testingList,
-  done: doneList
+  todo:       computed(() => flatTasks.value.filter(t => t.column === 'todo')),
+  inprogress: computed(() => flatTasks.value.filter(t => t.column === 'inprogress')),
+  testing:    computed(() => flatTasks.value.filter(t => t.column === 'testing')),
+  done:       computed(() => flatTasks.value.filter(t => t.column === 'done'))
 })
 
-const dragOverColumn = ref(null)
-const snapIds = ref(new Set())
-const quickAddText = reactive({ todo: '', inprogress: '', testing: '', done: '' })
-
-const showAdd = ref(false)
-const newTask = reactive({
-  title: '',
-  description: '',
-  owner: 'Me',
-  priority: 'mid',
-  column: 'todo'
-})
-
-const showLevelUp = ref(false)
-const prevCompletion = ref(0)
-let levelUpAudioCtx = null
-
-const totalTasks = computed(() =>
-  todoList.length + inprogressList.length + testingList.length + doneList.length
-)
-const doneCount = computed(() => doneList.length)
+// ===== 仪表盘统计 =====
+const totalTasks   = computed(() => flatTasks.value.length)
+const doneCount    = computed(() => tasksByCol.done.length)
 const completionRate = computed(() => {
   if (totalTasks.value === 0) return 0
-  return Math.round((doneList.length / totalTasks.value) * 100)
+  return Math.round((doneCount.value / totalTasks.value) * 100)
 })
-const stuckCount = computed(() => inprogressList.filter(t => isStuckByBase(t, t.column)).length)
+const stuckCount   = computed(() =>
+  tasksByCol.inprogress.filter(t => isStuckByBase(t)).length
+)
 
 const gaugeOption = computed(() => ({
   series: [
@@ -291,6 +276,7 @@ const gaugeOption = computed(() => ({
   ]
 }))
 
+// ===== 辅助函数 =====
 function priorityTagType(p) {
   return p === 'high' ? 'danger' : p === 'mid' ? 'warning' : 'success'
 }
@@ -301,14 +287,13 @@ function daysInProgress(task) {
   return Math.floor((Date.now() - base) / MS_PER_DAY)
 }
 
-function isStuckByBase(task, colKey) {
-  if (colKey !== 'inprogress') return false
+function isStuckByBase(task) {
   const base = task.movedInAt || task.createdAt || Date.now()
   return Math.floor((Date.now() - base) / MS_PER_DAY) >= STUCK_DAYS
 }
 
 function isStuck(task) {
-  return isStuckByBase(task, task.column)
+  return task.column === 'inprogress' && isStuckByBase(task)
 }
 
 function markSnap(id) {
@@ -316,67 +301,94 @@ function markSnap(id) {
   setTimeout(() => snapIds.value.delete(id), 500)
 }
 
+// ===== 拖拽事件 =====
+const dragOverColumn = ref(null)
+const snapIds = ref(new Set())
+const pendingMovedIds = ref(new Set()) // 在本列本轮 change 中新进入的任务 id
+
 function onDragStart(/* evt */) {
   dragOverColumn.value = null
+  pendingMovedIds.value = new Set()
 }
 
 function onDragChange(evt, colKey) {
-  if (evt && (evt.added || evt.moved)) {
-    dragOverColumn.value = colKey
+  // 目标列高亮
+  dragOverColumn.value = colKey
+
+  // VueDraggable 可能会临时把对象 push 进目标列，但我们不允许它改 computed，
+  // 所以这里只做「记录哪些 id 被拖到了 colKey」的准备工作，真正的更新放在 onDragEnd。
+  if (evt && evt.added && Array.isArray(evt.added.elements)) {
+    for (const el of evt.added.elements) {
+      if (el && el.id) pendingMovedIds.value.add(el.id)
+    }
   }
 }
 
-// 查找某个任务当前所在的列（可能存在多列重复，返回第一个命中）
-function findColumnOfTask(id) {
-  for (const colKey of ['todo', 'inprogress', 'testing', 'done']) {
-    const list = tasksByCol[colKey]
-    const t = list.find(x => x.id === id)
-    if (t) return { colKey, task: t }
-  }
-  return null
-}
-
-// 清理指定列中 id 匹配的任务（防重复）
-function removeFromList(colKey, id) {
-  const list = tasksByCol[colKey]
-  const idx = list.findIndex(t => t.id === id)
-  if (idx >= 0) list.splice(idx, 1)
-}
-
-function onDragEnd(evt) {
+function onDragEnd(evt, targetColKey) {
   const id = evt && evt.item && evt.item.dataset && evt.item.dataset.id
   dragOverColumn.value = null
-  if (!id) return
 
-  const target = findColumnOfTask(id)
-  if (!target) return
-  const { colKey, task } = target
+  // 1) 如果能拿到 DOM dataset.id，优先以它为准
+  const explicitId = id || pickFromPending(targetColKey)
 
-  // VueDraggable 跨 list 拖拽时可能只在目标 list 里 push 了同一份对象引用，
-  // 但源 list 的旧引用未被清理，必须手动从其它三列都移除该 id，
-  // 确保同一个任务只出现在目标列中，避免“已完成数/完成率”不变的问题。
-  for (const other of ['todo', 'inprogress', 'testing', 'done']) {
-    if (other === colKey) continue
-    removeFromList(other, id)
+  if (explicitId) {
+    applyColumnChange(explicitId, targetColKey)
+  } else {
+    // 2) 兜底：把 flatTasks 中所有对象的 column 字段对齐为「它真正所在的列」
+    //    以 VueDraggable 已经调整好的 DOM 列为准（列数组里包含这个对象就是此列）
+    for (const col of COLUMN_KEYS) {
+      const idsInCol = new Set(tasksByCol[col].map(t => t.id))
+      for (const t of flatTasks.value) {
+        if (idsInCol.has(t.id) && t.column !== col) {
+          t.column = col
+          t.movedInAt = Date.now()
+          markSnap(t.id)
+        }
+      }
+    }
   }
 
-  // 同步 column 字段并刷新 movedInAt（进入新列时重置计时）
-  task.column = colKey
-  task.movedInAt = Date.now()
-  markSnap(task.id)
-
-  if (colKey === 'done') {
+  pendingMovedIds.value = new Set()
+  if (targetColKey === 'done') {
     fireConfetti()
     maybePlayLevelUp()
   }
 }
 
+function pickFromPending(targetColKey) {
+  const ids = [...pendingMovedIds.value]
+  if (ids.length === 0) return null
+  // 如果只有一个被移动的 id，直接采信
+  if (ids.length === 1) return ids[0]
+  // 多个：挑「当前 column != targetColKey」的第一个（说明它确实被移过来了）
+  for (const id of ids) {
+    const t = flatTasks.value.find(x => x.id === id)
+    if (t && t.column !== targetColKey) return id
+  }
+  return ids[0]
+}
+
+// 核心：把一个任务移到目标列，唯一要做的就是修改它的 column 字段
+function applyColumnChange(taskId, targetColKey) {
+  const task = flatTasks.value.find(t => t.id === taskId)
+  if (!task) return
+  if (task.column === targetColKey) {
+    // 列内排序：不触发特效，但更新 movedInAt 以避免错误被当成"刚进来"
+    return
+  }
+  task.column = targetColKey
+  task.movedInAt = Date.now()
+  markSnap(task.id)
+}
+
+// ===== 特效 =====
+let levelUpAudioCtx = null
 function fireConfetti() {
   const duration = 1800
   const end = Date.now() + duration
   const colors = ['#5b6cff', '#26c6ff', '#f6a723', '#2f9e44', '#e53e3e', '#b37cff']
   const frame = () => {
-    confetti({ particleCount: 5, angle: 60, spread: 80, origin: { x: 0.0, y: 0.7 }, colors })
+    confetti({ particleCount: 5, angle: 60,  spread: 80, origin: { x: 0.0, y: 0.7 }, colors })
     confetti({ particleCount: 5, angle: 120, spread: 80, origin: { x: 1.0, y: 0.7 }, colors })
     if (Date.now() < end) requestAnimationFrame(frame)
   }
@@ -409,6 +421,9 @@ function playLevelUp() {
   } catch (e) { /* noop */ }
 }
 
+const showLevelUp = ref(false)
+const prevCompletion = ref(0)
+
 function maybePlayLevelUp() {
   const current = completionRate.value
   const prev = prevCompletion.value
@@ -423,10 +438,13 @@ function maybePlayLevelUp() {
   }
 }
 
+// ===== CRUD 操作 =====
+const quickAddText = reactive({ todo: '', inprogress: '', testing: '', done: '' })
+
 function quickAdd(colKey) {
   const text = (quickAddText[colKey] || '').trim()
   if (!text) return
-  const t = {
+  flatTasks.value.push({
     id: uid(),
     title: text,
     description: '快速添加的任务',
@@ -436,18 +454,25 @@ function quickAdd(colKey) {
     column: colKey,
     createdAt: Date.now(),
     movedInAt: Date.now()
-  }
-  tasksByCol[colKey].push(t)
+  })
   quickAddText[colKey] = ''
-  markSnap(t.id)
 }
+
+const showAdd = ref(false)
+const newTask = reactive({
+  title: '',
+  description: '',
+  owner: 'Me',
+  priority: 'mid',
+  column: 'todo'
+})
 
 function submitNew() {
   if (!newTask.title.trim()) {
     ElMessage.warning('请填写标题')
     return
   }
-  const t = {
+  flatTasks.value.push({
     id: uid(),
     title: newTask.title.trim(),
     description: newTask.description.trim() || '（无描述）',
@@ -457,9 +482,7 @@ function submitNew() {
     column: newTask.column,
     createdAt: Date.now(),
     movedInAt: Date.now()
-  }
-  tasksByCol[newTask.column].push(t)
-  markSnap(t.id)
+  })
   newTask.title = ''
   newTask.description = ''
   newTask.owner = 'Me'
@@ -470,19 +493,13 @@ function submitNew() {
 }
 
 function removeTask(id) {
-  for (const colKey of ['todo', 'inprogress', 'testing', 'done']) {
-    const list = tasksByCol[colKey]
-    const idx = list.findIndex(t => t.id === id)
-    if (idx >= 0) {
-      list.splice(idx, 1)
-      return
-    }
-  }
+  flatTasks.value = flatTasks.value.filter(t => t.id !== id)
 }
 
 function simulateStuck() {
-  if (inprogressList.length === 0) {
-    inprogressList.push({
+  const inprogress = flatTasks.value.filter(t => t.column === 'inprogress')
+  if (inprogress.length === 0) {
+    flatTasks.value.push({
       id: uid(),
       title: '遗留系统迁移评估',
       description: '这是一个演示用的停滞任务',
@@ -496,33 +513,30 @@ function simulateStuck() {
     ElMessage.info('已新建一个停滞 3+ 天的进行中任务')
     return
   }
-  // 把第一个进行中任务改成停滞 3+ 天
-  const target = inprogressList[0]
-  target.movedInAt = Date.now() - (STUCK_DAYS + 1) * MS_PER_DAY
-  // 通过 splice 触发响应式刷新
-  inprogressList.splice(0, 1, { ...target, column: 'inprogress' })
+  // 把第一个进行中任务改成停滞 3+ 天：需要触发 reactivity，所以整体替换一次
+  flatTasks.value = flatTasks.value.map(t =>
+    t.id === inprogress[0].id && t.column === 'inprogress'
+      ? { ...t, movedInAt: Date.now() - (STUCK_DAYS + 1) * MS_PER_DAY }
+      : t
+  )
   ElMessage.info('已将一个进行中的任务模拟为停滞 3 天以上')
 }
 
 function resetDemo() {
   snapIds.value = new Set()
-  const fresh = initialTasks()
-  todoList.splice(0, todoList.length, ...fresh.filter(t => t.column === 'todo'))
-  inprogressList.splice(0, inprogressList.length, ...fresh.filter(t => t.column === 'inprogress'))
-  testingList.splice(0, testingList.length, ...fresh.filter(t => t.column === 'testing'))
-  doneList.splice(0, doneList.length, ...fresh.filter(t => t.column === 'done'))
+  flatTasks.value = initialTasks()
   prevCompletion.value = completionRate.value
   ElMessage.info('演示数据已重置')
 }
 
+// ===== 生命周期 =====
 let staleTimer = null
 onMounted(() => {
-  prevCompletion.value = completionRate.value
-  // 初始化各列
   resetDemo()
+  prevCompletion.value = completionRate.value
+  // 每分钟轻微刷新一次，让「停滞 3 天」的判断在长时间打开页面下自然生效
   staleTimer = setInterval(() => {
-    // 强制刷新停滞状态判断（重新分配一次 column 触发响应式）
-    inprogressList.splice(0, inprogressList.length, ...inprogressList.map(t => ({ ...t })))
+    flatTasks.value = [...flatTasks.value]
   }, 60 * 1000)
 })
 onBeforeUnmount(() => {
