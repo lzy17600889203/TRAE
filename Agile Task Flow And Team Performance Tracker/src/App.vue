@@ -216,16 +216,36 @@ const COLUMN_KEYS = columns.map(c => c.key)
 // ===== 唯一真实数据源：所有显示都从它派生 =====
 const flatTasks = ref([])
 
-// 每列数据都是 computed（按 column 字段过滤 + 保持原有顺序）
-// 这样无论列内部排序、还是跨列移动，统一由 flatTasks 决定。
+// VueDraggable 需要可写数组（它会直接 push/splice），所以 tasksByCol 各列存真实数组
+// 放在 reactive 容器中，并在 flatTasks 变化时由 syncColumnsFromFlat 统一重新填充。
+// 列标题的 length 和仪表盘 doneCount 都从 tasksByCol 读取，保证二者一致。
 const tasksByCol = reactive({
-  todo:       computed(() => flatTasks.value.filter(t => t.column === 'todo')),
-  inprogress: computed(() => flatTasks.value.filter(t => t.column === 'inprogress')),
-  testing:    computed(() => flatTasks.value.filter(t => t.column === 'testing')),
-  done:       computed(() => flatTasks.value.filter(t => t.column === 'done'))
+  todo:       [],
+  inprogress: [],
+  testing:    [],
+  done:       []
 })
 
+// 把一列内容替换为新数组（保留响应式）
+function setColumn(colKey, arr) {
+  tasksByCol[colKey].length = 0
+  for (const item of arr) tasksByCol[colKey].push(item)
+}
+
+// 按 flatTasks 中各任务对象的原始出现顺序分入各列
+function syncColumnsFromFlat() {
+  const buckets = { todo: [], inprogress: [], testing: [], done: [] }
+  for (const t of flatTasks.value) {
+    const key = buckets[t.column] ? t.column : 'todo'
+    buckets[key].push(t)
+  }
+  for (const key of COLUMN_KEYS) {
+    setColumn(key, buckets[key])
+  }
+}
+
 // ===== 仪表盘统计 =====
+// 仪表盘计数与列标题计数全部从 tasksByCol 读取，保持单一显示副本的一致性
 const totalTasks   = computed(() => flatTasks.value.length)
 const doneCount    = computed(() => tasksByCol.done.length)
 const completionRate = computed(() => {
@@ -315,27 +335,31 @@ function onDragChange(evt, colKey) {
   // 目标列高亮
   dragOverColumn.value = colKey
 
-  // VueDraggable 可能会临时把对象 push 进目标列，但我们不允许它改 computed，
-  // 所以这里只做「记录哪些 id 被拖到了 colKey」的准备工作，真正的更新放在 onDragEnd。
+  // 记录本列被拖进来的任务 id，以便 onDragEnd 更新 flatTasks.column
   if (evt && evt.added && Array.isArray(evt.added.elements)) {
     for (const el of evt.added.elements) {
-      if (el && el.id) pendingMovedIds.value.add(el.id)
+      const id = el && el.dataset && el.dataset.id
+      if (id) pendingMovedIds.value.add(id)
     }
+  }
+  // 列内排序：VueDraggable 会直接调整 tasksByCol[colKey] 数组顺序
+  // 我们也需要把这份新顺序写回 flatTasks（保持 flatTasks 的顺序为最终来源）
+  if (evt && evt.moved !== undefined) {
+    writeColumnOrderBackToFlat(colKey)
   }
 }
 
 function onDragEnd(evt, targetColKey) {
-  const id = evt && evt.item && evt.item.dataset && evt.item.dataset.id
+  const domId = evt && evt.item && evt.item.dataset && evt.item.dataset.id
   dragOverColumn.value = null
 
-  // 1) 如果能拿到 DOM dataset.id，优先以它为准
-  const explicitId = id || pickFromPending(targetColKey)
+  // 1) 优先以 DOM dataset.id 为准
+  const explicitId = domId || pickFromPending(targetColKey)
 
   if (explicitId) {
     applyColumnChange(explicitId, targetColKey)
   } else {
-    // 2) 兜底：把 flatTasks 中所有对象的 column 字段对齐为「它真正所在的列」
-    //    以 VueDraggable 已经调整好的 DOM 列为准（列数组里包含这个对象就是此列）
+    // 2) 兜底：以 tasksByCol 当前内容为准对齐 flatTasks 的 column 字段
     for (const col of COLUMN_KEYS) {
       const idsInCol = new Set(tasksByCol[col].map(t => t.id))
       for (const t of flatTasks.value) {
@@ -348,6 +372,9 @@ function onDragEnd(evt, targetColKey) {
     }
   }
 
+  // 3) 统一重新同步：把 flatTasks 的最新顺序写入 tasksByCol
+  syncColumnsFromFlat()
+
   pendingMovedIds.value = new Set()
   if (targetColKey === 'done') {
     fireConfetti()
@@ -355,12 +382,22 @@ function onDragEnd(evt, targetColKey) {
   }
 }
 
+// 把列内的新顺序写回 flatTasks：调整 flatTasks 中这些任务的顺序
+function writeColumnOrderBackToFlat(colKey) {
+  const colIds = tasksByCol[colKey].map(t => t.id)
+  const orderIndex = new Map(colIds.map((id, i) => [id, i]))
+  // 将 flatTasks 中属于此列的任务的位置按列数组新顺序调整
+  const others = flatTasks.value.filter(t => t.column !== colKey)
+  const inCol  = flatTasks.value.filter(t => t.column === colKey)
+  inCol.sort((a, b) => (orderIndex.get(a.id) ?? 0) - (orderIndex.get(b.id) ?? 0))
+  // 重新拼回 flatTasks：保持非此列任务的相对顺序，然后把列内任务按新顺序插入
+  flatTasks.value = [...others, ...inCol]
+}
+
 function pickFromPending(targetColKey) {
   const ids = [...pendingMovedIds.value]
   if (ids.length === 0) return null
-  // 如果只有一个被移动的 id，直接采信
   if (ids.length === 1) return ids[0]
-  // 多个：挑「当前 column != targetColKey」的第一个（说明它确实被移过来了）
   for (const id of ids) {
     const t = flatTasks.value.find(x => x.id === id)
     if (t && t.column !== targetColKey) return id
@@ -373,7 +410,6 @@ function applyColumnChange(taskId, targetColKey) {
   const task = flatTasks.value.find(t => t.id === taskId)
   if (!task) return
   if (task.column === targetColKey) {
-    // 列内排序：不触发特效，但更新 movedInAt 以避免错误被当成"刚进来"
     return
   }
   task.column = targetColKey
@@ -456,6 +492,7 @@ function quickAdd(colKey) {
     movedInAt: Date.now()
   })
   quickAddText[colKey] = ''
+  syncColumnsFromFlat()
 }
 
 const showAdd = ref(false)
@@ -489,11 +526,13 @@ function submitNew() {
   newTask.priority = 'mid'
   newTask.column = 'todo'
   showAdd.value = false
+  syncColumnsFromFlat()
   ElMessage.success('任务已创建')
 }
 
 function removeTask(id) {
   flatTasks.value = flatTasks.value.filter(t => t.id !== id)
+  syncColumnsFromFlat()
 }
 
 function simulateStuck() {
@@ -510,6 +549,7 @@ function simulateStuck() {
       createdAt: Date.now() - 10 * MS_PER_DAY,
       movedInAt: Date.now() - (STUCK_DAYS + 1) * MS_PER_DAY
     })
+    syncColumnsFromFlat()
     ElMessage.info('已新建一个停滞 3+ 天的进行中任务')
     return
   }
@@ -519,12 +559,14 @@ function simulateStuck() {
       ? { ...t, movedInAt: Date.now() - (STUCK_DAYS + 1) * MS_PER_DAY }
       : t
   )
+  syncColumnsFromFlat()
   ElMessage.info('已将一个进行中的任务模拟为停滞 3 天以上')
 }
 
 function resetDemo() {
   snapIds.value = new Set()
   flatTasks.value = initialTasks()
+  syncColumnsFromFlat()
   prevCompletion.value = completionRate.value
   ElMessage.info('演示数据已重置')
 }
@@ -537,6 +579,7 @@ onMounted(() => {
   // 每分钟轻微刷新一次，让「停滞 3 天」的判断在长时间打开页面下自然生效
   staleTimer = setInterval(() => {
     flatTasks.value = [...flatTasks.value]
+    syncColumnsFromFlat()
   }, 60 * 1000)
 })
 onBeforeUnmount(() => {
