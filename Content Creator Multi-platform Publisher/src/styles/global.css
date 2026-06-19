@@ -272,11 +272,28 @@ html, body, #app {
   gap: 4px;
 }
 
-.platform-item.is-unbound {
-  opacity: 0.75;
+.disabled-bubble {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #e6a23c;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.platform-item.is-unbound:hover {
+.platform-item.is-unbound,
+.platform-item.is-disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.platform-item.is-unbound:hover,
+.platform-item.is-disabled:hover {
   opacity: 1;
 }
 

@@ -49,8 +49,8 @@
               :key="p.key"
               class="platform-item"
               :class="{
-                'is-selected': selectedPlatforms.has(p.key),
-                'is-disabled': !selectedPlatforms.has(p.key) && publishing,
+                'is-selected': selectedPlatforms.has(p.key) && bindings[p.key]?.enabled !== false,
+                'is-disabled': (!selectedPlatforms.has(p.key) && publishing) || isPlatformDisabled(p.key),
                 'is-publishing': platformStatus[p.key] === 'publishing',
                 'is-success': platformStatus[p.key] === 'success',
                 'is-failed': platformStatus[p.key] === 'failed',
@@ -58,7 +58,7 @@
               }"
               @click="handlePlatformClick(p.key)"
             >
-              <div class="platform-icon" :style="{ background: p.color }">
+              <div class="platform-icon" :style="{ background: isPlatformDisabled(p.key) ? '#909399' : p.color }">
                 {{ p.letter }}
               </div>
               <div class="platform-name">{{ p.short }}</div>
@@ -67,6 +67,10 @@
               <div v-if="!bindings[p.key]" class="unbound-bubble">
                 <el-icon><User /></el-icon>
                 <span>未绑定</span>
+              </div>
+              <div v-else-if="isPlatformDisabled(p.key)" class="disabled-bubble">
+                <el-icon><Warning /></el-icon>
+                <span>已停用</span>
               </div>
 
               <div v-if="platformStatus[p.key] === 'failed'" class="fail-bubble">
@@ -407,12 +411,20 @@ const handlePlatformClick = (key) => {
     ElMessage.info('分发进行中，点击无效')
     return
   }
-  // 未绑定的：直接打开抽屉让用户去绑
-  if (!bindings.value[key]) {
+  const bind = bindings.value[key]
+  // 未绑定：直接打开抽屉去绑定
+  if (!bind) {
     openDrawer(key)
     return
   }
-  // 已绑定：先切换选中状态，再打开抽屉查看信息
+  // 已绑定但已停用：不允许选中，明确提示
+  if (!bind.enabled) {
+    const p = platformsList.value.find((pp) => pp.key === key)
+    ElMessage.warning(`${p?.short || '该平台'} 的账号已停用，无法参与分发。请先在详情抽屉中启用。`)
+    openDrawer(key)
+    return
+  }
+  // 正常已绑定且启用：切换选中状态并打开抽屉
   const next = new Set(selectedPlatforms.value)
   if (next.has(key)) next.delete(key)
   else next.add(key)
@@ -428,8 +440,15 @@ const getStatusText = (key) => {
   if (s === 'success') return '发布成功 ✓'
   if (s === 'failed') return '发布失败 ✗'
   if (s === 'ignored') return '已忽略'
-  if (!bindings.value[key]) return '点击绑定'
+  const bind = bindings.value[key]
+  if (!bind) return '点击绑定'
+  if (!bind.enabled) return '账号已停用'
   return selectedPlatforms.value.has(key) ? '待发布' : '未选择'
+}
+
+const isPlatformDisabled = (key) => {
+  const bind = bindings.value[key]
+  return !!bind && !bind.enabled
 }
 
 const mockPublishCall = (key) => {
@@ -444,15 +463,52 @@ const mockPublishCall = (key) => {
 
 const startPublish = async () => {
   if (publishing.value) return
-  const queue = platformsList.value.filter((p) => {
-    if (!selectedPlatforms.value.has(p.key)) return false
-    const bind = bindings.value[p.key]
-    if (!bind || !bind.enabled) return false
-    return true
+
+  const selectedList = platformsList.value.filter((p) => selectedPlatforms.value.has(p.key))
+  const disabledList = selectedList.filter((p) => {
+    const b = bindings.value[p.key]
+    return b && !b.enabled
   })
+  const unboundList = selectedList.filter((p) => !bindings.value[p.key])
+  const queue = selectedList.filter((p) => {
+    const bind = bindings.value[p.key]
+    return bind && bind.enabled
+  })
+
+  if (queue.length === 0 && (disabledList.length || unboundList.length)) {
+    const parts = []
+    if (disabledList.length) parts.push(`· 账号已停用：${disabledList.map((p) => p.short).join('、')}`)
+    if (unboundList.length) parts.push(`· 尚未绑定账号：${unboundList.map((p) => p.short).join('、')}`)
+    ElMessageBox.alert(
+      parts.join('\n') + '\n\n请先在平台详情抽屉中启用账号或完成绑定，再进行分发。',
+      '当前没有可分发的平台',
+      { confirmButtonText: '我知道了', type: 'warning' }
+    )
+    return
+  }
+
   if (queue.length === 0) {
     ElMessage.warning('请先选择并绑定至少一个启用中的平台')
     return
+  }
+
+  // 有部分平台会被跳过：弹窗提醒并请求确认
+  if (disabledList.length || unboundList.length) {
+    const parts = []
+    if (disabledList.length) parts.push(`· 账号已停用：${disabledList.map((p) => p.short).join('、')}`)
+    if (unboundList.length) parts.push(`· 尚未绑定账号：${unboundList.map((p) => p.short).join('、')}`)
+    try {
+      await ElMessageBox.confirm(
+        '以下 ' + (disabledList.length + unboundList.length) + ' 个平台将被跳过，不参与本次分发：\n\n' +
+          parts.join('\n') +
+          '\n\n将继续向剩余 ' + queue.length + ' 个启用中的平台进行分发，是否继续？',
+        '部分平台将被跳过',
+        { confirmButtonText: '继续分发', cancelButtonText: '返回检查', type: 'warning' }
+      )
+    } catch {
+      // 用户取消：终止分发
+      return
+    }
   }
 
   publishing.value = true
@@ -475,7 +531,7 @@ const startPublish = async () => {
   }
 
   publishing.value = false
-  ElMessage.success('分发任务已完成')
+  ElMessage.success(`分发完成：${successCount.value} 成功，${failCount.value} 失败`)
 }
 
 const retryPlatform = async (key) => {
