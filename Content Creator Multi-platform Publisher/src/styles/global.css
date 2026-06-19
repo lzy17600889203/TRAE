@@ -165,7 +165,8 @@ html, body, #app {
   left: 30%;
   top: 20%;
   transform: rotate(18deg);
-  opacity: 0.85;
+  opacity: 0.9;
+  background: #fff;
 }
 
 .platform-item.is-failed .platform-icon::after {
@@ -174,7 +175,8 @@ html, body, #app {
   right: 20%;
   top: 15%;
   transform: rotate(-24deg);
-  opacity: 0.85;
+  opacity: 0.9;
+  background: #fff;
 }
 
 @keyframes spin {
@@ -254,6 +256,139 @@ html, body, #app {
 @keyframes popIn {
   from { opacity: 0; transform: scale(0.6); }
   to { opacity: 1; transform: scale(1); }
+}
+
+.unbound-bubble {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #909399;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.platform-item.is-unbound {
+  opacity: 0.75;
+}
+
+.platform-item.is-unbound:hover {
+  opacity: 1;
+}
+
+.drawer-body {
+  padding: 0 12px 20px;
+}
+
+.drawer-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  color: #fff;
+  margin-top: 8px;
+}
+
+.drawer-hero-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.drawer-hero-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.drawer-hero-sub {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.bind-info {
+  background: #fafbfc;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.bind-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.bind-label {
+  width: 84px;
+  color: #909399;
+  flex-shrink: 0;
+}
+
+.bind-value {
+  color: #303133;
+  font-weight: 500;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  word-break: break-all;
+}
+
+.bind-value.mask {
+  letter-spacing: 2px;
+}
+
+.bind-value .eye {
+  color: #909399;
+  margin-left: 4px;
+}
+
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 16px 8px;
+  background: #fafbfc;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-stat-date {
+  font-size: 11px;
+  color: #909399;
+}
+
+.mini-stat-bar {
+  width: 14px;
+  border-radius: 3px;
+  min-height: 14px;
+}
+
+.mini-stat-value {
+  font-size: 11px;
+  color: #606266;
+  font-weight: 600;
 }
 
 .action-bar {
