@@ -326,6 +326,23 @@ function onDragChange(evt, colKey) {
   }
 }
 
+// 查找某个任务当前所在的列（可能存在多列重复，返回第一个命中）
+function findColumnOfTask(id) {
+  for (const colKey of ['todo', 'inprogress', 'testing', 'done']) {
+    const list = tasksByCol[colKey]
+    const t = list.find(x => x.id === id)
+    if (t) return { colKey, task: t }
+  }
+  return null
+}
+
+// 清理指定列中 id 匹配的任务（防重复）
+function removeFromList(colKey, id) {
+  const list = tasksByCol[colKey]
+  const idx = list.findIndex(t => t.id === id)
+  if (idx >= 0) list.splice(idx, 1)
+}
+
 function onDragEnd(evt) {
   const id = evt && evt.item && evt.item.dataset && evt.item.dataset.id
   dragOverColumn.value = null
@@ -334,6 +351,14 @@ function onDragEnd(evt) {
   const target = findColumnOfTask(id)
   if (!target) return
   const { colKey, task } = target
+
+  // VueDraggable 跨 list 拖拽时可能只在目标 list 里 push 了同一份对象引用，
+  // 但源 list 的旧引用未被清理，必须手动从其它三列都移除该 id，
+  // 确保同一个任务只出现在目标列中，避免“已完成数/完成率”不变的问题。
+  for (const other of ['todo', 'inprogress', 'testing', 'done']) {
+    if (other === colKey) continue
+    removeFromList(other, id)
+  }
 
   // 同步 column 字段并刷新 movedInAt（进入新列时重置计时）
   task.column = colKey
@@ -344,15 +369,6 @@ function onDragEnd(evt) {
     fireConfetti()
     maybePlayLevelUp()
   }
-}
-
-function findColumnOfTask(id) {
-  for (const colKey of ['todo', 'inprogress', 'testing', 'done']) {
-    const list = tasksByCol[colKey]
-    const t = list.find(x => x.id === id)
-    if (t) return { colKey, task: t }
-  }
-  return null
 }
 
 function fireConfetti() {
