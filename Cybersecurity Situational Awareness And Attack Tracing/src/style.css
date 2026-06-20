@@ -1,0 +1,50 @@
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #040a16;
+  color: #e6f1ff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(0, 212, 255, 0.12), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(255, 59, 59, 0.08), transparent 50%),
+    linear-gradient(180deg, #05132a 0%, #040a16 100%);
+}
+
+/* 全局滚动条（Element Plus 内部） */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 选中文本高亮 */
+::selection {
+  background: rgba(0, 212, 255, 0.3);
+  color: #fff;
+}
+
+/* 避免 ECharts tooltip 被遮 */
+.attack-map :deep(.echarts-tooltip) {
+  z-index: 999 !important;
+}
