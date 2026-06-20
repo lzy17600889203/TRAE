@@ -29,15 +29,16 @@
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="8">
           <el-form-item label="年龄" prop="age">
             <el-input-number
               v-model="form.age"
               :min="0"
-              :max="120"
+              :max="150"
               :step="1"
               controls-position="right"
-              style="width:100%"
+              placeholder="请输入年龄"
+              style="width:100%;min-width:140px;font-size:14px"
             />
           </el-form-item>
         </el-col>
@@ -283,7 +284,7 @@ function emptyForm() {
   return {
     name: '',
     gender: '男',
-    age: 35,
+    age: null,
     triage: 'normal',
     arrivalTime: new Date().toTimeString().slice(0, 5),
     chiefComplaint: '',
@@ -307,7 +308,20 @@ const form = reactive(emptyForm())
 const rules = {
   name: [{ required: true, message: '请输入患者姓名', trigger: 'blur' }],
   gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-  age: [{ required: true, message: '请输入年龄', trigger: 'blur' }],
+  age: [
+    { required: true, message: '请输入年龄', trigger: 'blur' },
+    {
+      validator: (rule, value, cb) => {
+        if (value === '' || value === null || value === undefined) return cb()
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 150) {
+          cb(new Error('请输入 0~150 之间的有效年龄'))
+        } else {
+          cb()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
   triage: [{ required: true, message: '请选择分诊等级', trigger: 'change' }],
   chiefComplaint: [{ required: true, message: '请输入主诉', trigger: 'blur' }]
 }
@@ -349,3 +363,31 @@ function handleClosed() {
   if (formRef.value) formRef.value.clearValidate()
 }
 </script>
+
+<style scoped>
+/* 确保数字输入框在窄列中仍能清晰显示数字与占位符 */
+:deep(.el-input-number) {
+  width: 100% !important;
+  min-width: 160px;
+}
+:deep(.el-input-number .el-input__inner) {
+  text-align: left;
+  font-size: 14px;
+  padding-left: 12px;
+  padding-right: 64px; /* 给右侧 +/− 控件留出足够空间，避免遮挡数字 */
+  height: 32px;
+  line-height: 32px;
+}
+:deep(.el-input-number .el-input__wrapper) {
+  box-shadow: 0 0 0 1px #dcdfe6 inset;
+}
+:deep(.el-input-number.is-focus .el-input__wrapper) {
+  box-shadow: 0 0 0 1px #409eff inset;
+}
+:deep(.el-input-number .el-input-number__decrease),
+:deep(.el-input-number .el-input-number__increase) {
+  width: 28px;
+  font-size: 16px;
+  color: #606266;
+}
+</style>
