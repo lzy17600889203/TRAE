@@ -36,22 +36,26 @@ let chartInstance: echarts.ECharts | null = null;
 let resizeObs: ResizeObserver | null = null;
 
 // 粒子爆炸覆盖层
+// 粒子始终保存经纬度坐标，每帧通过 echarts.convertToPixel 重新换算为屏幕像素
+// —— 彻底解决"鼠标滚轮缩放 / 拖动后，粒子漂移到海洋"的问题
 interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
+  lng: number;
+  lat: number;
   life: number;
   maxLife: number;
   size: number;
   color: string;
+  // 每帧经纬度增量（会被衰减）—— 在生成时依据当时的地图缩放把 "像素速度" 换算为 "经纬度速度"
+  // 由于已经转换为经纬度，后续粒子在地理坐标上扩散，不依赖地图缩放状态
+  dLng: number;
+  dLat: number;
 }
 let particles: Particle[] = [];
 let rafId: number;
 
 const WORLD_GEO_URL = 'https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/world.json';
 
-// 将经纬度转换为屏幕像素坐标（基于echarts geo 组件）
+// 将经纬度转换为屏幕像素坐标（基于 echarts geo 组件）
 function coordToPixel(coord: [number, number]): [number, number] | null {
   if (!chartInstance) return null;
   try {
@@ -63,22 +67,42 @@ function coordToPixel(coord: [number, number]): [number, number] | null {
   }
 }
 
+// 计算当前地图缩放状态下，1 像素约等于多少"度"
+// 用于在 spawnExplosion 时把"像素级扩散速度"换算为"经纬度级扩散速度"
+function pixelDeltaToLngLat(dx: number, dy: number, baseLat: number): [number, number] {
+  if (!chartInstance) return [0, 0];
+  const p0 = chartInstance.convertToPixel('geo', [0, baseLat] as any);
+  const pLng = chartInstance.convertToPixel('geo', [1, baseLat] as any);
+  const pLat = chartInstance.convertToPixel('geo', [0, baseLat + 1] as any);
+  if (!Array.isArray(p0) || !Array.isArray(pLng) || !Array.isArray(pLat)) {
+    return [0, 0];
+  }
+  const pxPerDegLng = Math.max(1, Math.abs(pLng[0] - p0[0]));
+  const pxPerDegLat = Math.max(1, Math.abs(pLat[1] - p0[1]));
+  // 屏幕 y 向下为正，纬度向北为正 → dLat 取反
+  return [dx / pxPerDegLng, -dy / pxPerDegLat];
+}
+
 function spawnExplosion(targetCoord: [number, number]) {
   if (!canvasRef.value) return;
-  const px = coordToPixel(targetCoord);
-  if (!px) return;
+  const [lng, lat] = targetCoord;
   for (let i = 0; i < 40; i++) {
     const angle = (Math.PI * 2 * i) / 40 + Math.random() * 0.3;
-    const speed = 2 + Math.random() * 4;
+    const speedPx = 2 + Math.random() * 4;
+    const [dLng, dLat] = pixelDeltaToLngLat(
+      Math.cos(angle) * speedPx,
+      Math.sin(angle) * speedPx,
+      lat
+    );
     particles.push({
-      x: px[0],
-      y: px[1],
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
+      lng,
+      lat,
+      dLng,
+      dLat,
       life: 0,
       maxLife: 60 + Math.random() * 30,
       size: 2 + Math.random() * 3,
-      color: `rgba(${255}, ${80 + Math.random() * 100}, ${Math.random() * 60}, 1)`
+      color: `rgba(255, ${Math.floor(80 + Math.random() * 100)}, ${Math.floor(Math.random() * 60)}, 1)`
     });
   }
 }
@@ -89,19 +113,26 @@ function drawParticles() {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const next: Particle[] = [];
   particles.forEach((p) => {
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vx *= 0.96;
-    p.vy *= 0.96;
+    // 按经纬度扩散
+    p.lng += p.dLng;
+    p.lat += p.dLat;
+    p.dLng *= 0.96;
+    p.dLat *= 0.96;
     p.life += 1;
+    // 每帧重新把 (lng,lat) 换算成屏幕像素 —— 缩放/拖动后依然贴地
+    const px = coordToPixel([p.lng, p.lat]);
+    if (!px) return;
     const alpha = Math.max(0, 1 - p.life / p.maxLife);
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fillStyle = p.color.replace(/rgba\((\d+), (\d+), (\d+), 1\)/, (_, r, g, b) => `rgba(${r},${g},${b},${alpha})`);
+    ctx.arc(px[0], px[1], p.size, 0, Math.PI * 2);
+    // 把 rgba(... , 1) 动态替换 alpha
+    ctx.fillStyle = p.color.replace(/,\s*1\)$/, `, ${alpha.toFixed(3)})`);
     ctx.fill();
+    if (p.life < p.maxLife) next.push(p);
   });
-  particles = particles.filter((p) => p.life < p.maxLife);
+  particles = next;
   rafId = requestAnimationFrame(drawParticles);
 }
 
@@ -123,6 +154,13 @@ async function initMap() {
     renderChart();
     loading.value = false;
     resizeCanvas();
+
+    // 地图缩放/平移后，canvas 层自动同步尺寸与 DPR（echarts resize 不直接触发 canvas resize）
+    // 监听 georoam 确保 canvas 层与地图容器保持完全对齐
+    chartInstance.on('georoam', () => {
+      resizeCanvas();
+    });
+
     resizeObs = new ResizeObserver(() => {
       chartInstance?.resize();
       resizeCanvas();

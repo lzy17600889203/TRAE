@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { useMockData } from '@/composables/useMockData';
 import StatusBar from '@/components/StatusBar.vue';
 import AttackMap from '@/components/AttackMap.vue';
@@ -6,6 +7,11 @@ import AlertList from '@/components/AlertList.vue';
 import SecurityRadar from '@/components/SecurityRadar.vue';
 
 const { attackLines, alerts, scores, ddosEvent, stats, handleAlert, ATTACK_TARGETS } = useMockData();
+
+// 让 Element Plus 暗色主题立即生效（避免默认亮色闪烁）
+onMounted(() => {
+  document.documentElement.classList.add('dark');
+});
 </script>
 
 <template>
