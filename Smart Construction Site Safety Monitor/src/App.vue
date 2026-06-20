@@ -73,7 +73,9 @@
         <div class="detail-card">
           <div class="row">
             <span class="label">违规人员</span>
-            <span class="value">{{ severeMask.worker?.name }}（{{ severeMask.worker?.team }}）</span>
+            <span class="value">
+              {{ severeMask.worker?.name }}（{{ severeMask.worker?.team }}{{ severeMask.worker?.group ? '·' + severeMask.worker.group : '' }}）
+            </span>
           </div>
           <div class="row">
             <span class="label">所在区域</span>
@@ -146,7 +148,8 @@ function addLog(level, message) {
 }
 
 function onIncident({ worker, zone, reason }) {
-  addLog('warn', `${worker.name}（${worker.team}）在「${zone.name}」${reason}`)
+  const groupText = worker.group ? '·' + worker.group : ''
+  addLog('warn', `${worker.name}（${worker.team}${groupText}）在「${zone.name}」${reason}`)
   const idx = teamViolations.value.findIndex((t) => t.team === worker.team)
   if (idx > -1) teamViolations.value[idx].count += 1
   teamViolations.value.sort((a, b) => b.count - a.count)
@@ -160,7 +163,8 @@ function onSevere({ worker, zone, reason }) {
     time: formattedTime.value,
     reason
   }
-  addLog('danger', `${worker.name}（${worker.team}）在「${zone.name}」${reason}`)
+  const groupText = worker.group ? '·' + worker.group : ''
+  addLog('danger', `${worker.name}（${worker.team}${groupText}）在「${zone.name}」${reason}`)
   const idx = teamViolations.value.findIndex((t) => t.team === worker.team)
   if (idx > -1) teamViolations.value[idx].count += 2
   teamViolations.value.sort((a, b) => b.count - a.count)
@@ -172,7 +176,7 @@ function confirmSevere() {
 
 function simulateSevere() {
   onSevere({
-    worker: { id: 'sim', name: '模拟员', team: '一队' },
+    worker: { id: 'sim', name: '模拟员', team: '一队', group: '2组' },
     zone: { id: 'highAltitude', name: '高空作业区' },
     reason: '未系安全带'
   })

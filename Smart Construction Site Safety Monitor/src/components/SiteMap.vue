@@ -82,6 +82,10 @@
           <circle :cx="w.x" :cy="w.y" r="14" fill="none"
             :stroke="w.severe ? '#ff3b4a' : (w.danger ? '#ff3b4a' : 'rgba(18,230,168,0.4)')"
             stroke-width="1" opacity="0.6" />
+          <text :x="w.x + 14" :y="w.y - 10" class="worker-label"
+            :fill="w.severe ? '#ff9aa4' : (w.danger ? '#ffb6b6' : '#c8ffec')" font-size="11">
+            {{ w.name }} · {{ w.team }}{{ w.group ? '·' + w.group : '' }}
+          </text>
         </g>
       </g>
     </svg>
@@ -94,7 +98,7 @@
       :style="{ left: `calc(${(w.x / 1000) * 100}% + 14px)`, top: `calc(${(w.y / 650) * 100}% - 8px)` }"
     >
       <span class="icon">{{ w.severe ? '🚨' : '⚠️' }}</span>
-      <span class="name">{{ w.name }}</span>
+      <span class="name">{{ w.name }}（{{ w.team }}{{ w.group ? '·' + w.group : '' }}）</span>
       <span class="text">
         {{ w.severe ? '未系安全带进入高空作业区' : '未戴安全帽进入' + w.zone.name }}
       </span>
@@ -141,13 +145,13 @@ watch(
         reportedIds.value.add(key)
         if (w.severe) {
           emit('severe', {
-            worker: { id: w.id, name: w.name, team: w.team },
+            worker: { id: w.id, name: w.name, team: w.team, group: w.group },
             zone: w.zone,
             reason: '未系安全带'
           })
         } else {
           emit('incident', {
-            worker: { id: w.id, name: w.name, team: w.team },
+            worker: { id: w.id, name: w.name, team: w.team, group: w.group },
             zone: w.zone,
             reason: '未戴安全帽'
           })
@@ -244,6 +248,20 @@ watch(
 }
 .bubble .icon { margin-right: 4px; }
 .bubble .name { font-weight: 700; margin-right: 4px; }
+
+.worker-label {
+  font-weight: 600;
+  paint-order: stroke fill;
+  stroke: rgba(10, 22, 40, 0.8);
+  stroke-width: 3;
+  user-select: none;
+}
+
+.worker.danger .worker-label,
+.worker.severe .worker-label {
+  stroke: rgba(40, 0, 8, 0.85);
+  stroke-width: 3;
+}
 
 @keyframes bubble-in {
   from { opacity: 0; transform: translateY(-80%) scale(0.8); }
