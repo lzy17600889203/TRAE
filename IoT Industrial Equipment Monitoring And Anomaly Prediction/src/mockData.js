@@ -129,11 +129,87 @@ export function generate24HourHistory(equipment) {
   return { temperature, vibration, abnormalRanges }
 }
 
+// 为每台设备维护一个"隐式状态机"，确保温度/震动会自然爬升 → 触发预警 → 触发异常 → 回落恢复
+// 这样"异常节点变红 + 波纹扩散 + 告警日志"的演示效果就能稳定复现
+const deviceState = {}
+function ensureState(id, equipment) {
+  if (!deviceState[id]) {
+    // 启动时随机决定是否初始就处于异常态（概率约 35%）
+    // 这样页面一打开就可能看到红色波纹，演示效果更明显
+    const startAbnormal = equipment.type !== 'center' && Math.random() < 0.35
+    const initialTemp = startAbnormal
+      ? equipment.warningTemp + 5 + Math.random() * 10
+      : (equipment.normalTemp[0] + equipment.normalTemp[1]) / 2
+    const initialVib = startAbnormal
+      ? equipment.warningVibration + Math.random() * 1.2
+      : (equipment.normalVibration[0] + equipment.normalVibration[1]) / 2
+    deviceState[id] = {
+      temp: initialTemp,
+      vib: initialVib,
+      drift: startAbnormal ? 0.8 : 0,
+      abnormalCounter: startAbnormal ? 10 + Math.floor(Math.random() * 15) : 0,
+      lastTick: Date.now()
+    }
+  }
+  return deviceState[id]
+}
+
 // 实时模拟：给定时间点，返回所有设备的最新传感器状态
 export function getCurrentReadings(equipment) {
-  const temp = equipment.normalTemp[0] + Math.random() * (equipment.normalTemp[1] - equipment.normalTemp[0])
-  const vib = equipment.normalVibration[0] + Math.random() * (equipment.normalVibration[1] - equipment.normalVibration[0])
+  const s = ensureState(equipment.id, equipment)
+  const now = Date.now()
+  const dt = Math.min((now - s.lastTick) / 1000, 10) // 秒
+  s.lastTick = now
 
+  const tempMid = (equipment.normalTemp[0] + equipment.normalTemp[1]) / 2
+  const vibMid = (equipment.normalVibration[0] + equipment.normalVibration[1]) / 2
+
+  // 每 ~8 秒重新评估"故障倾向"：
+  //  - 15% 概率触发异常（直接向 warning 以上爬升）
+  //  - 20% 概率触发预警（向 warning*0.9 附近爬升）
+  //  - 其余时间朝 mid 回归
+  if (Math.random() < 0.12) {
+    if (s.abnormalCounter > 0) {
+      // 已经在异常态，有 55% 概率开始回落
+      s.drift = -1 * (0.6 + Math.random() * 0.8)
+      s.abnormalCounter = Math.max(0, s.abnormalCounter - 1)
+    } else if (Math.random() < 0.35) {
+      // 35% * 12% ≈ 4% 概率触发异常
+      s.drift = 0.8 + Math.random() * 1.2
+      s.abnormalCounter = 8 + Math.floor(Math.random() * 10) // 持续多个 tick
+    } else if (Math.random() < 0.5) {
+      // 约 6% 概率触发预警
+      s.drift = 0.3 + Math.random() * 0.5
+      s.abnormalCounter = 0
+    } else {
+      // 其余回归正常
+      s.drift = (Math.random() - 0.5) * 0.3
+      s.abnormalCounter = 0
+    }
+  }
+
+  // 温度演化：按 drift 做小幅布朗运动，并被 tempMid / warningTemp 约束
+  s.temp += s.drift * (1.2 + Math.random()) + (Math.random() - 0.5) * 1.2
+  // 自然回归力：离 mid 越远，回拉越强
+  s.temp += (tempMid - s.temp) * 0.04
+
+  // 震动演化：与温度正相关 + 随机噪声
+  const tempRatio = Math.max(0, (s.temp - tempMid) / (equipment.warningTemp - tempMid))
+  s.vib = vibMid + tempRatio * (equipment.warningVibration - vibMid) * 0.9 + (Math.random() - 0.5) * 0.3
+  s.vib = Math.max(equipment.normalVibration[0] - 0.2, s.vib)
+
+  // 异常时维持足够高（让红色不会只闪一下）
+  if (s.abnormalCounter > 0 && s.temp < equipment.warningTemp + 3) {
+    s.temp = equipment.warningTemp + 3 + Math.random() * 10
+    s.vib = equipment.warningVibration + Math.random() * 1.5
+  }
+
+  // 边界兜底
+  s.temp = Math.max(equipment.normalTemp[0] - 5, Math.min(equipment.warningTemp + 25, s.temp))
+  s.vib = Math.max(0, Math.min(equipment.warningVibration + 3, s.vib))
+
+  const temp = s.temp
+  const vib = s.vib
   const tempAbnormal = temp > equipment.warningTemp
   const vibAbnormal = vib > equipment.warningVibration
 
@@ -141,7 +217,8 @@ export function getCurrentReadings(equipment) {
   let anomalyMsg = null
   if (tempAbnormal || vibAbnormal) {
     status = 'error'
-    if (tempAbnormal) anomalyMsg = `温度异常：${temp.toFixed(0)}℃`
+    if (tempAbnormal && temp > vib * 10) anomalyMsg = `温度异常：${temp.toFixed(0)}℃`
+    else if (tempAbnormal) anomalyMsg = `温度异常：${temp.toFixed(0)}℃`
     else anomalyMsg = `震动异常：${vib.toFixed(2)}mm/s`
   } else if (temp > equipment.warningTemp * 0.85 || vib > equipment.warningVibration * 0.85) {
     status = 'warn'
