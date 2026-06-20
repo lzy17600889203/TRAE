@@ -33,6 +33,7 @@ function renderChart () {
 
   chart.setOption({
     backgroundColor: 'transparent',
+    animationDuration: 900,
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -45,7 +46,7 @@ function renderChart () {
         return d.name + '<br/>使用率：<b>' + d.value + '%</b><br/>占用 ' + d.used + ' / 总 ' + d.total
       }
     },
-    grid: { left: 10, right: 20, top: 60, bottom: 30, containLabel: true },
+    grid: { left: 24, right: 16, top: 56, bottom: 36, containLabel: true },
     xAxis: {
       type: 'category',
       data: data.map(d => d.name),
@@ -71,7 +72,7 @@ function renderChart () {
             ]),
             borderRadius: [8, 8, 2, 2],
             shadowColor: d.color,
-            shadowBlur: d.id === hottest.id ? 22 : 10
+            shadowBlur: d.id === hottest.id ? 20 : 10
           },
           label: {
             show: true,
@@ -79,49 +80,46 @@ function renderChart () {
             color: d.color,
             fontWeight: 700,
             fontSize: 13,
-            formatter: '{c}%'
-          }
+            formatter: (d.id === hottest.id ? '👑 ' : '') + '{c}%'
+          },
+          _area: d
         })),
         barWidth: 42,
-        animationDuration: 900
+        emphasis: {
+          focus: 'series',
+          itemStyle: { shadowBlur: 28 }
+        }
+      },
+      {
+        type: 'custom',
+        coordinateSystem: null,
+        renderItem: function () { return null },
+        data: []
       }
-    ]
+    ],
+    graphic: buildCrownGraphic(hottest, data)
   }, true)
-
-  // Render crown label as graphic elements positioned using pixel conversion
-  chart.setOption({
-    graphic: buildCrownGraphic(hottest)
-  })
 }
 
-function buildCrownGraphic (hottest) {
+function buildCrownGraphic (hottest, data) {
   if (!chart || !hottest) return []
-  const idx = statsRef.value.findIndex(x => x.id === hottest.id)
-  const barTopPixel = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [idx, hottest.value])
-  if (!barTopPixel) return []
-  const x = barTopPixel[0]
-  const y = barTopPixel[1]
+  // 把最热区的标签放到该柱子顶部偏上
+  const idx = data.findIndex(x => x.id === hottest.id)
+  const pixel = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [idx, hottest.value])
+  if (!pixel || pixel[0] == null || pixel[1] == null) return []
   return [
     {
       type: 'text',
-      position: [x, y - 44],
+      left: pixel[0],
+      top: pixel[1] - 12,
       style: {
-        text: '👑',
-        font: 'bold 24px sans-serif',
-        textAlign: 'center',
-        textVerticalAlign: 'middle'
-      }
-    },
-    {
-      type: 'text',
-      position: [x, y - 22],
-      style: {
-        text: hottest.name + ' · 最热门',
-        font: 'bold 12px sans-serif',
+        text: '👑 ' + hottest.name + ' 最热门',
         fill: '#ffc94a',
+        font: 'bold 12px sans-serif',
         textAlign: 'center',
-        textVerticalAlign: 'middle'
-      }
+        textVerticalAlign: 'bottom'
+      },
+      silent: true
     }
   ]
 }
@@ -133,7 +131,7 @@ onMounted(() => {
     if (!chart) return
     chart.resize()
     const hottest = statsRef.value.reduce((a, b) => (a.value > b.value ? a : b), statsRef.value[0])
-    chart.setOption({ graphic: buildCrownGraphic(hottest) })
+    if (hottest) chart.setOption({ graphic: buildCrownGraphic(hottest, statsRef.value) })
   })
   resizeObserver.observe(chartRef.value)
 })
@@ -151,6 +149,6 @@ onBeforeUnmount(() => {
 .usage-chart {
   width: 100%;
   height: 100%;
-  min-height: 260px;
+  min-height: 0;
 }
 </style>

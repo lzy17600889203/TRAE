@@ -4,8 +4,13 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch, shallowRef } from 'vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { CustomChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
 import { AREAS } from '../data/parking.js'
+
+echarts.use([CanvasRenderer, CustomChart, GridComponent, TooltipComponent])
 
 const props = defineProps({
   spots: { type: Array, required: true }
@@ -23,188 +28,234 @@ const STATUS_COLOR = {
   reserved: '#ffc94a'
 }
 
-const areaW = 320
-const areaH = 240
-const gap = 80
-const totalW = 2 * areaW + gap + 60
-const totalH = 2 * areaH + gap + 40
-const rowsPerArea = 3
-const colsPerArea = 6
-const spotW = 42
-const spotH = 62
+const DESIGN_W = 780
+const DESIGN_H = 620
+const AREA_W = 320
+const AREA_H = 240
+const ROWS_PER_AREA = 3
+const COLS_PER_AREA = 6
+const SPOT_W = 42
+const SPOT_H = 62
 
 function areaBox (a) {
+  const areaGapX = (DESIGN_W - 2 * AREA_W) / 3
+  const areaGapY = (DESIGN_H - 2 * AREA_H) / 3
   return {
-    x: 30 + a.col * (areaW + gap),
-    y: 30 + a.row * (areaH + gap)
+    x: areaGapX + a.col * (AREA_W + areaGapX),
+    y: areaGapY + a.row * (AREA_H + areaGapY)
   }
 }
-
-function padX () { return (areaW - colsPerArea * spotW) / 2 }
-function padY () { return (areaH - rowsPerArea * spotH) / 2 }
 
 function spotCenter (spot) {
   const a = AREAS.find(x => x.id === spot.area)
   const box = areaBox(a)
+  const padX = (AREA_W - COLS_PER_AREA * SPOT_W) / 2
+  const padY = (AREA_H - ROWS_PER_AREA * SPOT_H) / 2
   return {
-    x: box.x + padX() + spot.col * spotW + spotW / 2,
-    y: box.y + padY() + spot.row * spotH + spotH / 2
+    x: box.x + padX + spot.col * SPOT_W + SPOT_W / 2,
+    y: box.y + padY + spot.row * SPOT_H + SPOT_H / 2
   }
+}
+
+function textSize (base, scale) {
+  return Math.max(8, Math.round(base * scale)) + 'px sans-serif'
 }
 
 function renderChart () {
   if (!chart) return
   spotsRef.value = props.spots
 
-  const groupElements = []
-
+  const decorative = []
   AREAS.forEach(a => {
     const box = areaBox(a)
-    groupElements.push({
-      type: 'rect',
-      shape: { x: box.x - 14, y: box.y - 28, width: areaW + 28, height: areaH + 34 },
-      style: {
-        fill: 'rgba(255,255,255,0.02)',
-        stroke: a.color + '66',
-        lineWidth: 1.5,
-        lineDash: [6, 4]
-      },
-      z: 1
+    decorative.push({
+      name: '__area_box_' + a.id,
+      value: [box.x + AREA_W / 2, box.y + AREA_H / 2],
+      _role: 'area-box',
+      _area: { ...a, box }
     })
-    groupElements.push({
-      type: 'text',
-      style: {
-        text: a.name + ' 停车区',
-        x: box.x + areaW / 2,
-        y: box.y - 12,
-        fill: a.color,
-        font: 'bold 14px sans-serif',
-        textAlign: 'center',
-        textVerticalAlign: 'middle'
-      },
-      z: 3
+    decorative.push({
+      name: '__area_title_' + a.id,
+      value: [box.x + AREA_W / 2, box.y - 10],
+      _role: 'area-title',
+      _area: a
     })
   })
-
-  groupElements.push({
-    type: 'text',
-    style: {
-      text: '▼ 车辆入口 ENTRANCE ▼',
-      x: totalW / 2,
-      y: 18,
-      fill: '#7ad9ff',
-      font: 'bold 13px sans-serif',
-      textAlign: 'center',
-      textVerticalAlign: 'middle'
-    },
-    z: 5
+  decorative.push({
+    name: '__entrance',
+    value: [DESIGN_W / 2, 20],
+    _role: 'entrance'
   })
 
-  const dataPoints = props.spots.map((spot, idx) => ({
+  const dataPoints = props.spots.map(spot => ({
     name: spot.id,
-    value: [idx, 1],
-    spot: spot,
-    itemStyle: { color: STATUS_COLOR[spot.status] }
+    value: [spotCenter(spot).x, spotCenter(spot).y],
+    _role: 'spot',
+    _spot: spot
   }))
 
   chart.setOption({
     backgroundColor: 'transparent',
+    animationDuration: 600,
     tooltip: {
       trigger: 'item',
-      backgroundColor: 'rgba(25,33,72,0.95)',
+      backgroundColor: 'rgba(25,33,72,0.96)',
       borderColor: 'rgba(170,200,255,0.3)',
-      textStyle: { color: '#e8ecff' },
-      formatter: (p) => {
-        const s = p.data.spot
+      textStyle: { color: '#e8ecff', fontSize: 13 },
+      formatter: function (p) {
+        const s = p.data && p.data._spot
+        if (!s) return ''
         const stateText = s.status === 'free' ? '空闲' : s.status === 'reserved' ? '预留' : '占用'
-        return `<b>${s.id}</b><br/>状态：${stateText}<br/>${s.plate ? '车牌：' + s.plate + '<br/>入场：' + s.inTime : ''}`
+        return '<b>' + s.id + '</b><br/>状态：' + stateText + (s.plate ? '<br/>车牌：' + s.plate + '<br/>入场：' + s.inTime : '')
       }
     },
-    xAxis: { show: false, min: 0, max: totalW },
-    yAxis: { show: false, min: 0, max: totalH, inverse: true },
-    grid: { left: 0, right: 0, top: 0, bottom: 0, containLabel: false },
+    grid: { left: 10, right: 10, top: 40, bottom: 10 },
+    xAxis: { type: 'value', show: false, min: 0, max: DESIGN_W },
+    yAxis: { type: 'value', show: false, inverse: true, min: 0, max: DESIGN_H },
     series: [
       {
         type: 'custom',
-        coordinateSystem: null,
-        renderItem: function (params) {
-          const spot = spotsRef.value[params.dataIndex]
+        coordinateSystem: 'cartesian2d',
+        encode: { x: 0, y: 1 },
+        renderItem: function (params, api) {
+          const cx = api.coord([api.value(0), api.value(1)])[0]
+          const cy = api.coord([api.value(0), api.value(1)])[1]
+          const scaleX = api.getWidth() / DESIGN_W
+          const scaleY = api.getHeight() / DESIGN_H
+          const scale = Math.min(scaleX, scaleY)
+          const role = params.data._role
+
+          if (role === 'entrance') {
+            return {
+              type: 'text',
+              silent: true,
+              style: {
+                text: '▼ 车辆入口 · ENTRANCE ▼',
+                x: cx,
+                y: cy,
+                fill: '#7ad9ff',
+                font: 'bold ' + textSize(13, scale),
+                textAlign: 'center',
+                textVerticalAlign: 'middle'
+              }
+            }
+          }
+          if (role === 'area-box') {
+            const info = params.data._area
+            return {
+              type: 'rect',
+              silent: true,
+              shape: {
+                x: cx - (AREA_W + 20) * scale / 2,
+                y: cy - (AREA_H + 26) * scale / 2,
+                width: (AREA_W + 20) * scale,
+                height: (AREA_H + 26) * scale,
+                r: 12 * scale
+              },
+              style: {
+                fill: 'rgba(255,255,255,0.02)',
+                stroke: info.color + '88',
+                lineWidth: 1.5 * scale,
+                lineDash: [6 * scale, 4 * scale]
+              }
+            }
+          }
+          if (role === 'area-title') {
+            const info = params.data._area
+            return {
+              type: 'text',
+              silent: true,
+              style: {
+                text: info.name + ' 停车区',
+                x: cx,
+                y: cy,
+                fill: info.color,
+                font: 'bold ' + textSize(14, scale),
+                textAlign: 'center',
+                textVerticalAlign: 'middle'
+              }
+            }
+          }
+          // spot
+          const spot = params.data._spot
           if (!spot) return
-          const c = spotCenter(spot)
           const color = STATUS_COLOR[spot.status]
           const statusText = spot.status === 'free' ? '空闲' : spot.status === 'reserved' ? '预留' : '占用'
+          const w = SPOT_W * scale
+          const h = SPOT_H * scale
           return {
             type: 'group',
             children: [
               {
                 type: 'rect',
-                shape: { x: c.x - spotW / 2, y: c.y - spotH / 2, width: spotW, height: spotH, r: 6 },
+                shape: { x: cx - w / 2, y: cy - h / 2, width: w, height: h, r: 6 * scale },
                 style: {
                   fill: color + '44',
                   stroke: color,
-                  lineWidth: 2,
+                  lineWidth: Math.max(1.5, 2 * scale),
                   shadowColor: color,
-                  shadowBlur: 12
+                  shadowBlur: 12 * scale
                 },
                 styleEmphasis: {
                   fill: color + 'cc',
-                  shadowBlur: 22,
-                  lineWidth: 3
+                  shadowBlur: 22 * scale,
+                  lineWidth: Math.max(2, 3 * scale)
                 }
               },
               {
                 type: 'text',
                 style: {
                   text: spot.id,
-                  x: c.x,
-                  y: c.y - 2,
+                  x: cx,
+                  y: cy - 2 * scale,
                   fill: color,
-                  font: 'bold 11px sans-serif',
+                  font: 'bold ' + textSize(11, scale),
                   textAlign: 'center',
                   textVerticalAlign: 'middle'
-                }
+                },
+                silent: true
               },
               {
                 type: 'text',
                 style: {
                   text: statusText,
-                  x: c.x,
-                  y: c.y + 12,
+                  x: cx,
+                  y: cy + 12 * scale,
                   fill: color,
-                  font: '10px sans-serif',
+                  font: textSize(10, scale),
                   textAlign: 'center',
                   textVerticalAlign: 'middle'
-                }
+                },
+                silent: true
               }
             ]
           }
         },
-        data: dataPoints,
-        animationDuration: 700
+        data: [...decorative, ...dataPoints]
       }
-    ],
-    graphic: { elements: groupElements }
+    ]
   }, true)
 }
 
 function onChartClick (params) {
-  const spot = spotsRef.value[params.dataIndex]
-  if (spot) {
-    emit('spotClick', { spot: spot, event: params.event })
-  }
+  const data = params.data
+  if (!data || data._role !== 'spot' || !data._spot) return
+  emit('spotClick', { spot: data._spot, event: params.event })
 }
 
 onMounted(() => {
   chart = echarts.init(chartRef.value)
   renderChart()
   chart.on('click', onChartClick)
-  resizeObserver = new ResizeObserver(() => chart && chart.resize())
+  resizeObserver = new ResizeObserver(function () {
+    chart && chart.resize()
+  })
   resizeObserver.observe(chartRef.value)
 })
 
-watch(() => props.spots, () => renderChart(), { deep: true })
+watch(function () { return props.spots }, function () { renderChart() }, { deep: true })
 
-onBeforeUnmount(() => {
+onBeforeUnmount(function () {
   resizeObserver && resizeObserver.disconnect()
   chart && chart.dispose()
   chart = null
@@ -215,6 +266,6 @@ onBeforeUnmount(() => {
 .map-chart {
   width: 100%;
   height: 100%;
-  min-height: 480px;
+  min-height: 0;
 }
 </style>
