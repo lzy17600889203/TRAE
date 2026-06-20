@@ -22,11 +22,19 @@
           <span>{{ bed.patient.name }} · {{ bed.patient.age }}岁{{ bed.patient.gender }}</span>
           <span class="tag" :class="'tag-' + bed.patient.triage">{{ triageLabel }}</span>
         </div>
+        <div v-if="bed.patient.chiefComplaint" style="font-size:12px;color:#1a3a5c;margin-bottom:8px;background:#e6f1ff;padding:4px 8px;border-radius:6px">
+          📌 {{ bed.patient.chiefComplaint }}
+        </div>
         <div class="bed-vitals">
           <div class="vital"><span class="label">心率</span><span class="value">{{ bed.patient.heartRate }} bpm</span></div>
           <div class="vital"><span class="label">血压</span><span class="value">{{ bed.patient.bloodPressure }}</span></div>
           <div class="vital"><span class="label">SpO₂</span><span class="value">{{ bed.patient.spo2 }}%</span></div>
           <div class="vital"><span class="label">体温</span><span class="value">{{ bed.patient.temperature }}°C</span></div>
+          <div v-if="bed.patient.respiratoryRate" class="vital"><span class="label">呼吸</span><span class="value">{{ bed.patient.respiratoryRate }}/分</span></div>
+          <div v-if="bed.patient.bloodGlucose" class="vital"><span class="label">血糖</span><span class="value">{{ bed.patient.bloodGlucose }} mmol/L</span></div>
+        </div>
+        <div v-if="bed.patient.allergies" style="margin-top:6px;font-size:12px;color:#c0392b">
+          ⚠ 过敏：{{ bed.patient.allergies }}
         </div>
         <HeartChart :wave="bed.patient.heartWave" :color="heartColor" />
         <div style="text-align:right;margin-top:6px;font-size:11px;color:#909399">

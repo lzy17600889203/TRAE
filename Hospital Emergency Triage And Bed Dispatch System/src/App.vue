@@ -49,10 +49,18 @@
       <div class="bed-layout">
         <!-- 候诊队列 -->
         <div class="patient-queue">
-          <div style="font-size:15px;font-weight:600;color:#1a3a5c;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:15px;font-weight:600;color:#1a3a5c;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
             <span><UserFilled /> 候诊队列</span>
             <el-tag size="small" type="danger" effect="plain">共 {{ waitingPatients.length }} 人</el-tag>
           </div>
+          <el-button
+            type="primary"
+            size="default"
+            style="width:100%;margin-bottom:12px"
+            @click="registerVisible = true"
+          >
+            <Edit /> 登记新患者 · 采集体征
+          </el-button>
           <div class="queue-list">
             <PatientCard
               v-for="p in waitingPatients"
@@ -91,17 +99,19 @@
     </div>
 
     <EmergencyDialog :crowded-zones="crowdedZones" />
+    <PatientRegisterDialog v-model="registerVisible" @submit="handlePatientRegister" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
-import { TrendCharts, FirstAidKit, UserFilled } from '@element-plus/icons-vue'
+import { TrendCharts, FirstAidKit, UserFilled, Edit } from '@element-plus/icons-vue'
 import HeatMap from './HeatMap.vue'
 import BedCard from './BedCard.vue'
 import PatientCard from './PatientCard.vue'
 import EmergencyDialog from './EmergencyDialog.vue'
+import PatientRegisterDialog from './PatientRegisterDialog.vue'
 import {
   zones,
   beds,
@@ -110,11 +120,13 @@ import {
   assignPatientToBed,
   releaseBed,
   updateHeartWave,
-  syncZoneOccupancy
+  syncZoneOccupancy,
+  addWaitingPatient
 } from './store.js'
 
 const nowTime = ref(new Date().toLocaleString('zh-CN', { hour12: false }))
 const filterZone = ref('all')
+const registerVisible = ref(false)
 
 const totalBeds = computed(() => beds.value.length)
 const occupiedBeds = computed(() => beds.value.filter(b => b.patient).length)
@@ -155,6 +167,17 @@ function handleAssign({ patientId, bedId }) {
 function handleRelease(bedId) {
   releaseBed(bedId)
   ElMessage.info(`床位 ${bedId} 已释放`)
+}
+
+function handlePatientRegister(formData) {
+  const payload = { ...formData }
+  if (!payload.symptom) {
+    payload.symptom = payload.chiefComplaint?.slice(0, 12) || '待评估'
+  }
+  const patient = addWaitingPatient(payload)
+  ElMessage.success(
+    `已登记 ${patient.name}（${patient.age}岁 · ${patient.triage === 'critical' ? '危重' : patient.triage === 'urgent' ? '急症' : '普通'}）加入候诊`
+  )
 }
 
 function handleCrowded(zones) {
