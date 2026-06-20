@@ -20,8 +20,12 @@
           <el-icon v-if="node.key === 'customs' && isStuck(node)" class="magnifier spin" @click.stop="$emit('inspect', pkg)">
             <ZoomIn />
           </el-icon>
-          <el-icon v-else-if="node.isDone"><CircleCheck />
-          <el-icon v-else-if="node.isCurrent"><Loading />
+          <el-icon v-else-if="node.isDone">
+            <CircleCheck />
+          </el-icon>
+          <el-icon v-else-if="node.isCurrent">
+            <Loading />
+          </el-icon>
         </div>
 
         <div class="node-line" v-if="idx < timelineNodes.length - 1"></div>
