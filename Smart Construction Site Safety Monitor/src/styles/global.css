@@ -1,0 +1,26 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  background: #0b1420;
+  color: #e6f1ff;
+}
+
+:root {
+  --primary-cyan: #00d4ff;
+  --primary-green: #12e6a8;
+  --primary-yellow: #ffc042;
+  --danger-red: #ff3b4a;
+  --danger-red-soft: rgba(255, 59, 74, 0.18);
+  --panel-bg: rgba(18, 32, 54, 0.72);
+  --panel-border: rgba(0, 212, 255, 0.25);
+  --text-dim: #8aa2c0;
+}
