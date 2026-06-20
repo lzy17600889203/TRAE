@@ -7,4 +7,4 @@ import './styles/global.css'
 
 const app = createApp(App)
 app.use(ElementPlus, { locale: zhCn })
-app
+app.mount('#app')
