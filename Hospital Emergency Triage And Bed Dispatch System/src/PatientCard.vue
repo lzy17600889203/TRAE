@@ -1,14 +1,15 @@
 <template>
   <div
+    v-if="patient"
     class="patient-card"
-    :class="'triage-' + patient.triage"
+    :class="'triage-' + (patient.triage || 'normal')"
     draggable="true"
     @dragstart="handleDragStart"
-    @dragend="$emit('dragend')"
+    @dragend="handleDragEnd"
   >
     <div class="name">
       <span>{{ patient.name }} · {{ patient.age }}岁{{ patient.gender }}</span>
-      <span class="tag" :class="'tag-' + patient.triage">{{ triageLabel }}</span>
+      <span class="tag" :class="'tag-' + (patient.triage || 'normal')">{{ triageLabel }}</span>
     </div>
     <div class="meta">
       <div v-if="patient.chiefComplaint" style="color:#1a3a5c;font-weight:500;margin-bottom:4px">
@@ -55,17 +56,19 @@
 
 <script setup>
 import { computed } from 'vue'
+import { startDragPatient, endDragPatient } from './store.js'
+
 const props = defineProps({ patient: { type: Object, required: true } })
 defineEmits(['dragend'])
 
-const triageLabel = computed(() => ({
-  critical: '一级·危重',
-  urgent: '二级·急症',
-  normal: '三级·普通'
-}[props.patient.triage]))
+const triageLabel = computed(() => {
+  const t = props.patient?.triage
+  return { critical: '一级·危重', urgent: '二级·急症', normal: '三级·普通' }[t] || '普通'
+})
 
 const hasVitals = computed(() => {
   const p = props.patient
+  if (!p) return false
   return !!(p.heartRate || p.bloodPressure || p.spo2 != null ||
     p.temperature || p.respiratoryRate || p.bloodGlucose ||
     (p.consciousness && p.consciousness !== '清醒'))
@@ -73,6 +76,7 @@ const hasVitals = computed(() => {
 
 function tagColor(field) {
   const p = props.patient
+  if (!p) return '#ecf5ff'
   if (field === 'hr') {
     if (p.heartRate > 110 || p.heartRate < 60) return '#fde2e2'
     return '#ecf5ff'
@@ -90,7 +94,10 @@ function tagColor(field) {
 }
 
 function handleDragStart(e) {
+  if (!props.patient?.id) return
   e.dataTransfer.setData('text/plain', props.patient.id)
   e.dataTransfer.effectAllowed = 'move'
+  startDragPatient()
 }
+function handleDragEnd() { endDragPatient() }
 </script>

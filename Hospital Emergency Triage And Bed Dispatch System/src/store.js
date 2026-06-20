@@ -7,6 +7,11 @@ export function nextPatientId() {
   return `p${_patientSeq}`
 }
 
+/* 全局拖拽态：当用户正在拖拽某个患者卡片时，所有空闲床位亮起绿色边框 */
+export const isDraggingPatient = ref(false)
+export function startDragPatient() { isDraggingPatient.value = true }
+export function endDragPatient()  { isDraggingPatient.value = false }
+
 export const zones = ref([
   { id: 'resuscitation', name: '抢救室', capacity: 10, used: 5 },
   { id: 'observation', name: '观察区', capacity: 20, used: 12 },
