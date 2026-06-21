@@ -20,10 +20,11 @@ const emit = defineEmits<{
 const copiedId = ref<string | null>(null);
 const activeTab = ref('sql');
 
-watch(
-  () => props.visible,
-  (v) => emit('update:visible', v),
-);
+// 用 computed 桥接：get 读 props，set 时 emit('update:visible') 给父组件
+const drawerVisible = computed({
+  get: () => props.visible,
+  set: (v: boolean) => emit('update:visible', v),
+});
 
 const drawerTitle = computed(() => props.node?.name ?? '节点详情');
 
@@ -54,7 +55,7 @@ function formatDuration(ms: number): string {
 
 <template>
   <el-drawer
-    v-model="visible"
+    v-model="drawerVisible"
     :title="drawerTitle"
     direction="rtl"
     size="640px"
