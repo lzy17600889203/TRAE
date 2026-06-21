@@ -69,6 +69,21 @@
 
   var currentUid = Number(localStorage.getItem('uid')) || 0;
   var lastPublishedId = null;
+  var modalClosingLockUntil = 0;
+
+  function closeModal(el) {
+    var now = Date.now();
+    if (now < modalClosingLockUntil) return;
+    var target = el && el.closest && el.closest('.modal');
+    if (!target) {
+      var openModals = $all('.modal').filter(function (m) { return !m.hidden; });
+      if (openModals.length === 0) return;
+      target = openModals[openModals.length - 1];
+    }
+    target.hidden = true;
+    if (target.id === 'publishModal') resetPublishModal();
+    modalClosingLockUntil = now + 80;
+  }
 
   function api(path, opts) {
     opts = opts || {};
@@ -451,14 +466,34 @@
   }
 
   function handleBuy() {
+    var btn = $('#buyBtn');
+    if (btn && btn.getAttribute('data-loading') === '1') return;
     var g = detailGoods;
-    if (!g) return;
+    if (!g) { toast('商品信息未加载，请稍后再试', 'err'); return; }
+    if (Number(g.user_id) === Number(currentUid)) {
+      toast('不能购买自己的商品', 'err');
+      return;
+    }
     var msg = $('#buyMsg').value.trim();
+    if (btn) {
+      btn.setAttribute('data-loading', '1');
+      var original = btn.textContent;
+      btn.textContent = '发送中...';
+      btn.disabled = true;
+    }
     api('/api/orders', { method: 'POST', body: { goods_id: g.id, message: msg } })
       .then(function () {
-        toast('购买请求已发送', 'ok');
+        toast('✔ 购买请求已发送', 'ok');
         detailModal.hidden = true;
-      }).catch(function (err) { toast(err.message, 'err'); });
+        setView('orders');
+      }).catch(function (err) { toast(err.message, 'err'); })
+      .then(function () {
+        if (btn) {
+          btn.removeAttribute('data-loading');
+          btn.textContent = original || '向 TA 发起购买请求';
+          btn.disabled = false;
+        }
+      });
   }
 
   var commentList = $('#commentList');
@@ -663,10 +698,36 @@
     fileInput.addEventListener('change', handleFiles);
     $('#submitBtn').addEventListener('click', function (e) { e.preventDefault(); submitPublish(); });
 
+    // 发布表单内按 Enter 不要提交整页
+    publishForm.addEventListener('submit', function (e) { e.preventDefault(); });
+    publishForm.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') e.preventDefault();
+    });
+
+    // 统一 data-close（× / 取消）
     $all('[data-close]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        btn.closest('.modal').hidden = true;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeModal(btn);
       });
+    });
+
+    // 模态框：点击遮罩关闭 + 内容不冒泡到遮罩
+    $all('.modal').forEach(function (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal(modal);
+      });
+    });
+    $all('.modal-card').forEach(function (card) {
+      card.addEventListener('click', function (e) { e.stopPropagation(); });
+    });
+
+    // ESC 关闭最上层弹窗
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var openModals = $all('.modal').filter(function (m) { return !m.hidden; });
+        if (openModals.length > 0) closeModal(openModals[openModals.length - 1]);
+      }
     });
 
     $('#buyBtn').addEventListener('click', handleBuy);

@@ -64,10 +64,10 @@
     <div class="modal-card">
       <header class="modal-head">
         <h3 id="publishTitle">发布闲置</h3>
-        <button class="btn ghost" data-close>×</button>
+        <button class="btn ghost" type="button" data-close>×</button>
       </header>
       <div class="modal-body">
-        <form id="publishForm">
+        <form id="publishForm" autocomplete="off">
           <div class="row">
             <label>标题 <small>*</small></label>
             <input name="title" required placeholder="如 iPhone 13 256G 自用" />
@@ -98,8 +98,8 @@
         </form>
       </div>
       <footer class="modal-foot">
-        <button class="btn ghost" data-close>取消</button>
-        <button class="btn primary" id="submitBtn">提交发布</button>
+        <button class="btn ghost" type="button" data-close>取消</button>
+        <button class="btn primary" type="button" id="submitBtn">提交发布</button>
       </footer>
     </div>
   </div>
@@ -109,7 +109,7 @@
     <div class="modal-card wide">
       <header class="modal-head">
         <h3 id="detailTitle">商品详情</h3>
-        <button class="btn ghost" data-close>×</button>
+        <button class="btn ghost" type="button" data-close>×</button>
       </header>
       <div class="modal-body" id="detailBody">
         <div class="gallery" id="detailGallery"></div>
