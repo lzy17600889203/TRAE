@@ -211,6 +211,8 @@ input:focus, textarea:focus, select:focus { border-color: #2563eb; box-shadow: 0
   display: flex; justify-content: space-between; align-items: center; }
 .comment-bubble .who .del { color: #9ca3af; cursor: pointer; font-weight: 400; font-size: 12px; }
 .comment-bubble .who .del:hover { color: #dc2626; }
+.comment-bubble .who .role-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.comment-bubble .who .role-tag.seller { background: #ecfdf5; color: #047857; }
 .comment-bubble .content { color: #111827; font-size: 13.5px; white-space: pre-wrap; }
 .comment-form { display: flex; gap: 8px; }
 .comment-form input { flex: 1; }

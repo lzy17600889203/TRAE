@@ -222,18 +222,33 @@ app.delete('/api/orders/:id', (req, res) => {
 
 app.get('/api/goods/:id/messages', (req, res) => {
   const id = parseInt(req.params.id, 10);
-  res.json(queryRows('SELECT * FROM messages WHERE goods_id = ? ORDER BY created_at ASC, id ASC', [id]));
+  const rows = queryRows(
+    'SELECT m.id, m.goods_id, m.user_id, m.content, m.created_at, ' +
+    ' u.nickname AS user_nickname, u.username AS user_username ' +
+    ' FROM messages m JOIN users u ON u.id = m.user_id ' +
+    ' WHERE m.goods_id = ? ORDER BY m.created_at ASC, m.id ASC',
+    [id]
+  );
+  res.json(rows);
 });
 
 app.post('/api/goods/:id/messages', (req, res) => {
   const user = getCurrentUser(req);
   const id = parseInt(req.params.id, 10);
+  const g = queryOne('SELECT id, user_id FROM goods WHERE id = ?', [id]);
+  if (!g) return res.status(404).json({ error: '商品不存在' });
   const { content } = req.body || {};
   if (!content || !content.trim()) return res.status(400).json({ error: '内容不能为空' });
   const mid = runInsert('INSERT INTO messages (goods_id, user_id, username, content) VALUES (?, ?, ?, ?)',
     [id, user.id, user.nickname, String(content)]);
   save();
-  res.json(queryOne('SELECT * FROM messages WHERE id = ?', [mid]));
+  const m = queryOne(
+    'SELECT m.id, m.goods_id, m.user_id, m.content, m.created_at, ' +
+    ' u.nickname AS user_nickname, u.username AS user_username ' +
+    ' FROM messages m JOIN users u ON u.id = m.user_id WHERE m.id = ?',
+    [mid]
+  );
+  res.json(m);
 });
 
 app.delete('/api/messages/:id', (req, res) => {

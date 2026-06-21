@@ -33,7 +33,8 @@
 
   function formatTime(s) {
     if (!s) return '';
-    var d = new Date(s);
+    var n = Number(s);
+    var d = isNaN(n) ? new Date(s) : new Date(n < 1e12 ? n * 1000 : n);
     if (isNaN(d.getTime())) return escapeHtml(String(s));
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
       pad(d.getHours()) + ':' + pad(d.getMinutes());
@@ -515,7 +516,10 @@
     bubble.setAttribute('data-id', c.id);
     var who = document.createElement('div');
     who.className = 'who';
-    who.textContent = (c.user_nickname || c.user_name || c.user_username || '用户') + ' · ' + formatTime(c.created_at);
+    var isSeller = detailGoods && Number(detailGoods.user_id) === Number(c.user_id);
+    var tag = isSeller ? ' <span class="role-tag seller">卖家</span>' : '';
+    var whoText = (c.user_nickname || c.user_username || c.username || '用户') + tag + ' · ' + formatTime(c.created_at);
+    who.innerHTML = whoText;
     if (Number(c.user_id) === currentUid) {
       var del = document.createElement('span');
       del.className = 'del';
