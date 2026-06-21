@@ -1,0 +1,79 @@
+:root {
+  --bg-0: #0a0f1c;
+  --bg-1: #111a2e;
+  --bg-2: #16223a;
+  --bg-3: #1d2d48;
+  --line: rgba(120, 160, 220, 0.12);
+  --line-strong: rgba(120, 160, 220, 0.22);
+  --text-1: #e9f1ff;
+  --text-2: #aebcd6;
+  --text-3: #7687a5;
+  --accent: #35c2ff;
+  --accent-2: #7effb2;
+  --warn: #ffb545;
+  --danger: #ff5d5d;
+  --ok: #3ddc97;
+  --gold: #ffd36a;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: radial-gradient(1200px 800px at 10% 0%, #18294a 0%, transparent 60%),
+              radial-gradient(900px 700px at 100% 100%, #0e2340 0%, transparent 60%),
+              var(--bg-0);
+  color: var(--text-1);
+  font-family: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 覆盖 element-plus 一些默认色，使其融入工业台风格 */
+.el-card {
+  background: linear-gradient(180deg, rgba(29, 45, 72, 0.75) 0%, rgba(17, 26, 46, 0.85) 100%);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  color: var(--text-1);
+}
+.el-card__body { padding: 16px; }
+
+.el-button {
+  border-radius: 6px;
+}
+
+/* 细滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 160, 220, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+
+/* 通用工具类 */
+.glow-text {
+  text-shadow: 0 0 12px rgba(53, 194, 255, 0.55);
+}
+.dashed-line {
+  background-image: repeating-linear-gradient(90deg, var(--line-strong) 0 8px, transparent 8px 16px);
+  height: 1px;
+  width: 100%;
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+.panel-title::before {
+  content: '';
+  width: 10px; height: 10px;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  transform: rotate(45deg);
+}
