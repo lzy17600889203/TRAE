@@ -136,6 +136,30 @@ input:focus, textarea:focus, select:focus { border-color: #2563eb; box-shadow: 0
 .order-card .title { font-weight: 600; color: #111827; font-size: 15px; }
 .order-card .sub { color: #6b7280; font-size: 12.5px; }
 .order-card .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.order-card .order-chat {
+  width: 100%; margin-top: 12px; padding: 12px; background: #f9fafb;
+  border-radius: 10px; border: 1px dashed #e5e7eb;
+}
+.order-card .order-chat.hidden { display: none; }
+.order-card .chat-list {
+  max-height: 240px; overflow-y: auto; display: flex; flex-direction: column;
+  gap: 8px; padding-right: 4px; margin-bottom: 10px;
+}
+.order-card .chat-bubble {
+  background: #fff; border-radius: 10px; padding: 8px 10px; border: 1px solid #e5e7eb;
+}
+.order-card .chat-bubble.me { background: #eff6ff; border-color: #dbeafe; }
+.order-card .chat-head { font-size: 12px; color: #6b7280; margin-bottom: 4px; display: flex; gap: 6px; align-items: center; }
+.order-card .chat-head .chat-name { color: #111827; font-weight: 600; }
+.order-card .chat-head .chat-time { margin-left: auto; color: #9ca3af; font-size: 11px; }
+.order-card .chat-head .chat-tag {
+  padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 500;
+}
+.order-card .chat-head .chat-tag.seller { background: #ecfdf5; color: #065f46; }
+.order-card .chat-head .chat-tag.buyer  { background: #eff6ff; color: #1e40af; }
+.order-card .chat-body { font-size: 13.5px; color: #111827; white-space: pre-wrap; word-break: break-word; }
+.order-card .chat-form { display: flex; gap: 8px; }
+.order-card .chat-form input { flex: 1; }
 .order-status {
   padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
   background: #e0e7ff; color: #3730a3;

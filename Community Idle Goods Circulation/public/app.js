@@ -623,16 +623,17 @@
       '　' + escapeHtml(formatTime(o.created_at));
     info.appendChild(statusRow);
 
-    if (o.message) {
-      var msgRow = document.createElement('div');
-      msgRow.className = 'sub';
-      msgRow.textContent = '留言：' + o.message;
-      info.appendChild(msgRow);
-    }
     card.appendChild(info);
 
     var actions = document.createElement('div');
     actions.className = 'actions';
+
+    // 展开聊天区按钮（买卖双方都有）
+    var chatBtn = document.createElement('button');
+    chatBtn.className = 'btn ghost small';
+    chatBtn.textContent = '留言沟通';
+    actions.appendChild(chatBtn);
+
     if (orderRole === 'seller') {
       if (o.status === 'pending') {
         var a1 = document.createElement('button');
@@ -667,7 +668,105 @@
       }
     }
     card.appendChild(actions);
+
+    // —— 聊天展开区 ——
+    var chatWrap = document.createElement('div');
+    chatWrap.className = 'order-chat hidden';
+    var chatList = document.createElement('div');
+    chatList.className = 'chat-list';
+    chatList.textContent = '加载中...';
+    chatWrap.appendChild(chatList);
+
+    var chatForm = document.createElement('form');
+    chatForm.className = 'chat-form';
+    var chatInput = document.createElement('input');
+    chatInput.type = 'text';
+    chatInput.placeholder = '输入留言，Enter 发送';
+    var chatSend = document.createElement('button');
+    chatSend.type = 'button';
+    chatSend.className = 'btn primary small';
+    chatSend.textContent = '发送';
+    chatForm.appendChild(chatInput);
+    chatForm.appendChild(chatSend);
+    chatWrap.appendChild(chatForm);
+    card.appendChild(chatWrap);
+
+    var chatLoaded = false;
+    chatBtn.addEventListener('click', function () {
+      if (chatWrap.classList.contains('hidden')) {
+        chatWrap.classList.remove('hidden');
+        if (!chatLoaded) {
+          chatLoaded = true;
+          loadOrderMessages(o.id, chatList);
+        } else {
+          // 重新拉一次，确保最新
+          loadOrderMessages(o.id, chatList);
+        }
+        setTimeout(function () { chatInput.focus(); }, 50);
+      } else {
+        chatWrap.classList.add('hidden');
+      }
+    });
+
+    function sendChat() {
+      var txt = chatInput.value.trim();
+      if (!txt) return;
+      chatInput.value = '';
+      api('/api/orders/' + o.id + '/messages', { method: 'POST', body: { content: txt } })
+        .then(function (m) {
+          appendChatMsg(chatList, m);
+          chatList.scrollTop = chatList.scrollHeight;
+        })
+        .catch(function (err) { toast(err.message, 'err'); });
+    }
+    chatSend.addEventListener('click', sendChat);
+    chatForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      sendChat();
+    });
+    chatInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChat();
+      }
+    });
+
     container.appendChild(card);
+  }
+
+  function loadOrderMessages(orderId, chatList) {
+    api('/api/orders/' + orderId + '/messages', { method: 'GET' })
+      .then(function (data) {
+        var msgs = data && data.messages ? data.messages : (Array.isArray(data) ? data : []);
+        chatList.innerHTML = '';
+        if (!msgs || msgs.length === 0) {
+          chatList.innerHTML = '<div style="color:#9ca3af;font-size:12px;text-align:center;padding:8px;">还没有留言，来说点什么吧~</div>';
+          return;
+        }
+        msgs.forEach(function (m) { appendChatMsg(chatList, m, data && data.me_id, data && data.seller_id); });
+        chatList.scrollTop = chatList.scrollHeight;
+      })
+      .catch(function (err) {
+        chatList.innerHTML = '<div style="color:#dc2626;font-size:12px;">加载失败：' + escapeHtml(err.message) + '</div>';
+      });
+  }
+
+  function appendChatMsg(chatList, m, meId, sellerId) {
+    var isMe = meId ? Number(m.user_id) === Number(meId) : Number(m.user_id) === currentUid;
+    var isSeller = sellerId ? Number(m.user_id) === Number(sellerId) : false;
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble' + (isMe ? ' me' : '');
+    var head = document.createElement('div');
+    head.className = 'chat-head';
+    var tag = isSeller ? '<span class="chat-tag seller">卖家</span>' : '<span class="chat-tag buyer">买家</span>';
+    head.innerHTML = '<span class="chat-name">' + escapeHtml(m.user_nickname || m.user_username || '用户') + '</span> ' + tag +
+      '<span class="chat-time">' + escapeHtml(formatTime(m.created_at)) + '</span>';
+    bubble.appendChild(head);
+    var body = document.createElement('div');
+    body.className = 'chat-body';
+    body.textContent = m.content || '';
+    bubble.appendChild(body);
+    chatList.appendChild(bubble);
   }
 
   function updateOrder(id, status) {

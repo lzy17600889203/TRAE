@@ -185,6 +185,10 @@ app.post('/api/orders', (req, res) => {
   if (g.status !== 'on_sale') return res.status(400).json({ error: '商品不可购买' });
   const id = runInsert('INSERT INTO orders (goods_id, seller_id, buyer_id, buyer_name, message) VALUES (?, ?, ?, ?, ?)',
     [gid, g.user_id, user.id, user.nickname, message || '']);
+  if (message && message.trim()) {
+    exec('INSERT INTO order_messages (order_id, user_id, content) VALUES (?, ?, ?)',
+      [id, user.id, String(message).trim()]);
+  }
   save();
   res.json({ id });
 });
@@ -216,8 +220,49 @@ app.delete('/api/orders/:id', (req, res) => {
     return res.status(403).json({ error: '无权' });
   }
   exec('DELETE FROM orders WHERE id = ?', [id]);
+  exec('DELETE FROM order_messages WHERE order_id = ?', [id]);
   save();
   res.json({ ok: true });
+});
+
+app.get('/api/orders/:id/messages', (req, res) => {
+  const user = getCurrentUser(req);
+  const id = parseInt(req.params.id, 10);
+  const order = queryOne('SELECT * FROM orders WHERE id = ?', [id]);
+  if (!order) return res.status(404).json({ error: 'not found' });
+  if (order.buyer_id !== user.id && order.seller_id !== user.id) {
+    return res.status(403).json({ error: '无权' });
+  }
+  const rows = queryRows(
+    'SELECT m.id, m.order_id, m.user_id, m.content, m.created_at, ' +
+    ' u.nickname AS user_nickname, u.username AS user_username ' +
+    ' FROM order_messages m JOIN users u ON u.id = m.user_id ' +
+    ' WHERE m.order_id = ? ORDER BY m.created_at ASC, m.id ASC',
+    [id]
+  );
+  res.json({ messages: rows, me_id: user.id, seller_id: order.seller_id, buyer_id: order.buyer_id });
+});
+
+app.post('/api/orders/:id/messages', (req, res) => {
+  const user = getCurrentUser(req);
+  const id = parseInt(req.params.id, 10);
+  const order = queryOne('SELECT * FROM orders WHERE id = ?', [id]);
+  if (!order) return res.status(404).json({ error: 'not found' });
+  if (order.buyer_id !== user.id && order.seller_id !== user.id) {
+    return res.status(403).json({ error: '无权' });
+  }
+  const { content } = req.body || {};
+  if (!content || !content.trim()) return res.status(400).json({ error: '内容不能为空' });
+  const mid = runInsert('INSERT INTO order_messages (order_id, user_id, content) VALUES (?, ?, ?)',
+    [id, user.id, String(content).trim()]);
+  save();
+  const m = queryOne(
+    'SELECT m.id, m.order_id, m.user_id, m.content, m.created_at, ' +
+    ' u.nickname AS user_nickname, u.username AS user_username ' +
+    ' FROM order_messages m JOIN users u ON u.id = m.user_id WHERE m.id = ?',
+    [mid]
+  );
+  res.json(m);
 });
 
 app.get('/api/goods/:id/messages', (req, res) => {
@@ -296,6 +341,10 @@ async function start() {
   exec('CREATE TABLE IF NOT EXISTS messages_priv (' +
        'id INTEGER PRIMARY KEY AUTOINCREMENT, from_id INTEGER NOT NULL, to_id INTEGER NOT NULL, ' +
        'content TEXT NOT NULL, created_at INTEGER NOT NULL DEFAULT (strftime(\'%s\',\'now\')))');
+  exec('CREATE TABLE IF NOT EXISTS order_messages (' +
+       'id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER NOT NULL, ' +
+       'user_id INTEGER NOT NULL, content TEXT NOT NULL, ' +
+       'created_at INTEGER NOT NULL DEFAULT (strftime(\'%s\',\'now\')))');
   seedDefaultUsers();
   save();
 
