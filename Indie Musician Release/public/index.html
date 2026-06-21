@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>独立音乐人 · 后台管理</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="top-bar">
+    <div class="brand">
+      <span class="logo">♪</span>
+      <span>独立音乐人后台</span>
+    </div>
+    <nav class="tabs" id="mainTabs">
+      <button data-tab="songs" class="tab active">歌曲管理</button>
+      <button data-tab="fans" class="tab">粉丝管理</button>
+      <button data-tab="announcements" class="tab">公告发布</button>
+    </nav>
+    <div class="top-actions">
+      <button id="btnNewAnnouncement" class="btn btn-primary">＋ 发布公告</button>
+    </div>
+  </header>
+
+  <section id="announcementBar" class="announcement-bar">
+    <div class="announcement-scroll" id="announcementScroll"></div>
+  </section>
+
+  <main class="layout">
+    <section class="panel" data-panel="songs">
+      <div class="panel-header">
+        <h2>歌曲管理</h2>
+        <button id="btnNewSong" class="btn btn-primary">上传新歌</button>
+      </div>
+      <div id="songList" class="song-list"></div>
+    </section>
+
+    <section class="panel hidden" data-panel="fans">
+      <div class="panel-header">
+        <h2>粉丝管理</h2>
+        <div class="filters">
+          <input type="text" id="fanSearch" placeholder="搜索姓名 / 标签 / 地区" />
+          <select id="fanRegion"></select>
+          <select id="fanSort">
+            <option value="followed_desc">最近关注</option>
+            <option value="followed_asc">最早关注</option>
+            <option value="region_asc">按地区</option>
+          </select>
+        </div>
+      </div>
+      <table class="fan-table">
+        <thead>
+          <tr>
+            <th>姓名</th>
+            <th>地区</th>
+            <th>标签</th>
+            <th>关注时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="fanTbody"></tbody>
+      </table>
+    </section>
+
+    <section class="panel hidden" data-panel="announcements">
+      <div class="panel-header">
+        <h2>公告列表</h2>
+        <button id="btnNewAnnouncement2" class="btn btn-primary">＋ 发布公告</button>
+      </div>
+      <div id="announcementList" class="announcement-list"></div>
+    </section>
+  </main>
+
+  <!-- Song editor modal -->
+  <div class="modal hidden" id="songModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="songModalTitle">上传新歌</h3>
+        <button class="icon-btn close-modal" data-close="songModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="dropzone" class="dropzone">
+          <div class="dz-text">
+            <div class="dz-ico">📁</div>
+            <div>拖拽音频文件到这里，或 <label class="dz-link" for="fileInput">点击选择</label></div>
+            <div class="dz-hint">支持 mp3 / wav / ogg / flac / m4a / aac</div>
+          </div>
+          <input id="fileInput" type="file" accept="audio/*" hidden />
+        </div>
+        <div class="progress hidden" id="progressWrap">
+          <div class="progress-bar"><div id="progressFill"></div></div>
+          <div class="progress-meta" id="progressMeta">准备上传...</div>
+        </div>
+
+        <div class="grid">
+          <label>
+            <span>歌名</span>
+            <input type="text" id="fieldTitle" placeholder="必填" />
+          </label>
+          <label>
+            <span>专辑</span>
+            <input type="text" id="fieldAlbum" />
+          </label>
+          <label>
+            <span>时长 (秒)</span>
+            <input type="number" id="fieldDuration" min="0" placeholder="上传后自动填充" />
+          </label>
+          <label>
+            <span>状态</span>
+            <select id="fieldStatus">
+              <option value="published">上架</option>
+              <option value="offline">下架</option>
+              <option value="draft">草稿</option>
+            </select>
+          </label>
+          <label class="full">
+            <span>歌词</span>
+            <textarea id="fieldLyrics" rows="5" placeholder="输入歌词..."></textarea>
+          </label>
+        </div>
+        <div class="audio-preview" id="audioPreview"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost close-modal" data-close="songModal">取消</button>
+        <button class="btn btn-primary" id="btnSaveSong">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tag editor modal -->
+  <div class="modal hidden" id="fanModal">
+    <div class="modal-card small">
+      <div class="modal-head">
+        <h3>编辑粉丝</h3>
+        <button class="icon-btn close-modal" data-close="fanModal">×</button>
+      </div>
+      <div class="modal-body">
+        <label><span>姓名</span><input id="fanFieldName" type="text" /></label>
+        <label><span>地区</span><input id="fanFieldRegion" type="text" /></label>
+        <label><span>标签（用逗号分隔）</span><input id="fanFieldTags" type="text" placeholder="核心粉, 巡演客" /></label>
+        <div class="tag-presets" id="tagPresets">
+          <button type="button" data-tag="核心粉">核心粉</button>
+          <button type="button" data-tag="白嫖党">白嫖党</button>
+          <button type="button" data-tag="巡演客">巡演客</button>
+          <button type="button" data-tag="海外">海外</button>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost close-modal" data-close="fanModal">取消</button>
+        <button class="btn btn-primary" id="btnSaveFan">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement modal -->
+  <div class="modal hidden" id="announcementModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>发布新公告</h3>
+        <button class="icon-btn close-modal" data-close="announcementModal">×</button>
+      </div>
+      <div class="modal-body">
+        <label><span>标题</span><input id="annTitle" type="text" placeholder="巡演通知 / 新专辑预告..." /></label>
+        <label class="full"><span>内容</span><textarea id="annContent" rows="6" placeholder="巡演城市、时间..."></textarea></label>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost close-modal" data-close="announcementModal">取消</button>
+        <button class="btn btn-primary" id="btnPublishAnnouncement">发布</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

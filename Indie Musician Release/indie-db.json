@@ -1,0 +1,101 @@
+{
+  "songs": [
+    {
+      "id": 1,
+      "title": "夜航星辰",
+      "album": "星夜集",
+      "lyrics": "窗外的风，悄悄吹过...",
+      "duration": 215,
+      "filename": "",
+      "original_name": "",
+      "status": "published",
+      "created_at": 1782020626
+    },
+    {
+      "id": 2,
+      "title": "未命名的歌",
+      "album": "单曲",
+      "lyrics": "歌词待补充",
+      "duration": 180,
+      "filename": "",
+      "original_name": "",
+      "status": "published",
+      "created_at": 1782020626
+    },
+    {
+      "id": 3,
+      "title": "Demo 草稿",
+      "album": "",
+      "lyrics": "",
+      "duration": 120,
+      "filename": "",
+      "original_name": "",
+      "status": "draft",
+      "created_at": 1782020626
+    }
+  ],
+  "fans": [
+    {
+      "id": 1,
+      "name": "小林",
+      "region": "北京",
+      "tags": "核心粉",
+      "followed_at": 1779428626
+    },
+    {
+      "id": 2,
+      "name": "Aria",
+      "region": "上海",
+      "tags": "白嫖党",
+      "followed_at": 1781415826
+    },
+    {
+      "id": 3,
+      "name": "夜航",
+      "region": "广州",
+      "tags": "核心粉,巡演客",
+      "followed_at": 1773380626
+    },
+    {
+      "id": 4,
+      "name": "Kai",
+      "region": "成都",
+      "tags": "",
+      "followed_at": 1781761426
+    },
+    {
+      "id": 5,
+      "name": "Momo",
+      "region": "东京",
+      "tags": "海外",
+      "followed_at": 1764740626
+    },
+    {
+      "id": 6,
+      "name": "阿哲",
+      "region": "杭州",
+      "tags": "白嫖党",
+      "followed_at": 1780724626
+    },
+    {
+      "id": 7,
+      "name": "Leo",
+      "region": "深圳",
+      "tags": "核心粉",
+      "followed_at": 1777700626
+    }
+  ],
+  "announcements": [
+    {
+      "id": 1,
+      "title": "欢迎来到独立音乐管理后台",
+      "content": "在这里你可以管理歌曲、粉丝与巡演公告。",
+      "created_at": 1782020626
+    }
+  ],
+  "_seq": {
+    "songs": 3,
+    "fans": 7,
+    "announcements": 1
+  }
+}
