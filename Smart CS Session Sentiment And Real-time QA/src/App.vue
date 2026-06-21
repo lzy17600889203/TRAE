@@ -7,11 +7,12 @@ import KeywordCloud from '@/components/KeywordCloud.vue';
 import RadarSummary from '@/components/RadarSummary.vue';
 
 const {
-  messages, currentTime, isPlaying, isFinished,
+  messages, currentTime, isFinished, showSummary, agentThinking,
   sentimentTime, sentimentScore, warningThreshold, supervisorTriggered,
   keywordFreq, totalMessages, negativeCount, keywordKinds,
-  summary, showSummary,
-  pauseToggle, restart, closeSummary,
+  summary,
+  sendCustomerMessage, sendAgentMessage,
+  endSession, restart, closeSummary,
 } = useSession();
 
 const latestScore = computed(() => sentimentScore.value[sentimentScore.value.length - 1] ?? 70);
@@ -30,8 +31,10 @@ const sentimentLabel = computed(() => {
     <header class="topbar">
       <div class="brand">
         <span class="logo-dot"></span>
-        <span class="title">智能客服会话 · 实时质检工作台</span>
-        <span class="sub">SmartCS · Real-time Sentiment Analysis System</span>
+        <div class="title-wrap">
+          <span class="title">智能客服会话 · 实时质检工作台</span>
+          <span class="sub">SmartCS · Real-time Sentiment Analysis System — 您是客户，系统扮演客服</span>
+        </div>
       </div>
       <div class="top-stats">
         <div class="stat">
@@ -59,11 +62,11 @@ const sentimentLabel = computed(() => {
 
     <!-- 主管介入横幅 -->
     <transition name="banner">
-      <div v-if="supervisorTriggered" class="supervisor-banner">
+      <div v-if="supervisorTriggered && !isFinished" class="supervisor-banner">
         <span class="icon">⚠</span>
         <span class="txt-strong">客户情绪极度不满，建议主管介入</span>
         <span class="txt-sub">检测到客户连续发送 3 条以上包含负面关键词的消息，情绪指数跌破警戒线 {{ warningThreshold }}，请立即接管会话安抚客户。</span>
-        <el-button type="warning" size="small" @click="() => {}">立即接管</el-button>
+        <el-button type="warning" size="small" @click="endSession">结束会话并评分</el-button>
       </div>
     </transition>
 
@@ -74,16 +77,22 @@ const sentimentLabel = computed(() => {
         <div class="panel-head">
           <span class="panel-title"><span>会话实时监听</span></span>
           <div class="ctrl">
-            <el-tag :type="isPlaying ? 'primary' : 'info'" effect="dark" size="small">
-              {{ isFinished ? '已结束' : (isPlaying ? '实时推送中' : '已暂停') }}
+            <el-tag :type="isFinished ? 'info' : (supervisorTriggered ? 'danger' : 'success')" effect="dark" size="small">
+              {{ isFinished ? '会话已结束' : (supervisorTriggered ? '触发主管介入' : '实时质检中') }}
             </el-tag>
-            <el-button size="small" @click="pauseToggle" :disabled="isFinished">
-              {{ isPlaying ? '暂停' : '继续' }}
+            <el-button size="small" type="warning" :disabled="isFinished" @click="endSession">
+              结束会话并评分
             </el-button>
-            <el-button size="small" type="primary" @click="restart">重新播放</el-button>
+            <el-button size="small" type="primary" @click="restart">重新开始</el-button>
           </div>
         </div>
-        <ChatPanel :messages="messages" />
+        <ChatPanel
+          :messages="messages"
+          :agent-thinking="agentThinking"
+          :is-finished="isFinished"
+          :on-send-customer="sendCustomerMessage"
+          :on-send-agent="sendAgentMessage"
+        />
       </div>
 
       <!-- 右上：情绪折线图 -->
@@ -125,7 +134,7 @@ const sentimentLabel = computed(() => {
           <div class="summary-head">
             <div>
               <div class="summary-title">会话质检报告 · AI 自动评分</div>
-              <div class="summary-sub">Session {{ messages.length }} 条消息 · 负面关键词命中 {{ negativeCount }} 条 · 敏感度种类 {{ keywordKinds }}</div>
+              <div class="summary-sub">共 {{ messages.length }} 条消息 · 客户负面消息 {{ negativeCount }} 条 · 命中敏感词 {{ keywordKinds }} 类</div>
             </div>
             <div class="overall">
               <div class="overall-score">{{ summary.overall }}</div>
@@ -159,8 +168,8 @@ const sentimentLabel = computed(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 14px 18px;
-  gap: 12px;
+  padding: 12px 16px;
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -185,24 +194,25 @@ const sentimentLabel = computed(() => {
 .topbar::after  { bottom: -2px; right: -2px; border-left: none; border-top: none; }
 
 .brand { display: flex; align-items: center; gap: 12px; }
+.title-wrap { display: flex; flex-direction: column; gap: 2px; }
 .logo-dot {
   width: 12px; height: 12px; background: var(--accent);
   box-shadow: 0 0 14px var(--accent); transform: rotate(45deg);
 }
-.title { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; }
-.sub { font-size: 11px; color: var(--text-3); letter-spacing: 0.15em; text-transform: uppercase; }
+.title { font-size: 17px; font-weight: 700; letter-spacing: 0.08em; color: var(--text-1); }
+.sub { font-size: 11px; color: var(--text-3); letter-spacing: 0.1em; }
 
-.top-stats { display: flex; gap: 14px; }
+.top-stats { display: flex; gap: 12px; }
 .stat {
-  min-width: 96px;
-  padding: 6px 14px;
+  min-width: 88px;
+  padding: 5px 12px;
   border: 1px solid var(--line-strong);
   border-radius: 8px;
   background: rgba(17, 26, 46, 0.6);
   text-align: right;
 }
-.stat .k { font-size: 20px; font-weight: 700; color: var(--accent); line-height: 1.2; }
-.stat .v { font-size: 11px; color: var(--text-3); letter-spacing: 0.15em; text-transform: uppercase; }
+.stat .k { font-size: 18px; font-weight: 700; color: var(--accent); line-height: 1.2; }
+.stat .v { font-size: 10.5px; color: var(--text-3); letter-spacing: 0.1em; }
 .stat.warn .k { color: var(--warn); }
 .stat.score .k { text-shadow: 0 0 10px currentColor; }
 
@@ -212,7 +222,7 @@ const sentimentLabel = computed(() => {
   align-items: center;
   gap: 16px;
   padding: 12px 18px;
-  background: linear-gradient(90deg, rgba(255, 181, 69, 0.18) 0%, rgba(255, 93, 93, 0.15) 100%);
+  background: linear-gradient(90deg, rgba(255, 181, 69, 0.2) 0%, rgba(255, 93, 93, 0.18) 100%);
   border: 1.5px solid #ffb545;
   border-radius: 8px;
   box-shadow: 0 0 24px rgba(255, 181, 69, 0.3), inset 0 0 12px rgba(255, 181, 69, 0.1);
@@ -221,7 +231,7 @@ const sentimentLabel = computed(() => {
 .supervisor-banner .icon {
   font-size: 22px; color: #ffb545; text-shadow: 0 0 12px #ffb545;
 }
-.txt-strong { font-size: 15px; font-weight: 700; color: #ffd36a; letter-spacing: 0.1em; }
+.txt-strong { font-size: 15px; font-weight: 700; color: #ffd36a; letter-spacing: 0.08em; white-space: nowrap; }
 .txt-sub { flex: 1; font-size: 12px; color: var(--text-2); }
 @keyframes bannerFlash {
   0% { box-shadow: 0 0 24px rgba(255, 181, 69, 0.25), inset 0 0 12px rgba(255, 181, 69, 0.08); }
@@ -239,19 +249,20 @@ const sentimentLabel = computed(() => {
   flex: 1;
   display: grid;
   grid-template-columns: 1.1fr 1fr;
-  grid-template-rows: 1.1fr 1fr;
-  gap: 12px;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
   min-height: 0;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, rgba(29, 45, 72, 0.7) 0%, rgba(17, 26, 46, 0.85) 100%);
+  background: linear-gradient(180deg, rgba(29, 45, 72, 0.65) 0%, rgba(17, 26, 46, 0.8) 100%);
   border: 1px solid var(--line-strong);
   border-radius: 10px;
   overflow: hidden;
   position: relative;
+  min-height: 0;
 }
 .panel::before {
   content: '';
@@ -269,6 +280,7 @@ const sentimentLabel = computed(() => {
   justify-content: space-between;
   padding: 10px 14px;
   border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .ctrl { display: flex; gap: 8px; align-items: center; }
 
