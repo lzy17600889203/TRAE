@@ -44,38 +44,53 @@ function buildNodeShape(node: ServiceNode, index: number) {
         ry: 10,
         filter: { name: 'dropShadow', args: { dx: 0, dy: 0, stdDeviation: 6, color: node.isBottleneck ? '#EF4444' : '#38BDF8' } },
       },
-      label: {
-        text: node.name,
-        fill: '#E2E8F0',
-        fontSize: 14,
-        fontWeight: 600,
-        textVerticalAnchor: 'top',
-        refY: 16,
-        textAnchor: 'middle',
-        refX: '50%',
-      },
-      duration_label: {
-        text: node.duration + ' ms',
-        fill: node.isBottleneck ? '#FCA5A5' : '#7DD3FC',
-        fontSize: 15,
-        fontWeight: 700,
-        textVerticalAnchor: 'bottom',
-        refY: -16,
-        textAnchor: 'middle',
-        refX: '50%',
-      },
-      type_tag: {
-        text: node.type.toUpperCase(),
-        fill: node.isBottleneck ? '#FCA5A5' : '#7DD3FC',
-        fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: 1,
-        textVerticalAnchor: 'top',
-        refY: 38,
-        textAnchor: 'middle',
-        refX: '50%',
-      },
     },
+    labels: [
+      {
+        text: node.name,
+        attrs: {
+          text: {
+            fill: '#E2E8F0',
+            fontSize: 14,
+            fontWeight: 700,
+            textVerticalAnchor: 'top',
+            textAnchor: 'middle',
+            refX: 0.5,
+            refY: 14,
+          },
+        },
+      },
+      {
+        text: node.duration + ' ms',
+        attrs: {
+          text: {
+            fill: node.isBottleneck ? '#FCA5A5' : '#7DD3FC',
+            fontSize: 15,
+            fontWeight: 700,
+            textVerticalAnchor: 'bottom',
+            textAnchor: 'middle',
+            refX: 0.5,
+            refY: NODE_HEIGHT - 14,
+          },
+        },
+      },
+      {
+        text: node.type.toUpperCase(),
+        attrs: {
+          text: {
+            fill: node.isBottleneck ? '#FCA5A5' : '#7DD3FC',
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: 1,
+            textVerticalAnchor: 'middle',
+            textAnchor: 'middle',
+            refX: 0.5,
+            refY: NODE_HEIGHT / 2,
+            opacity: 0.75,
+          },
+        },
+      },
+    ],
     data: node,
   };
 }
@@ -83,13 +98,16 @@ function buildNodeShape(node: ServiceNode, index: number) {
 function buildEdgeShape(edge: TraceRequest['edges'][number]) {
   const isBottleneck = edge.isBottleneckPath;
   return {
+    shape: 'edge',
     source: edge.source,
     target: edge.target,
-    router: { name: 'normal' },
+    router: { name: 'manhattan', args: { padding: 20 } },
     attrs: {
       line: {
         stroke: isBottleneck ? '#EF4444' : '#475569',
         strokeWidth: isBottleneck ? 4 : 2,
+        strokeDasharray: isBottleneck ? '10 5' : undefined,
+        strokeLinecap: 'round',
         targetMarker: {
           name: 'block',
           width: 10,
@@ -98,7 +116,6 @@ function buildEdgeShape(edge: TraceRequest['edges'][number]) {
         },
       },
     },
-    smooth: true,
     zIndex: isBottleneck ? 2 : 1,
     labels: isBottleneck
       ? [
@@ -123,7 +140,7 @@ function buildEdgeShape(edge: TraceRequest['edges'][number]) {
           },
         ]
       : [],
-    isBottleneckPath: isBottleneck,
+    data: edge,
   };
 }
 
@@ -138,15 +155,10 @@ function renderGraph() {
   graph.centerContent();
   graph.zoom(0.95);
 
-  // 给瓶颈边设置初始虚线
+  // 给瓶颈边设置初始 dashoffset，供后续动画递减
   graph.getEdges().forEach((e) => {
     const data = e.getData() as any;
-    const cell = e as any;
-    if (cell.store && cell.store.data) {
-      // do nothing
-    }
-    if ((e as any).isBottleneckPath || props.trace.edges.find((ed) => ed.source === e.getSourceCellId() && ed.target === e.getTargetCellId())?.isBottleneckPath) {
-      e.attr('line/strokeDasharray', '10 5');
+    if (data?.isBottleneckPath) {
       e.attr('line/strokeDashoffset', dashOffset);
     }
   });
@@ -156,7 +168,7 @@ function renderGraph() {
     if (raw) emit('node-click', raw);
   });
 
-  graph.on('node:mouseenter', ({ node, e }) => {
+  graph.on('node:mouseenter', ({ node }) => {
     const raw = node.getData() as ServiceNode | undefined;
     if (!raw) return;
     node.attr('body/strokeWidth', raw.isBottleneck ? 4.5 : 2.5);
