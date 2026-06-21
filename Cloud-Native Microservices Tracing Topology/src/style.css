@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0B1020;
+  --bg-secondary: #0F172A;
+  --bg-card: #1E293B;
+  --bg-card-2: #1E3A5F;
+  --color-accent: #38BDF8;
+  --color-accent-soft: rgba(56, 189, 248, 0.18);
+  --color-success: #22C55E;
+  --color-danger: #EF4444;
+  --color-danger-dark: #7F1D1D;
+  --color-text: #E2E8F0;
+  --color-text-dim: #94A3B8;
+  --color-border: rgba(59, 130, 246, 0.2);
+  --color-border-strong: rgba(56, 189, 248, 0.45);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glow-danger: 0 0 24px rgba(239, 68, 68, 0.45);
+  --shadow-glow-accent: 0 0 18px rgba(56, 189, 248, 0.35);
+
+  font-family: 'JetBrains Mono', 'Segoe UI', -apple-system, BlinkMacSystemFont,
+    'Noto Sans', Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--color-text);
+}
+
+/* -------------------- 全局组件样式覆盖 -------------------- */
+
+@keyframes pulse-danger {
+  0%, 100% { box-shadow: var(--shadow-glow-danger); opacity: 1; }
+  50%      { box-shadow: 0 0 40px rgba(239, 68, 68, 0.75); opacity: 0.9; }
+}
+
+@keyframes pulse-accent {
+  0%, 100% { box-shadow: var(--shadow-glow-accent); }
+  50%      { box-shadow: 0 0 28px rgba(56, 189, 248, 0.65); }
+}
+
+@keyframes flow-dash {
+  from { stroke-dashoffset: 30; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.badge-pulse {
+  animation: pulse-accent 2.4s ease-in-out infinite;
+}
+
+.badge-pulse-danger {
+  animation: pulse-danger 1.6s ease-in-out infinite;
+}
+
+/* -------------------- Element Plus Drawer 深色主题覆盖 -------------------- */
+
+.el-drawer {
+  background-color: var(--bg-secondary) !important;
+  color: var(--color-text) !important;
+}
+
+.el-drawer__header {
+  color: var(--color-text) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding: 20px 24px !important;
+  margin-bottom: 0 !important;
+}
+
+.el-drawer__body {
+  padding: 24px !important;
+}
+
+.el-tabs__item {
+  color: var(--color-text-dim) !important;
+}
+
+.el-tabs__item.is-active {
+  color: var(--color-accent) !important;
+}
+
+.el-tabs__active-bar {
+  background-color: var(--color-accent) !important;
+}
+
+.el-tabs__nav-wrap::after {
+  background-color: var(--color-border) !important;
+}
+
+.el-divider__text {
+  background-color: var(--bg-secondary) !important;
+  color: var(--color-text-dim) !important;
+}
+
+/* -------------------- 代码块样式 -------------------- */
+
+.sql-block {
+  background: #0B1020;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #E2E8F0;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0;
+}
+
+.sql-block .hljs-keyword   { color: #F472B6; font-weight: 600; }
+.sql-block .hljs-string    { color: #86EFAC; }
+.sql-block .hljs-number    { color: #FBBF24; }
+.sql-block .hljs-comment   { color: #64748B; font-style: italic; }
+.sql-block .hljs-function  { color: #60A5FA; }
+.sql-block .hljs-title     { color: #C084FC; }
+
+/* -------------------- 滚动条美化 -------------------- */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
