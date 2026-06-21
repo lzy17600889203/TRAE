@@ -260,21 +260,30 @@
 
         <div class="chart-card">
           <div class="chart-title">
-            <DataAnalysis class="chart-icon" /> 各站点今日充电量（kWh）
+            <span class="title-left">
+              <DataAnalysis class="chart-icon" /> 今日充电量
+            </span>
+            <span class="title-sub">单位：kWh</span>
           </div>
           <div ref="chartKwh" class="chart-box"></div>
         </div>
 
         <div class="chart-card">
           <div class="chart-title">
-            <TrendCharts class="chart-icon" /> 各站点设备故障率（%）
+            <span class="title-left">
+              <TrendCharts class="chart-icon" /> 设备故障率
+            </span>
+            <span class="title-sub">单位：%</span>
           </div>
           <div ref="chartFault" class="chart-box"></div>
         </div>
 
         <div class="chart-card alarm-list-card">
           <div class="chart-title">
-            <Bell class="chart-icon" /> 实时告警流
+            <span class="title-left">
+              <Bell class="chart-icon" /> 实时告警流
+            </span>
+            <span class="title-sub">近 10 条</span>
           </div>
           <ul class="alarm-list">
             <li v-for="a in alarms" :key="a.id" class="alarm-item">
@@ -321,6 +330,7 @@ const currentTime = ref('')
 
 const chartKwh = ref(null)
 const chartFault = ref(null)
+const resizeObserverRef = ref(null)
 let chart1 = null
 let chart2 = null
 let clockTimer = null
@@ -383,47 +393,74 @@ function initKwhChart() {
   chart1 = echarts.init(chartKwh.value)
   const names = stations.value.map((s) => s.name)
   const data = stations.value.map((s) => s.todayKwh)
+  const max = Math.max.apply(null, data)
   chart1.setOption({
     backgroundColor: 'transparent',
-    grid: { left: 12, right: 16, top: 24, bottom: 12, containLabel: true },
+    grid: { left: 96, right: 64, top: 24, bottom: 16, containLabel: false },
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'shadow' },
+      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(79,195,247,0.12)' } },
       backgroundColor: 'rgba(10,30,52,0.95)',
       borderColor: '#1e88e5',
-      textStyle: { color: '#e6f1ff' }
+      textStyle: { color: '#e6f1ff' },
+      valueFormatter: (v) => `${v} kWh`
     },
     xAxis: {
       type: 'value',
+      max: Math.ceil((max * 1.15) / 100) * 100,
       axisLine: { lineStyle: { color: '#2a6fa8' } },
-      splitLine: { lineStyle: { color: 'rgba(42,111,168,0.2)' } },
-      axisLabel: { color: '#8ab4d8' }
+      splitLine: { lineStyle: { color: 'rgba(42,111,168,0.2)', type: 'dashed' } },
+      axisLabel: {
+        color: '#8ab4d8',
+        fontSize: 11,
+        formatter: (v) => (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v)
+      }
     },
     yAxis: {
       type: 'category',
       data: names,
+      inverse: true,
       axisLine: { lineStyle: { color: '#2a6fa8' } },
       axisTick: { show: false },
-      axisLabel: { color: '#c7e0ff', fontSize: 12 }
+      axisLabel: {
+        color: '#c7e0ff',
+        fontSize: 12,
+        margin: 12,
+        width: 82,
+        overflow: 'truncate',
+        ellipsis: '…'
+      }
     },
     series: [
       {
         name: '今日充电量',
         type: 'bar',
         data,
-        barWidth: 14,
+        barWidth: 12,
+        barGap: 0,
+        barCategoryGap: '40%',
         itemStyle: {
           borderRadius: [0, 4, 4, 0],
           color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#29b6f6' },
+            { offset: 0, color: '#1e88e5' },
             { offset: 1, color: '#4fc3f7' }
           ])
+        },
+        emphasis: {
+          focus: 'series',
+          itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+              { offset: 0, color: '#4fc3f7' },
+              { offset: 1, color: '#b3e5fc' }
+            ])
+          }
         },
         label: {
           show: true,
           position: 'right',
           color: '#e6f1ff',
-          fontSize: 11
+          fontSize: 11,
+          fontWeight: 500
         }
       }
     ]
@@ -434,29 +471,29 @@ function initFaultChart() {
   if (!chartFault.value) return
   chart2 = echarts.init(chartFault.value)
   const names = stations.value.map((s) => s.name)
+  const values = stations.value.map((s) => s.faultRate)
   const data = stations.value.map((s) => ({
     value: s.faultRate,
-    itemStyle:
-      s.faultRate > 5
-        ? {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+    itemStyle: {
+      borderRadius: [4, 4, 0, 0],
+      color:
+        s.faultRate > 5
+          ? new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: '#ef5350' },
               { offset: 1, color: '#b71c1c' }
             ])
-          }
-        : {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          : new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: '#ffb74d' },
               { offset: 1, color: '#f57c00' }
             ])
-          }
+    }
   }))
   chart2.setOption({
     backgroundColor: 'transparent',
-    grid: { left: 12, right: 16, top: 24, bottom: 36, containLabel: true },
+    grid: { left: 48, right: 24, top: 32, bottom: 64, containLabel: false },
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'shadow' },
+      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(239,83,80,0.12)' } },
       backgroundColor: 'rgba(10,30,52,0.95)',
       borderColor: '#ef5350',
       textStyle: { color: '#e6f1ff' },
@@ -467,26 +504,38 @@ function initFaultChart() {
       data: names,
       axisLine: { lineStyle: { color: '#2a6fa8' } },
       axisTick: { show: false },
-      axisLabel: { color: '#c7e0ff', fontSize: 11, interval: 0, rotate: 18 }
+      axisLabel: {
+        color: '#c7e0ff',
+        fontSize: 11,
+        margin: 10,
+        hideOverlap: true,
+        interval: 0,
+        rotate: 28,
+        width: 68,
+        overflow: 'truncate',
+        ellipsis: '…'
+      }
     },
     yAxis: {
       type: 'value',
+      max: Math.max(10, Math.ceil((Math.max.apply(null, values) * 1.3))),
       axisLine: { lineStyle: { color: '#2a6fa8' } },
-      splitLine: { lineStyle: { color: 'rgba(42,111,168,0.2)' } },
-      axisLabel: { color: '#8ab4d8', formatter: '{value}%' }
+      splitLine: { lineStyle: { color: 'rgba(42,111,168,0.2)', type: 'dashed' } },
+      axisLabel: { color: '#8ab4d8', fontSize: 11, formatter: '{value}%' }
     },
     series: [
       {
         name: '故障率',
         type: 'bar',
         data,
-        barWidth: 16,
-        itemStyle: { borderRadius: [4, 4, 0, 0] },
+        barWidth: 20,
+        barCategoryGap: '45%',
         label: {
           show: true,
           position: 'top',
           color: '#ffd54f',
           fontSize: 11,
+          fontWeight: 500,
           formatter: '{c}%'
         }
       }
@@ -510,19 +559,35 @@ onMounted(async () => {
   }, 6000)
 
   await nextTick()
-  try {
-    initKwhChart()
-    initFaultChart()
-    window.addEventListener('resize', handleResize)
-  } catch (err) {
-    console.error('图表初始化失败：', err)
-  }
+  // 用 rAF 等待一帧，避免 DOM 尺寸未就绪造成图表被压缩
+  requestAnimationFrame(() => {
+    try {
+      initKwhChart()
+      initFaultChart()
+      // ResizeObserver 精准监测每个图表容器尺寸变化
+      if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(() => handleResize())
+        if (chartKwh.value) ro.observe(chartKwh.value)
+        if (chartFault.value) ro.observe(chartFault.value)
+        resizeObserverRef.value = ro
+      } else {
+        window.addEventListener('resize', handleResize)
+      }
+    } catch (err) {
+      console.error('图表初始化失败：', err)
+    }
+  })
 })
 
 onBeforeUnmount(() => {
   clearInterval(clockTimer)
   clearInterval(alarmTimer)
-  window.removeEventListener('resize', handleResize)
+  if (resizeObserverRef.value) {
+    resizeObserverRef.value.disconnect()
+    resizeObserverRef.value = null
+  } else {
+    window.removeEventListener('resize', handleResize)
+  }
   chart1 && chart1.dispose()
   chart2 && chart2.dispose()
 })
@@ -653,7 +718,7 @@ onBeforeUnmount(() => {
 .dashboard-main {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 430px;
+  grid-template-columns: minmax(0, 1fr) 520px;
   gap: 18px;
   min-height: 0;
 }
@@ -1041,12 +1106,19 @@ onBeforeUnmount(() => {
 .chart-panel {
   padding: 0;
   gap: 0;
+  overflow-y: auto;
+}
+.chart-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.chart-panel::-webkit-scrollbar-thumb {
+  background: rgba(79, 195, 247, 0.3);
+  border-radius: 3px;
 }
 .chart-card {
-  padding: 14px 18px;
+  padding: 16px 20px 12px;
   border-bottom: 1px dashed rgba(79, 195, 247, 0.15);
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
 }
@@ -1056,26 +1128,35 @@ onBeforeUnmount(() => {
 .chart-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   color: #c7e0ff;
   font-size: 14px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+}
+.chart-title .title-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-title .title-sub {
+  color: #8ab4d8;
+  font-size: 12px;
+  font-weight: 400;
 }
 .chart-icon {
   color: #4fc3f7;
 }
 .chart-box {
-  flex: 1;
-  min-height: 180px;
   width: 100%;
+  height: 260px;
 }
 .alarm-list-card {
   flex: 0 0 auto;
 }
 .alarm-list {
   list-style: none;
-  max-height: 160px;
+  max-height: 180px;
   overflow-y: auto;
   font-size: 12px;
 }
